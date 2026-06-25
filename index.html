@@ -1106,10 +1106,10 @@
     const CONFLICT_PENALTY = 15000;
     const ADMIN_RESET_PASSWORD = "Baker123";
 
-    // Global Database Configuration using JSONHosting API
-    const GLOBAL_DB_READ_URL = "https://jsonhosting.com/api/json/f743f6e6/raw";
-    const GLOBAL_DB_WRITE_URL = "https://jsonhosting.com/api/json/f743f6e6";
-    const GLOBAL_DB_EDIT_KEY = "34125062d8a66461ea57e13f6008650ee3427896e9e5178e459e775f4286a267";
+    // Global Database Configuration using JSONBin.io API
+    const GLOBAL_DB_READ_URL = "https://api.jsonbin.io/v3/b/6a3d856fda38895dfeff408e/latest";
+    const GLOBAL_DB_WRITE_URL = "https://api.jsonbin.io/v3/b/6a3d856fda38895dfeff408e";
+    const GLOBAL_DB_MASTER_KEY = "$2a$10$wcNILpAnI0blYmml8KlczubuglaF4NPs4hJKwYiajsyaAVYtfNIpi";
 
     // Airport Reference Database
     const AIRPORTS = {
@@ -1281,7 +1281,8 @@
           if (!response.ok) throw new Error("Fetch failed");
           return response.json();
         })
-        .then(globalScores => {
+        .then(res => {
+          let globalScores = res.record || res;
           if (!Array.isArray(globalScores)) globalScores = [];
           const globalCount = getSubmissionCount(globalScores, session.name);
           const globalEntryName = `${session.name} #${globalCount + 1} (Aborted)`;
@@ -1298,9 +1299,10 @@
           return fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              "X-Master-Key": GLOBAL_DB_MASTER_KEY
             },
-            body: JSON.stringify({ editKey: GLOBAL_DB_EDIT_KEY, data: globalScores })
+            body: JSON.stringify(globalScores)
           });
         })
         .then(() => {
@@ -2219,7 +2221,8 @@
           if (!response.ok) throw new Error("Database fetch failed");
           return response.json();
         })
-        .then(scores => {
+        .then(res => {
+          let scores = res.record || res;
           if (!Array.isArray(scores)) {
             scores = [];
           }
@@ -2238,9 +2241,10 @@
           return fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              "X-Master-Key": GLOBAL_DB_MASTER_KEY
             },
-            body: JSON.stringify({ editKey: GLOBAL_DB_EDIT_KEY, data: scores })
+            body: JSON.stringify(scores)
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
             closeModal("loadingOverlay");
@@ -2298,7 +2302,8 @@
           if (!response.ok) throw new Error("Database fetch failed");
           return response.json();
         })
-        .then(scores => {
+        .then(res => {
+          let scores = res.record || res;
           if (!Array.isArray(scores)) {
             scores = [];
           }
@@ -2327,9 +2332,10 @@
           fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              "X-Master-Key": GLOBAL_DB_MASTER_KEY
             },
-            body: JSON.stringify({ editKey: GLOBAL_DB_EDIT_KEY, data: [] })
+            body: JSON.stringify([])
           })
           .then(response => {
             if (!response.ok) throw new Error("Database reset failed");
