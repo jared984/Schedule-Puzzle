@@ -1106,8 +1106,10 @@
     const CONFLICT_PENALTY = 15000;
     const ADMIN_RESET_PASSWORD = "Baker123";
 
-    // Global Database Configuration using JSONBlob API
-    const GLOBAL_DB_URL = "https://jsonblob.com/api/jsonBlob/019efa6f-f70d-7421-9112-3d2562d4b3b2";
+    // Global Database Configuration using JSONHosting API
+    const GLOBAL_DB_READ_URL = "https://jsonhosting.com/api/json/f743f6e6/raw";
+    const GLOBAL_DB_WRITE_URL = "https://jsonhosting.com/api/json/f743f6e6";
+    const GLOBAL_DB_EDIT_KEY = "34125062d8a66461ea57e13f6008650ee3427896e9e5178e459e775f4286a267";
 
     // Airport Reference Database
     const AIRPORTS = {
@@ -1274,7 +1276,7 @@
       scores.sort((a, b) => b.score - a.score);
       localStorage.setItem("aero_scores", JSON.stringify(scores));
       
-      fetch(GLOBAL_DB_URL)
+      fetch(GLOBAL_DB_READ_URL)
         .then(response => {
           if (!response.ok) throw new Error("Fetch failed");
           return response.json();
@@ -1293,12 +1295,12 @@
           globalScores.push(globalEntry);
           globalScores.sort((a, b) => b.score - a.score);
           
-          return fetch(GLOBAL_DB_URL, {
+          return fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json"
             },
-            body: JSON.stringify(globalScores)
+            body: JSON.stringify({ editKey: GLOBAL_DB_EDIT_KEY, data: globalScores })
           });
         })
         .then(() => {
@@ -2212,7 +2214,7 @@
       openModal("loadingOverlay");
 
       // Save to global database via API
-      fetch(GLOBAL_DB_URL)
+      fetch(GLOBAL_DB_READ_URL)
         .then(response => {
           if (!response.ok) throw new Error("Database fetch failed");
           return response.json();
@@ -2233,12 +2235,12 @@
           scores.push(entry);
           scores.sort((a, b) => b.score - a.score);
           
-          return fetch(GLOBAL_DB_URL, {
+          return fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json"
             },
-            body: JSON.stringify(scores)
+            body: JSON.stringify({ editKey: GLOBAL_DB_EDIT_KEY, data: scores })
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
             closeModal("loadingOverlay");
@@ -2291,7 +2293,7 @@
       const tbody = document.getElementById("leaderboardBody");
       tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px;'>Loading global scores...</td></tr>";
 
-      fetch(GLOBAL_DB_URL)
+      fetch(GLOBAL_DB_READ_URL)
         .then(response => {
           if (!response.ok) throw new Error("Database fetch failed");
           return response.json();
@@ -2322,12 +2324,12 @@
             showToast("Local Leaderboard Reset Successful.", "success");
           };
 
-          fetch(GLOBAL_DB_URL, {
+          fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json"
             },
-            body: JSON.stringify([])
+            body: JSON.stringify({ editKey: GLOBAL_DB_EDIT_KEY, data: [] })
           })
           .then(response => {
             if (!response.ok) throw new Error("Database reset failed");
