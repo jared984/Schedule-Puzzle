@@ -196,37 +196,63 @@
       color: var(--color-conflict);
     }
 
+    .submit-btn-wrapper {
+      position: relative;
+      width: 100%;
+      padding: 2px;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      margin-top: 6px;
+      margin-bottom: 12px;
+      background: transparent;
+      animation: submitGlow 3s ease-in-out infinite alternate;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+    }
+
+    .submit-btn-wrapper::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(
+        from 0deg,
+        var(--accent),
+        #a855f7,
+        var(--accent),
+        #3b82f6,
+        var(--accent)
+      );
+      animation: rotateBorder 6s linear infinite;
+      z-index: 0;
+    }
+
     #submitBtn {
+      position: relative;
+      z-index: 1;
       width: 100%;
       justify-content: center;
       font-size: 16px;
-      padding: 14px 20px;
+      padding: 12px 20px;
       border-radius: 12px;
       font-weight: 700;
-      margin-top: 6px;
-      margin-bottom: 12px;
-      border: 2px solid transparent !important;
-      background: linear-gradient(#0a0e1a, #0a0e1a) padding-box,
-                  linear-gradient(135deg, var(--accent), #a855f7, var(--accent)) border-box !important;
-      background-size: 200% 200% !important;
-      animation: movingBorder 6s linear infinite, submitGlow 3s ease-in-out infinite alternate;
+      background: var(--accent) !important;
+      border: none !important;
       color: white !important;
+      margin: 0 !important;
+      box-shadow: none !important;
     }
 
     #submitBtn:hover {
+      background: #2563eb !important;
       transform: translateY(-1px);
-      filter: brightness(1.15);
     }
 
-    @keyframes movingBorder {
-      0% {
-        background-position: 0% 50%;
-      }
-      50% {
-        background-position: 100% 50%;
-      }
+    @keyframes rotateBorder {
       100% {
-        background-position: 0% 50%;
+        transform: rotate(360deg);
       }
     }
 
@@ -952,10 +978,12 @@
             <span id="scoreValue" class="score-value" style="font-size: 24px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono);">10,000</span>
           </div>
 
-          <!-- Submit button: big, below the clock -->
-          <button id="submitBtn" class="btn btn-primary">
-            <i class="fa-solid fa-paper-plane"></i> Submit Schedule
-          </button>
+          <!-- Submit button wrapper for rotating border -->
+          <div class="submit-btn-wrapper">
+            <button id="submitBtn" class="btn btn-primary">
+              <i class="fa-solid fa-play"></i> Start Test
+            </button>
+          </div>
 
           <!-- Rules and Leaderboard buttons: smaller, inline with each other below the clock -->
           <div style="display: flex; gap: 8px; width: 100%;">
@@ -1091,8 +1119,19 @@
           <input type="text" id="rulesNameInput" class="form-input" placeholder="Enter your full name to start test" required autocomplete="off">
         </div>
       </div>
-      <div class="modal-footer">
-        <button id="startTestBtn" class="btn btn-primary">Start Test</button>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-top: 15px; border-top: 1px solid var(--border-color);">
+        <!-- Exit link on the left -->
+        <a href="#" id="rulesExitLink" style="font-size: 13px; color: var(--text-secondary); text-decoration: none; font-weight: 600; opacity: 0.6; transition: opacity 0.2s;">
+          Exit
+        </a>
+        
+        <!-- Right side actions: Leaderboard link and Start Test button -->
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <a href="#" id="rulesLeaderboardLink" style="font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; transition: filter 0.2s;">
+            <i class="fa-solid fa-trophy"></i> Leaderboard
+          </a>
+          <button id="startTestBtn" class="btn btn-primary">Start Test</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1584,16 +1623,19 @@
       updateSchedules();
       
       if (isReplay === true) {
+        gameStarted = true;
+        updateSubmitButtonState();
+        updateSchedules();
         startTimer();
         showToast(`Welcome back, ${schedulerName}. Test started!`, "success");
       } else {
+        updateSubmitButtonState();
+        updateRulesModalFooter();
         if (schedulerName) {
           document.getElementById("rulesNameInput").value = schedulerName;
           document.getElementById("nameInputContainer").style.display = "none";
-          document.getElementById("startTestBtn").innerText = gameStarted ? "Resume" : "Start Test";
         } else {
           document.getElementById("nameInputContainer").style.display = "flex";
-          document.getElementById("startTestBtn").innerText = "Start Test";
         }
         openModal("rulesModal");
       }
@@ -1884,6 +1926,12 @@
           if (c > 0) {
             const hasLiveLeg = grid[r][c] !== null && grid[r][c] !== undefined;
             cell.draggable = hasLiveLeg;
+          }
+
+          if (!gameStarted) {
+            cell.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: rgba(255,255,255,0.15); font-size: 11px;"><i class="fa-solid fa-lock" style="margin-right: 4px;"></i> Locked</div>`;
+            if (c > 0) cell.draggable = false;
+            continue;
           }
 
           // Find events assigned to this (row, day) cell
@@ -2215,6 +2263,35 @@
       });
     });
 
+    function updateRulesModalFooter() {
+      const exitLink = document.getElementById("rulesExitLink");
+      const leaderboardLink = document.getElementById("rulesLeaderboardLink");
+      const startBtn = document.getElementById("startTestBtn");
+      
+      if (gameStarted) {
+        if (exitLink) exitLink.style.display = "none";
+        if (leaderboardLink) leaderboardLink.style.display = "none";
+        if (startBtn) startBtn.innerText = "Resume";
+      } else {
+        if (exitLink) exitLink.style.display = "inline";
+        if (leaderboardLink) leaderboardLink.style.display = "inline";
+        if (startBtn) startBtn.innerText = "Start Test";
+      }
+    }
+
+    function updateSubmitButtonState() {
+      const submitBtn = document.getElementById("submitBtn");
+      if (!submitBtn) return;
+      
+      if (!gameStarted) {
+        submitBtn.innerHTML = `<i class="fa-solid fa-play"></i> Start Test`;
+      } else if (testCompleted) {
+        submitBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Try Again`;
+      } else {
+        submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Submit Schedule`;
+      }
+    }
+
     // Start Test Action
     document.getElementById("startTestBtn").addEventListener("click", () => {
       if (gameStarted) {
@@ -2226,8 +2303,10 @@
         setCookie("aero_scheduler_name", schedulerName);
         saveActiveSession();
         closeModal("rulesModal");
+        updateSchedules();
         startTimer();
         showToast(`Welcome back, ${schedulerName}. Test started!`, "success");
+        updateSubmitButtonState();
         return;
       }
       const nameVal = document.getElementById("rulesNameInput").value.trim();
@@ -2240,20 +2319,35 @@
       gameStarted = true;
       saveActiveSession();
       closeModal("rulesModal");
+      updateSchedules();
       startTimer();
       showToast(`Welcome, ${schedulerName}. Test started!`, "success");
+      updateSubmitButtonState();
     });
 
     document.getElementById("rulesBtn").addEventListener("click", () => {
       if (schedulerName) {
         document.getElementById("rulesNameInput").value = schedulerName;
         document.getElementById("nameInputContainer").style.display = "none";
-        document.getElementById("startTestBtn").innerText = gameStarted ? "Resume" : "Start Test";
       } else {
         document.getElementById("nameInputContainer").style.display = "flex";
-        document.getElementById("startTestBtn").innerText = "Start Test";
       }
+      updateRulesModalFooter();
       openModal("rulesModal");
+    });
+
+    document.getElementById("rulesExitLink").addEventListener("click", (e) => {
+      e.preventDefault();
+      closeModal("rulesModal");
+      updateSubmitButtonState();
+      updateSchedules();
+    });
+
+    document.getElementById("rulesLeaderboardLink").addEventListener("click", (e) => {
+      e.preventDefault();
+      closeModal("rulesModal");
+      renderLeaderboardTable();
+      openModal("leaderboardModal");
     });
     
     document.getElementById("leaderboardBtn").addEventListener("click", () => {
@@ -2262,7 +2356,10 @@
     });
     
     document.getElementById("submitBtn").addEventListener("click", () => {
-      if (testCompleted) {
+      if (!gameStarted) {
+        updateRulesModalFooter();
+        openModal("rulesModal");
+      } else if (testCompleted) {
         resetGame();
       } else {
         openSubmitModal();
@@ -2312,13 +2409,6 @@
       
       // Hide score banner
       document.getElementById("scoreBanner").style.display = "none";
-      
-      // Restore Submit button state
-      const submitBtn = document.getElementById("submitBtn");
-      submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Submit Schedule`;
-      submitBtn.className = "btn btn-primary";
-      submitBtn.disabled = false;
-      submitBtn.style.opacity = 1;
       
       // Re-shuffle and initialize
       grid = Array(6).fill(null).map(() => Array(5).fill(null));
@@ -2384,14 +2474,8 @@
 
         testCompleted = true;
         clearInterval(timerInterval);
+        updateSubmitButtonState();
         updateSchedules();
-        
-        // Change submit button to Try Again button
-        const submitBtn = document.getElementById("submitBtn");
-        submitBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Try Again`;
-        submitBtn.className = "btn btn-primary";
-        submitBtn.disabled = false;
-        submitBtn.style.opacity = 1;
         
         showToast(`Score logged for ${schedulerName}!`, "success");
       };
