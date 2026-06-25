@@ -547,7 +547,7 @@
     .leg-times {
       display: flex;
       justify-content: space-between;
-      font-size: 9px;
+      font-size: 11px;
       font-family: var(--font-mono);
       opacity: 0.9;
     }
@@ -555,7 +555,7 @@
     .leg-meta {
       display: flex;
       justify-content: space-between;
-      font-size: 8px;
+      font-size: 10px;
       opacity: 0.85;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       padding-top: 3px;
@@ -917,7 +917,7 @@
                 <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
                 <span>Arrival</span>
               </div>
-              <div class="leg-times" style="font-size: 8.5px;">
+              <div class="leg-times">
                 <span>DEP: Local departure time</span>
                 <span>ARR: Local arrival time</span>
               </div>
@@ -934,7 +934,7 @@
                 <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
                 <span>Arrival</span>
               </div>
-              <div class="leg-times" style="font-size: 8.5px;">
+              <div class="leg-times">
                 <span>DEP: Local departure time</span>
                 <span>ARR: Local arrival time</span>
               </div>
@@ -1179,7 +1179,10 @@
       NUQ:  { name: "Moffett Field, CA", lat: 37.4167, lon: -122.0489, tz: -8, tzName: "PST" },
       OAK:  { name: "Oakland, CA", lat: 37.7214, lon: -122.2208, tz: -8, tzName: "PST" },
       BED:  { name: "Bedford, MA", lat: 42.4700, lon: -71.2890, tz: -5, tzName: "EST" },
-      SAT:  { name: "San Antonio, TX", lat: 29.5337, lon: -98.4698, tz: -6, tzName: "CST" }
+      SAT:  { name: "San Antonio, TX", lat: 29.5337, lon: -98.4698, tz: -6, tzName: "CST" },
+      MCO:  { name: "Orlando, FL", lat: 28.4294, lon: -81.3090, tz: -5, tzName: "EST" },
+      OPF:  { name: "Miami Opa-locka, FL", lat: 25.9070, lon: -80.2784, tz: -5, tzName: "EST" },
+      SDF:  { name: "Louisville, KY", lat: 38.1744, lon: -85.7360, tz: -5, tzName: "EST" }
     };
 
     // Airplane Metadata
@@ -1217,14 +1220,14 @@
       { id: "leg-16", from: "VNY", to: "BED", day: 3, depTimeStr: "08:00" },
       { id: "leg-17", from: "PHL", to: "SAT", day: 3, depTimeStr: "10:30" },
       { id: "leg-18", from: "ORD", to: "STP", day: 3, depTimeStr: "13:00" },
-      { id: "leg-19", from: "BZN", to: "SDL", day: 3, depTimeStr: "15:00" },
+      { id: "leg-19", from: "BZN", to: "OPF", day: 3, depTimeStr: "15:00" },
       { id: "leg-20", from: "NUQ", to: "TNCM", day: 3, depTimeStr: "17:30" },
       { id: "leg-21", from: "BCT", to: "OAK", day: 3, depTimeStr: "19:00" },
       // Day 5 (index 4)
       { id: "leg-22", from: "MYNN", to: "MIA", day: 4, depTimeStr: "08:00" },
       { id: "leg-23", from: "CYYZ", to: "YVR", day: 4, depTimeStr: "10:30" },
       { id: "leg-24", from: "BFI", to: "LAX", day: 4, depTimeStr: "13:00" },
-      { id: "leg-25", from: "SNA", to: "VNY", day: 4, depTimeStr: "15:00" },
+      { id: "leg-25", from: "MCO", to: "SDF", day: 4, depTimeStr: "15:00" },
       { id: "leg-26", from: "DFW", to: "SDL", day: 4, depTimeStr: "17:30" },
       { id: "leg-27", from: "PHL", to: "ORD", day: 4, depTimeStr: "19:00" }
     ];
