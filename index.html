@@ -1299,10 +1299,26 @@
       </div>
       <div class="modal-body" style="gap: 12px; max-height: 70vh; overflow-y: auto;">
         
-        <!-- Accordion Section 1: Rename Player -->
-        <div class="accordion-item active">
+        <!-- Accordion Section 1: Reset Leader Board -->
+        <div class="accordion-item">
           <div class="accordion-header">
-            <span><i class="fa-solid fa-user-pen" style="color: var(--accent); margin-right: 8px;"></i> Rename Player Globally</span>
+            <span><i class="fa-solid fa-trash-can" style="color: #ef4444; margin-right: 8px;"></i> Reset Leader Board</span>
+            <i class="fa-solid fa-chevron-down chevron"></i>
+          </div>
+          <div class="accordion-content">
+            <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+              Permanently delete all scores on the global and local leaderboard. Active player name mappings will be preserved.
+            </p>
+            <button id="adminResetLeaderboardBtn" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 13px; padding: 10px 16px;">
+              <i class="fa-solid fa-triangle-exclamation"></i> Reset Leader Board
+            </button>
+          </div>
+        </div>
+
+        <!-- Accordion Section 2: Rename Player -->
+        <div class="accordion-item">
+          <div class="accordion-header">
+            <span><i class="fa-solid fa-user-pen" style="color: var(--accent); margin-right: 8px;"></i> Rename Player</span>
             <i class="fa-solid fa-chevron-down chevron"></i>
           </div>
           <div class="accordion-content">
@@ -1325,7 +1341,7 @@
           </div>
         </div>
 
-        <!-- Accordion Section 2: Delete Player -->
+        <!-- Accordion Section 3: Delete Player -->
         <div class="accordion-item">
           <div class="accordion-header">
             <span><i class="fa-solid fa-user-minus" style="color: var(--accent); margin-right: 8px;"></i> Delete Player</span>
@@ -1347,26 +1363,10 @@
           </div>
         </div>
 
-        <!-- Accordion Section 3: Reset Leaderboard -->
+        <!-- Accordion Section 4: Delete All Players -->
         <div class="accordion-item">
           <div class="accordion-header">
-            <span><i class="fa-solid fa-trash-can" style="color: #ef4444; margin-right: 8px;"></i> Reset Leaderboard</span>
-            <i class="fa-solid fa-chevron-down chevron"></i>
-          </div>
-          <div class="accordion-content">
-            <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
-              Permanently delete all scores on the global and local leaderboard. Active player name mappings will be preserved.
-            </p>
-            <button id="adminResetLeaderboardBtn" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 13px; padding: 10px 16px;">
-              <i class="fa-solid fa-triangle-exclamation"></i> Reset Leaderboard
-            </button>
-          </div>
-        </div>
-
-        <!-- Accordion Section 4: Delete All Users -->
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <span><i class="fa-solid fa-users-slash" style="color: #ef4444; margin-right: 8px;"></i> Delete All Users</span>
+            <span><i class="fa-solid fa-users-slash" style="color: #ef4444; margin-right: 8px;"></i> Delete All Players</span>
             <i class="fa-solid fa-chevron-down chevron"></i>
           </div>
           <div class="accordion-content">
@@ -1374,7 +1374,7 @@
               Wipe out all leaderboard scores and player rename mappings. This forces every single user to re-enter their name and start fresh.
             </p>
             <button id="adminDeleteAllUsersBtn" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 13px; padding: 10px 16px;">
-              <i class="fa-solid fa-radiation"></i> Delete All Users
+              <i class="fa-solid fa-radiation"></i> Delete All Players
             </button>
           </div>
         </div>
@@ -1401,6 +1401,44 @@
   <div id="toastNotification" class="toast">
     <i id="toastIcon" class="fa-solid"></i>
     <span id="toastMessage">Notification Message</span>
+  </div>
+
+  <!-- Admin Password Authentication Modal -->
+  <div id="adminAuthModal" class="modal-overlay" style="z-index: 140;">
+    <div class="modal-box" style="width: 380px; gap: 16px;">
+      <div class="modal-header">
+        <h2 class="modal-title" style="font-size: 16px;"><i class="fa-solid fa-lock-open"></i> Admin Authentication</h2>
+        <button class="btn btn-secondary modal-close-btn" style="padding: 6px 12px;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="gap: 12px; overflow-y: visible;">
+        <p style="font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+          Please enter the administrator password to access the panel.
+        </p>
+        <div class="form-group">
+          <label class="form-label" for="adminAuthPassword">Password</label>
+          <input type="password" id="adminAuthPassword" class="form-input" placeholder="Enter password">
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 16px;">
+        <button id="adminAuthCancelBtn" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Cancel</button>
+        <button id="adminAuthSubmitBtn" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">Authenticate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reusable Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay" style="z-index: 150;">
+    <div class="modal-box" style="width: 400px; text-align: center; gap: 16px; align-items: center; justify-content: center;">
+      <div style="font-size: 40px; color: #ef4444; margin-bottom: 8px; text-align: center;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 id="confirmTitle" style="font-size: 18px; font-weight: 700; color: white; margin: 0; text-align: center; width: 100%;">Are you sure?</h3>
+      <p id="confirmMessage" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; text-align: center; width: 100%;"></p>
+      <div style="display: flex; gap: 12px; justify-content: center; margin-top: 8px; width: 100%;">
+        <button id="confirmCancelBtn" class="btn btn-secondary" style="padding: 10px 20px; font-size: 13px;">Cancel</button>
+        <button id="confirmYesBtn" class="btn btn-primary" style="background: #ef4444; border-color: #ef4444; color: white; padding: 10px 20px; font-size: 13px; outline: none; border: none; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">Yes, Proceed</button>
+      </div>
+    </div>
   </div>
 
   <!-- Interactive JavaScript Logic -->
@@ -2891,6 +2929,34 @@
         });
     }
 
+    // Reusable Confirmation Modal Helper
+    function showConfirm(title, message, onYes, onCancel) {
+      document.getElementById("confirmTitle").innerText = title;
+      document.getElementById("confirmMessage").innerText = message;
+      
+      const yesBtn = document.getElementById("confirmYesBtn");
+      const cancelBtn = document.getElementById("confirmCancelBtn");
+      
+      // Clone buttons to clear previous event listeners
+      const newYesBtn = yesBtn.cloneNode(true);
+      const newCancelBtn = cancelBtn.cloneNode(true);
+      
+      yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+      cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+      
+      newYesBtn.addEventListener("click", () => {
+        closeModal("confirmModal");
+        if (onYes) onYes();
+      });
+      
+      newCancelBtn.addEventListener("click", () => {
+        closeModal("confirmModal");
+        if (onCancel) onCancel();
+      });
+      
+      openModal("confirmModal");
+    }
+
     // Admin features
     function populateAdminDropdowns(scores) {
       const renameSelect = document.getElementById("adminOldName");
@@ -2922,42 +2988,64 @@
       });
     }
 
+    // Helper to open the admin panel after successful authentication
+    function openAdminPanel() {
+      openModal("loadingOverlay");
+      fetch(GLOBAL_DB_READ_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Database fetch failed");
+          return response.json();
+        })
+        .then(res => {
+          closeModal("loadingOverlay");
+          let data = res.record || res;
+          let scores = Array.isArray(data) ? data : (data.scores || []);
+          populateAdminDropdowns(scores);
+          
+          // Collapse all accordion sections on load
+          document.querySelectorAll(".accordion-item").forEach(item => {
+            item.classList.remove("active");
+          });
+          
+          openModal("adminModal");
+        })
+        .catch(err => {
+          closeModal("loadingOverlay");
+          console.error("Admin initialization failed:", err);
+          showToast("Failed to fetch database for admin initialization.", "error");
+        });
+    }
+
+    // Admin Link opens Password Authentication Modal
     document.getElementById("adminLink").addEventListener("click", (e) => {
       e.preventDefault();
-      const password = prompt("Enter Administrator Password to access Admin Panel:");
-      if (password === null) return;
-      
+      document.getElementById("adminAuthPassword").value = "";
+      openModal("adminAuthModal");
+      setTimeout(() => {
+        document.getElementById("adminAuthPassword").focus();
+      }, 300);
+    });
+
+    // Close Authentication Modal on Cancel
+    document.getElementById("adminAuthCancelBtn").addEventListener("click", () => {
+      closeModal("adminAuthModal");
+    });
+
+    // Authenticate Admin Password
+    function authenticateAdmin() {
+      const password = document.getElementById("adminAuthPassword").value;
       if (password === ADMIN_RESET_PASSWORD) {
-        openModal("loadingOverlay");
-        fetch(GLOBAL_DB_READ_URL)
-          .then(response => {
-            if (!response.ok) throw new Error("Database fetch failed");
-            return response.json();
-          })
-          .then(res => {
-            closeModal("loadingOverlay");
-            let data = res.record || res;
-            let scores = Array.isArray(data) ? data : (data.scores || []);
-            populateAdminDropdowns(scores);
-            
-            // Expand first accordion section, collapse others
-            document.querySelectorAll(".accordion-item").forEach((item, idx) => {
-              if (idx === 0) {
-                item.classList.add("active");
-              } else {
-                item.classList.remove("active");
-              }
-            });
-            
-            openModal("adminModal");
-          })
-          .catch(err => {
-            closeModal("loadingOverlay");
-            console.error("Admin initialization failed:", err);
-            showToast("Failed to fetch database for admin initialization.", "error");
-          });
+        closeModal("adminAuthModal");
+        openAdminPanel();
       } else {
         showToast("Access Denied: Invalid Password.", "error");
+      }
+    }
+
+    document.getElementById("adminAuthSubmitBtn").addEventListener("click", authenticateAdmin);
+    document.getElementById("adminAuthPassword").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        authenticateAdmin();
       }
     });
 
@@ -3065,180 +3153,192 @@
         return;
       }
       
-      if (confirm(`Are you sure you want to delete "${playerToDelete}"? This will erase all their scores and force them to re-login next time they access the app.`)) {
-        openModal("loadingOverlay");
-        
-        fetch(GLOBAL_DB_READ_URL)
-          .then(response => {
-            if (!response.ok) throw new Error("Database fetch failed");
-            return response.json();
-          })
-          .then(res => {
-            let data = res.record || res;
-            let scores = Array.isArray(data) ? data : (data.scores || []);
-            let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
-            let deletedUsers = (data && data.deletedUsers) ? data.deletedUsers : [];
-            let resetVersion = data.resetVersion || 0;
-            
-            // Filter out matching scores
-            const initialCount = scores.length;
-            scores = scores.filter(entry => {
-              if (!entry || !entry.name) return false;
-              const name = entry.name;
-              return name !== playerToDelete && 
-                     !name.startsWith(playerToDelete + " #") && 
-                     name !== playerToDelete + " (Aborted)";
-            });
-            const deletedCount = initialCount - scores.length;
-            
-            // Add to deletedUsers
-            if (!deletedUsers.includes(playerToDelete)) {
-              deletedUsers.push(playerToDelete);
-            }
-            
-            // Clean up any name mappings for this player if they exist
-            if (nameMappings[playerToDelete]) {
-              delete nameMappings[playerToDelete];
-            }
-            for (const key in nameMappings) {
-              if (nameMappings[key] === playerToDelete) {
-                delete nameMappings[key];
+      showConfirm(
+        "Delete Player",
+        `Are you sure you want to delete "${playerToDelete}"? This will erase all their scores and force them to re-login next time they access the app.`,
+        () => {
+          openModal("loadingOverlay");
+          
+          fetch(GLOBAL_DB_READ_URL)
+            .then(response => {
+              if (!response.ok) throw new Error("Database fetch failed");
+              return response.json();
+            })
+            .then(res => {
+              let data = res.record || res;
+              let scores = Array.isArray(data) ? data : (data.scores || []);
+              let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
+              let deletedUsers = (data && data.deletedUsers) ? data.deletedUsers : [];
+              let resetVersion = data.resetVersion || 0;
+              
+              // Filter out matching scores
+              const initialCount = scores.length;
+              scores = scores.filter(entry => {
+                if (!entry || !entry.name) return false;
+                const name = entry.name;
+                return name !== playerToDelete && 
+                       !name.startsWith(playerToDelete + " #") && 
+                       name !== playerToDelete + " (Aborted)";
+              });
+              const deletedCount = initialCount - scores.length;
+              
+              // Add to deletedUsers
+              if (!deletedUsers.includes(playerToDelete)) {
+                deletedUsers.push(playerToDelete);
               }
-            }
-            
-            return fetch(GLOBAL_DB_WRITE_URL, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Master-Key": GLOBAL_DB_MASTER_KEY
-              },
-              body: JSON.stringify({
-                scores: scores,
-                nameMappings: nameMappings,
-                deletedUsers: deletedUsers,
-                resetVersion: resetVersion
-              })
-            }).then(writeRes => {
-              if (!writeRes.ok) throw new Error("Database delete failed");
+              
+              // Clean up any name mappings for this player if they exist
+              if (nameMappings[playerToDelete]) {
+                delete nameMappings[playerToDelete];
+              }
+              for (const key in nameMappings) {
+                if (nameMappings[key] === playerToDelete) {
+                  delete nameMappings[key];
+                }
+              }
+              
+              return fetch(GLOBAL_DB_WRITE_URL, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Master-Key": GLOBAL_DB_MASTER_KEY
+                },
+                body: JSON.stringify({
+                  scores: scores,
+                  nameMappings: nameMappings,
+                  deletedUsers: deletedUsers,
+                  resetVersion: resetVersion
+                })
+              }).then(writeRes => {
+                if (!writeRes.ok) throw new Error("Database delete failed");
+                closeModal("loadingOverlay");
+                
+                // Re-populate dropdowns
+                populateAdminDropdowns(scores);
+                
+                showToast(`Deleted player "${playerToDelete}" (${deletedCount} entries removed).`, "success");
+                renderLeaderboardTable();
+              });
+            })
+            .catch(err => {
+              console.error("Admin delete player error:", err);
               closeModal("loadingOverlay");
-              
-              // Re-populate dropdowns
-              populateAdminDropdowns(scores);
-              
-              showToast(`Deleted player "${playerToDelete}" (${deletedCount} entries removed).`, "success");
-              renderLeaderboardTable();
+              showToast("Failed to delete player. Please try again.", "error");
             });
-          })
-          .catch(err => {
-            console.error("Admin delete player error:", err);
-            closeModal("loadingOverlay");
-            showToast("Failed to delete player. Please try again.", "error");
-          });
-      }
+        }
+      );
     });
 
     document.getElementById("adminResetLeaderboardBtn").addEventListener("click", () => {
-      if (confirm("Are you sure you want to reset the leaderboard? All saved scores will be permanently deleted.")) {
-        const resetLocal = () => {
-          localStorage.setItem("aero_scores", JSON.stringify([]));
-          document.getElementById("userResultContainer").style.display = "none";
-          renderLeaderboardTable();
-          showToast("Local Leaderboard Reset Successful.", "success");
-        };
-
-        openModal("loadingOverlay");
-
-        fetch(GLOBAL_DB_READ_URL)
-          .then(response => {
-            if (!response.ok) throw new Error("Fetch failed");
-            return response.json();
-          })
-          .then(res => {
-            let data = res.record || res;
-            let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
-            let deletedUsers = (data && data.deletedUsers) ? data.deletedUsers : [];
-            let resetVersion = data.resetVersion || 0;
-            
-            return fetch(GLOBAL_DB_WRITE_URL, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Master-Key": GLOBAL_DB_MASTER_KEY
-              },
-              body: JSON.stringify({
-                scores: [],
-                nameMappings: nameMappings,
-                deletedUsers: deletedUsers,
-                resetVersion: resetVersion
-              })
-            });
-          })
-          .then(response => {
-            if (!response.ok) throw new Error("Database reset failed");
-            closeModal("loadingOverlay");
-            closeModal("adminModal");
-            
-            // Clear dropdown options since board was reset
-            populateAdminDropdowns([]);
-            
+      showConfirm(
+        "Reset Leader Board",
+        "Are you sure you want to reset the leaderboard? All saved scores will be permanently deleted.",
+        () => {
+          const resetLocal = () => {
+            localStorage.setItem("aero_scores", JSON.stringify([]));
             document.getElementById("userResultContainer").style.display = "none";
-            showToast("Global Leaderboard Reset Successful.", "success");
             renderLeaderboardTable();
-          })
-          .catch(err => {
-            console.error("Global database reset failed, doing local reset.", err);
-            closeModal("loadingOverlay");
-            resetLocal();
-          });
-      }
+            showToast("Local Leaderboard Reset Successful.", "success");
+          };
+
+          openModal("loadingOverlay");
+
+          fetch(GLOBAL_DB_READ_URL)
+            .then(response => {
+              if (!response.ok) throw new Error("Fetch failed");
+              return response.json();
+            })
+            .then(res => {
+              let data = res.record || res;
+              let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
+              let deletedUsers = (data && data.deletedUsers) ? data.deletedUsers : [];
+              let resetVersion = data.resetVersion || 0;
+              
+              return fetch(GLOBAL_DB_WRITE_URL, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Master-Key": GLOBAL_DB_MASTER_KEY
+                },
+                body: JSON.stringify({
+                  scores: [],
+                  nameMappings: nameMappings,
+                  deletedUsers: deletedUsers,
+                  resetVersion: resetVersion
+                })
+              });
+            })
+            .then(response => {
+              if (!response.ok) throw new Error("Database reset failed");
+              closeModal("loadingOverlay");
+              closeModal("adminModal");
+              
+              // Clear dropdown options since board was reset
+              populateAdminDropdowns([]);
+              
+              document.getElementById("userResultContainer").style.display = "none";
+              showToast("Global Leaderboard Reset Successful.", "success");
+              renderLeaderboardTable();
+            })
+            .catch(err => {
+              console.error("Global database reset failed, doing local reset.", err);
+              closeModal("loadingOverlay");
+              resetLocal();
+            });
+        }
+      );
     });
 
     document.getElementById("adminDeleteAllUsersBtn").addEventListener("click", () => {
-      if (confirm("Are you sure you want to delete ALL users? This will wipe out all leaderboard scores, all rename mappings, and immediately force every client to re-login on reload. This is a complete system wipe.")) {
-        openModal("loadingOverlay");
-        
-        fetch(GLOBAL_DB_READ_URL)
-          .then(response => {
-            if (!response.ok) throw new Error("Database fetch failed");
-            return response.json();
-          })
-          .then(res => {
-            let data = res.record || res;
-            let currentResetVersion = data.resetVersion || 0;
-            let nextResetVersion = currentResetVersion + 1;
-            
-            return fetch(GLOBAL_DB_WRITE_URL, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Master-Key": GLOBAL_DB_MASTER_KEY
-              },
-              body: JSON.stringify({
-                scores: [],
-                nameMappings: {},
-                deletedUsers: [],
-                resetVersion: nextResetVersion
-              })
+      showConfirm(
+        "Delete All Players",
+        "Are you sure you want to delete ALL players? This will wipe out all leaderboard scores, all rename mappings, and immediately force every client to re-login on reload. This is a complete system wipe.",
+        () => {
+          openModal("loadingOverlay");
+          
+          fetch(GLOBAL_DB_READ_URL)
+            .then(response => {
+              if (!response.ok) throw new Error("Database fetch failed");
+              return response.json();
+            })
+            .then(res => {
+              let data = res.record || res;
+              let currentResetVersion = data.resetVersion || 0;
+              let nextResetVersion = currentResetVersion + 1;
+              
+              return fetch(GLOBAL_DB_WRITE_URL, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Master-Key": GLOBAL_DB_MASTER_KEY
+                },
+                body: JSON.stringify({
+                  scores: [],
+                  nameMappings: {},
+                  deletedUsers: [],
+                  resetVersion: nextResetVersion
+                })
+              });
+            })
+            .then(response => {
+              if (!response.ok) throw new Error("Delete all users failed");
+              closeModal("loadingOverlay");
+              closeModal("adminModal");
+              
+              // Clear dropdown options since board was reset
+              populateAdminDropdowns([]);
+              
+              document.getElementById("userResultContainer").style.display = "none";
+              showToast("Wiped system database successfully. All clients reset.", "success");
+              renderLeaderboardTable();
+            })
+            .catch(err => {
+              console.error("Global delete all users failed:", err);
+              closeModal("loadingOverlay");
+              showToast("Failed to wipe database.", "error");
             });
-          })
-          .then(response => {
-            if (!response.ok) throw new Error("Delete all users failed");
-            closeModal("loadingOverlay");
-            closeModal("adminModal");
-            
-            // Clear dropdown options since board was reset
-            populateAdminDropdowns([]);
-            
-            document.getElementById("userResultContainer").style.display = "none";
-            showToast("Wiped system database successfully. All clients reset.", "success");
-            renderLeaderboardTable();
-          })
-          .catch(err => {
-            console.error("Global delete all users failed:", err);
-            closeModal("loadingOverlay");
-            showToast("Failed to wipe database.", "error");
-          });
-      }
+        }
+      );
     });
 
     // Setup accordion toggling for Admin panel
