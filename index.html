@@ -204,6 +204,8 @@
       border-radius: 12px;
       font-weight: 700;
       box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+      margin-top: 6px;
+      margin-bottom: 12px;
     }
 
     .sidebar-section #rulesBtn,
@@ -372,7 +374,7 @@
 
     /* Schedule Board Grid */
     .board-container {
-      padding: 30px;
+      padding: 16px 24px;
       overflow: auto;
       height: 100%;
       display: flex;
@@ -383,8 +385,8 @@
     .board-grid {
       display: grid;
       grid-template-columns: 160px repeat(5, minmax(220px, 1fr));
-      grid-template-rows: 50px repeat(6, 164px);
-      gap: 10px;
+      grid-template-rows: 40px repeat(6, 120px);
+      gap: 8px;
       min-width: 1200px;
       height: auto;
     }
@@ -416,7 +418,7 @@
       background: rgba(16, 22, 38, 0.85);
       border: 1px solid var(--border-color);
       border-radius: 14px;
-      padding: 12px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -426,29 +428,29 @@
 
     .aircraft-title {
       font-weight: 700;
-      font-size: 18px;
+      font-size: 15px;
       color: var(--text-main);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     .aircraft-title i {
       color: var(--accent);
-      font-size: 16px;
+      font-size: 13px;
     }
 
     .aircraft-model {
-      font-size: 13px;
+      font-size: 11px;
       color: var(--text-secondary);
     }
 
     .aircraft-tail {
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 10px;
       color: var(--text-muted);
       background: rgba(255, 255, 255, 0.03);
-      padding: 2px 6px;
+      padding: 1px 4px;
       border-radius: 4px;
       align-self: flex-start;
     }
@@ -458,11 +460,11 @@
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 14px;
-      height: 164px;
-      padding: 8px;
+      height: 120px;
+      padding: 6px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       transition: all 0.2s ease, border-color 0.1s ease;
       position: relative;
       cursor: grab;
@@ -507,16 +509,16 @@
 
     /* Card Items (Live, Repo, Idle) */
     .leg-card {
-      border-radius: 10px;
-      padding: 5px 10px 6px 10px;
-      font-size: 14px;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 13px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
       position: relative;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      height: 70px;
+      height: 48px;
       justify-content: center;
       flex-shrink: 0;
       flex-grow: 0;
@@ -547,21 +549,21 @@
       justify-content: center;
       align-items: center;
       font-weight: 800;
-      font-size: 11px;
+      font-size: 10.5px;
       letter-spacing: 0.5px;
-      margin-bottom: 2px;
-      gap: 12px;
+      margin-bottom: 0px;
+      gap: 8px;
     }
 
     .leg-arrow {
-      font-size: 10px;
+      font-size: 9px;
       opacity: 0.8;
     }
 
     .leg-times {
       display: flex;
       justify-content: space-between;
-      font-size: 11px;
+      font-size: 9.5px;
       font-family: var(--font-mono);
       opacity: 0.9;
     }
@@ -569,15 +571,15 @@
     .leg-meta {
       display: flex;
       justify-content: space-between;
-      font-size: 10px;
+      font-size: 9px;
       opacity: 0.85;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding-top: 2px;
+      padding-top: 1px;
       margin-top: 0px;
     }
 
     .leg-duration {
-      font-size: 11px;
+      font-size: 9.5px;
       font-weight: 700;
       color: white;
     }
@@ -944,7 +946,7 @@
             <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Flight Leg Examples:</div>
             
             <!-- Live Leg Example -->
-            <div class="leg-card leg-card-live" style="cursor: default; pointer-events: none; height: auto; min-height: 70px;">
+            <div class="leg-card leg-card-live" style="cursor: default; pointer-events: none; height: auto; min-height: 48px;">
               <div class="leg-route">
                 <span>Departure</span>
                 <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
@@ -961,7 +963,7 @@
             </div>
 
             <!-- Repo Leg Example -->
-            <div class="leg-card leg-card-repo" style="cursor: default; pointer-events: none; height: auto; min-height: 70px;">
+            <div class="leg-card leg-card-repo" style="cursor: default; pointer-events: none; height: auto; min-height: 48px;">
               <div class="leg-route">
                 <span>Departure</span>
                 <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
