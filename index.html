@@ -2745,7 +2745,13 @@
           openModal("rulesModal");
         }
       } else if (testCompleted) {
-        resetGame();
+        showConfirm(
+          "Retest Penalty",
+          "Retesting will incur a 30-second penalty. Your starting time will be reduced by 30 seconds. Do you want to proceed?",
+          () => {
+            resetGame();
+          }
+        );
       } else {
         openSubmitModal();
       }
