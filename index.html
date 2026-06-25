@@ -1511,8 +1511,19 @@
         .then(res => {
           let data = res.record || res;
           let globalScores = Array.isArray(data) ? data : (data.scores || []);
-          const globalCount = getSubmissionCount(globalScores, session.name);
-          const globalEntryName = formatSubmissionName(session.name, globalCount, true);
+          let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
+          
+          // Resolve session name using nameMappings
+          let current = session.name.trim();
+          let seen = new Set();
+          while (nameMappings[current] && !seen.has(current)) {
+            seen.add(current);
+            current = nameMappings[current].trim();
+          }
+          const resolvedSessionName = current;
+          
+          const globalCount = getSubmissionCount(globalScores, resolvedSessionName);
+          const globalEntryName = formatSubmissionName(resolvedSessionName, globalCount, true);
           const globalEntry = {
             name: globalEntryName,
             score: finalScore,
@@ -1529,12 +1540,12 @@
               "Content-Type": "application/json",
               "X-Master-Key": GLOBAL_DB_MASTER_KEY
             },
-            body: JSON.stringify({ scores: globalScores })
+            body: JSON.stringify({ scores: globalScores, nameMappings: nameMappings })
+          }).then(writeRes => {
+            if (!writeRes.ok) throw new Error("Write failed");
+            showToast(`Unfinished attempt for ${resolvedSessionName} logged as aborted!`, "error");
+            renderLeaderboardTable();
           });
-        })
-        .then(() => {
-          showToast(`Unfinished attempt for ${session.name} logged as aborted!`, "error");
-          renderLeaderboardTable();
         })
         .catch(err => {
           console.error("Global database auto-submit failed", err);
@@ -1597,30 +1608,28 @@
     // ----------------------------------------------------
     // INITIALIZATION & RANDOMIZER
     // ----------------------------------------------------
-    function syncPlayerName() {
-      const savedName = getCookie("aero_scheduler_name");
-      if (!savedName) return;
-
-      fetch(GLOBAL_DB_READ_URL)
+    function resolvePlayerName(rawName) {
+      if (!rawName) return Promise.resolve("");
+      return fetch(GLOBAL_DB_READ_URL)
         .then(response => {
-          if (!response.ok) throw new Error("Sync fetch failed");
+          if (!response.ok) throw new Error("DB read failed");
           return response.json();
         })
         .then(res => {
           const data = res.record || res;
-          if (data && data.nameMappings && data.nameMappings[savedName]) {
-            const newName = data.nameMappings[savedName];
-            schedulerName = newName;
-            setCookie("aero_scheduler_name", newName, 365);
-            
-            const nameInput = document.getElementById("rulesNameInput");
-            if (nameInput) {
-              nameInput.value = newName;
-            }
+          const nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
+          
+          let current = rawName.trim();
+          let seen = new Set();
+          while (nameMappings[current] && !seen.has(current)) {
+            seen.add(current);
+            current = nameMappings[current].trim();
           }
+          return current;
         })
         .catch(err => {
-          console.error("Player name synchronization failed:", err);
+          console.error("Name resolution error:", err);
+          return rawName;
         });
     }
 
@@ -1632,7 +1641,16 @@
       const savedName = getCookie("aero_scheduler_name");
       if (savedName) {
         schedulerName = savedName;
-        syncPlayerName();
+        resolvePlayerName(savedName).then(finalName => {
+          if (finalName && finalName !== savedName) {
+            schedulerName = finalName;
+            setCookie("aero_scheduler_name", finalName, 365);
+            const nameInput = document.getElementById("rulesNameInput");
+            if (nameInput) {
+              nameInput.value = finalName;
+            }
+          }
+        });
       }
       
       precalculateLiveLegs();
@@ -2380,19 +2398,28 @@
         closeModal("rulesModal");
         return;
       }
-      if (schedulerName) {
-        setCookie("aero_scheduler_name", schedulerName);
-        startGameFlow();
-        return;
-      }
+      
       const nameVal = document.getElementById("rulesNameInput").value.trim();
-      if (!nameVal) {
+      const nameToUse = schedulerName || nameVal;
+      if (!nameToUse) {
         showToast("Please enter your name to start the test.", "error");
         return;
       }
-      schedulerName = nameVal;
-      setCookie("aero_scheduler_name", schedulerName);
-      startGameFlow();
+
+      openModal("loadingOverlay");
+      resolvePlayerName(nameToUse).then(finalName => {
+        closeModal("loadingOverlay");
+        schedulerName = finalName;
+        setCookie("aero_scheduler_name", schedulerName, 365);
+        
+        // Update input field just in case
+        const nameInput = document.getElementById("rulesNameInput");
+        if (nameInput) {
+          nameInput.value = schedulerName;
+        }
+        
+        startGameFlow();
+      });
     });
 
     document.getElementById("rulesBtn").addEventListener("click", () => {
@@ -2433,9 +2460,19 @@
         const nameToUse = schedulerName || cookieName || inputName;
         
         if (nameToUse) {
-          schedulerName = nameToUse;
-          setCookie("aero_scheduler_name", schedulerName);
-          startGameFlow();
+          openModal("loadingOverlay");
+          resolvePlayerName(nameToUse).then(finalName => {
+            closeModal("loadingOverlay");
+            schedulerName = finalName;
+            setCookie("aero_scheduler_name", schedulerName, 365);
+            
+            const nameInput = document.getElementById("rulesNameInput");
+            if (nameInput) {
+              nameInput.value = schedulerName;
+            }
+            
+            startGameFlow();
+          });
         } else {
           updateRulesModalFooter();
           openModal("rulesModal");
@@ -2594,6 +2631,16 @@
           let data = res.record || res;
           let scores = Array.isArray(data) ? data : (data.scores || []);
           let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
+          
+          // Resolve schedulerName using nameMappings
+          let current = schedulerName.trim();
+          let seen = new Set();
+          while (nameMappings[current] && !seen.has(current)) {
+            seen.add(current);
+            current = nameMappings[current].trim();
+          }
+          schedulerName = current;
+          setCookie("aero_scheduler_name", schedulerName, 365);
           
           const count = getSubmissionCount(scores, schedulerName);
           const entryName = formatSubmissionName(schedulerName, count, false);
