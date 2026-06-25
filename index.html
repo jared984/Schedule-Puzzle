@@ -250,6 +250,16 @@
       transform: translateY(-1px);
     }
 
+    #rulesExitLink:hover {
+      opacity: 1 !important;
+      text-decoration: underline !important;
+    }
+
+    #rulesLeaderboardLink:hover {
+      filter: brightness(1.25) !important;
+      text-decoration: underline !important;
+    }
+
     @keyframes rotateBorder {
       100% {
         transform: rotate(360deg);
@@ -1075,8 +1085,12 @@
   <!-- Rules / Intro Modal -->
   <div id="rulesModal" class="modal-overlay">
     <div class="modal-box" style="width: 600px;">
-      <div class="modal-header">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
         <h2 class="modal-title"><i class="fa-solid fa-plane"></i> AeroScheduler Rules</h2>
+        <!-- Exit link in the top right of the modal -->
+        <a href="#" id="rulesExitLink" style="font-size: 13px; color: #fca5a5; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 4px; transition: opacity 0.2s; opacity: 0.85;">
+          <i class="fa-solid fa-xmark" style="color: #ef4444;"></i> Exit
+        </a>
       </div>
       <div class="modal-body">
         <p>Welcome to <strong>AeroScheduler</strong>. This simulation tests your logistical efficiency, timeline logic, and spatial coordination.</p>
@@ -1120,18 +1134,13 @@
         </div>
       </div>
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-top: 15px; border-top: 1px solid var(--border-color);">
-        <!-- Exit link on the left -->
-        <a href="#" id="rulesExitLink" style="font-size: 13px; color: var(--text-secondary); text-decoration: none; font-weight: 600; opacity: 0.6; transition: opacity 0.2s;">
-          Exit
+        <!-- Leaderboard link on the lower left -->
+        <a href="#" id="rulesLeaderboardLink" style="font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; transition: filter 0.2s; display: flex; align-items: center; gap: 4px;">
+          <i class="fa-solid fa-trophy"></i> Leaderboard
         </a>
         
-        <!-- Right side actions: Leaderboard link and Start Test button -->
-        <div style="display: flex; align-items: center; gap: 16px;">
-          <a href="#" id="rulesLeaderboardLink" style="font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; transition: filter 0.2s;">
-            <i class="fa-solid fa-trophy"></i> Leaderboard
-          </a>
-          <button id="startTestBtn" class="btn btn-primary">Start Test</button>
-        </div>
+        <!-- Start Test button on the lower right -->
+        <button id="startTestBtn" class="btn btn-primary">Start Test</button>
       </div>
     </div>
   </div>
@@ -2273,8 +2282,8 @@
         if (leaderboardLink) leaderboardLink.style.display = "none";
         if (startBtn) startBtn.innerText = "Resume";
       } else {
-        if (exitLink) exitLink.style.display = "inline";
-        if (leaderboardLink) leaderboardLink.style.display = "inline";
+        if (exitLink) exitLink.style.display = "flex";
+        if (leaderboardLink) leaderboardLink.style.display = "flex";
         if (startBtn) startBtn.innerText = "Start Test";
       }
     }
