@@ -467,7 +467,7 @@
       gap: 4px;
       transition: all 0.2s ease, border-color 0.1s ease;
       position: relative;
-      cursor: grab;
+      cursor: default;
       user-select: none;
       justify-content: flex-start;
       overflow: hidden;
@@ -478,7 +478,11 @@
       border-color: rgba(255, 255, 255, 0.12);
     }
 
-    .grid-cell:active {
+    .grid-cell:not(.grid-cell-locked):has(.leg-card-live) {
+      cursor: grab;
+    }
+
+    .grid-cell:not(.grid-cell-locked):has(.leg-card-live):active {
       cursor: grabbing;
     }
 
@@ -1761,6 +1765,11 @@
           cell.innerHTML = "";
           cell.classList.remove("has-conflict-border");
 
+          if (c > 0) {
+            const hasLiveLeg = grid[r][c] !== null && grid[r][c] !== undefined;
+            cell.draggable = hasLiveLeg;
+          }
+
           // Find events assigned to this (row, day) cell
           const cellEvents = schedules[r].filter(ev => ev.displayDay === c);
 
@@ -1903,6 +1912,12 @@
       const c = parseInt(this.dataset.col);
       
       if (c === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      // Prevent drag if there is no live leg in this cell
+      if (!grid[r][c]) {
         e.preventDefault();
         return;
       }
