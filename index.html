@@ -242,10 +242,6 @@
       transform: translateY(-1px);
     }
 
-    #rulesExitLink:hover {
-      filter: brightness(1.25) !important;
-    }
-
     #rulesLeaderboardLink:hover {
       filter: brightness(1.25) !important;
       text-decoration: underline !important;
@@ -267,6 +263,25 @@
       100% {
         box-shadow: 0 4px 25px rgba(168, 85, 247, 0.6);
       }
+    }
+
+    @keyframes shuffleIn {
+      0% {
+        transform: scale(0.3) rotate(-360deg) translate3d(-100px, -100px, 0);
+        opacity: 0;
+      }
+      80% {
+        transform: scale(1.05) rotate(10deg);
+        opacity: 0.95;
+      }
+      100% {
+        transform: scale(1) rotate(0deg) translate3d(0, 0, 0);
+        opacity: 1;
+      }
+    }
+
+    .leg-card-animating {
+      animation: shuffleIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) both;
     }
 
     .sidebar-section #rulesBtn,
@@ -305,15 +320,15 @@
     }
 
     .modal-box .btn-primary {
-      animation: modalBtnGlow 2.5s ease-in-out infinite alternate;
+      animation: modalBtnGlow 2.5s ease-in-out infinite alternate !important;
     }
 
     @keyframes modalBtnGlow {
       0% {
-        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2), 0 4px 10px rgba(168, 85, 247, 0.15) !important;
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2), 0 4px 10px rgba(168, 85, 247, 0.15);
       }
       100% {
-        box-shadow: 0 0 0 2px rgba(168, 85, 247, 1.0), 0 4px 25px rgba(168, 85, 247, 0.6) !important;
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 1.0), 0 4px 25px rgba(168, 85, 247, 0.6);
       }
     }
 
@@ -1095,9 +1110,9 @@
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
         <h2 class="modal-title"><i class="fa-solid fa-plane"></i> AeroScheduler Rules</h2>
         <!-- Exit link in the top right of the modal -->
-        <a href="#" id="rulesExitLink" style="font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: filter 0.2s;">
+        <button id="rulesExitLink" class="btn btn-secondary modal-close-btn" style="padding: 6px 12px;">
           <i class="fa-solid fa-xmark"></i>
-        </a>
+        </button>
       </div>
       <div class="modal-body">
         <p>Welcome to <strong>AeroScheduler</strong>. This simulation tests your logistical efficiency, timeline logic, and spatial coordination.</p>
@@ -1407,6 +1422,7 @@
     let dragSource = null;
     let testCompleted = false;
     let gameStarted = false;
+    let playShuffleAnimation = false;
 
     // ----------------------------------------------------
     // COOKIE & ACTIVE SESSION STORAGE HELPERS
@@ -1959,6 +1975,10 @@
                 const leg = ev.legRef;
                 const card = document.createElement("div");
                 card.className = "leg-card leg-card-live";
+                if (playShuffleAnimation) {
+                  card.classList.add("leg-card-animating");
+                  card.style.animationDelay = `${(r * 5 + c) * 0.04}s`;
+                }
                 
                 // Lock icon if on Day 1
                 const lockMarkup = (c === 0) ? `<i class="fa-solid fa-lock" style="font-size:10px; margin-right:4px; opacity:0.7;"></i>` : ``;
@@ -1995,6 +2015,10 @@
               else if (ev.type === "repo") {
                 const card = document.createElement("div");
                 card.className = "leg-card leg-card-repo";
+                if (playShuffleAnimation) {
+                  card.classList.add("leg-card-animating");
+                  card.style.animationDelay = `${(r * 5 + c) * 0.04}s`;
+                }
                 
                 card.innerHTML = `
                   <div class="leg-route">
@@ -2027,6 +2051,10 @@
             const idleLoc = getAircraftLocationAtDay(r, c, activeLegs);
             const card = document.createElement("div");
             card.className = "leg-card leg-card-idle";
+            if (playShuffleAnimation) {
+              card.classList.add("leg-card-animating");
+              card.style.animationDelay = `${(r * 5 + c) * 0.04}s`;
+            }
             card.innerHTML = `
               <i class="fa-solid fa-bed" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
               <div style="font-weight: 500; font-size: 11px;">Idle at ${idleLoc}</div>
@@ -2308,21 +2336,44 @@
       }
     }
 
-    // Start Test Action
+    function startGameFlow() {
+      gameStarted = true;
+      saveActiveSession();
+      closeModal("rulesModal");
+      
+      // Clear any running timer first just in case
+      clearInterval(timerInterval);
+      
+      // Enable shuffle animation for initial load
+      playShuffleAnimation = true;
+      updateSchedules();
+      playShuffleAnimation = false; // Disable for subsequent drag/drop operations
+      
+      // Update sidebar state
+      updateSubmitButtonState();
+      
+      // Set the initial clock display (e.g. 20:00) but don't count down yet
+      updateTimerDisplay(timeRemaining);
+      
+      // Start the timer after the 2-second shuffle animation completes
+      setTimeout(() => {
+        if (gameStarted && !testCompleted) {
+          startTimer();
+        }
+      }, 2000);
+      
+      showToast(`Welcome, ${schedulerName}. Test started!`, "success");
+    }
+
+    // Start Test Action inside Rules Modal
     document.getElementById("startTestBtn").addEventListener("click", () => {
       if (gameStarted) {
         closeModal("rulesModal");
         return;
       }
       if (schedulerName) {
-        gameStarted = true;
         setCookie("aero_scheduler_name", schedulerName);
-        saveActiveSession();
-        closeModal("rulesModal");
-        updateSchedules();
-        startTimer();
-        showToast(`Welcome back, ${schedulerName}. Test started!`, "success");
-        updateSubmitButtonState();
+        startGameFlow();
         return;
       }
       const nameVal = document.getElementById("rulesNameInput").value.trim();
@@ -2332,13 +2383,7 @@
       }
       schedulerName = nameVal;
       setCookie("aero_scheduler_name", schedulerName);
-      gameStarted = true;
-      saveActiveSession();
-      closeModal("rulesModal");
-      updateSchedules();
-      startTimer();
-      showToast(`Welcome, ${schedulerName}. Test started!`, "success");
-      updateSubmitButtonState();
+      startGameFlow();
     });
 
     document.getElementById("rulesBtn").addEventListener("click", () => {
@@ -2373,8 +2418,19 @@
     
     document.getElementById("submitBtn").addEventListener("click", () => {
       if (!gameStarted) {
-        updateRulesModalFooter();
-        openModal("rulesModal");
+        const cookieName = getCookie("aero_scheduler_name");
+        const inputElement = document.getElementById("rulesNameInput");
+        const inputName = inputElement ? inputElement.value.trim() : "";
+        const nameToUse = schedulerName || cookieName || inputName;
+        
+        if (nameToUse) {
+          schedulerName = nameToUse;
+          setCookie("aero_scheduler_name", schedulerName);
+          startGameFlow();
+        } else {
+          updateRulesModalFooter();
+          openModal("rulesModal");
+        }
       } else if (testCompleted) {
         resetGame();
       } else {
@@ -2419,7 +2475,6 @@
       clearInterval(timerInterval);
       timeRemaining = TOTAL_TIME;
       testCompleted = false;
-      gameStarted = false;
       localStorage.removeItem("aero_active_session");
       updateTimerDisplay(timeRemaining);
       
@@ -2428,7 +2483,28 @@
       
       // Re-shuffle and initialize
       grid = Array(6).fill(null).map(() => Array(5).fill(null));
-      initGame(false);
+      for (let day = 0; day < 5; day++) {
+        const dayLegs = FIXED_LIVE_LEGS.filter(l => l.day === day);
+        const aircraftIndices = [0, 1, 2, 3, 4, 5];
+        shuffleArray(aircraftIndices);
+        for (let i = 0; i < dayLegs.length; i++) {
+          const rowIdx = aircraftIndices[i];
+          grid[rowIdx][day] = dayLegs[i];
+        }
+      }
+
+      for (let r = 0; r < 6; r++) {
+        if (grid[r][0]) {
+          startingLocations[r] = grid[r][0].from;
+        } else {
+          startingLocations[r] = "LAX";
+        }
+      }
+
+      setupGridDOM();
+      
+      // Start the game directly with the shuffling animation and timer delay!
+      startGameFlow();
     }
 
     document.getElementById("saveScoreBtn").addEventListener("click", () => {
