@@ -467,15 +467,19 @@
       gap: 4px;
       transition: all 0.2s ease, border-color 0.1s ease;
       position: relative;
-      cursor: default;
+      cursor: grab;
       user-select: none;
       justify-content: flex-start;
       overflow: hidden;
     }
 
-    .grid-cell:not(.grid-cell-locked):hover {
+    .grid-cell:hover {
       background: var(--bg-card-hover);
       border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .grid-cell:active {
+      cursor: grabbing;
     }
 
     .grid-cell.grid-cell-locked {
@@ -523,14 +527,6 @@
     .leg-card-live {
       background: var(--color-live-gradient);
       color: white;
-    }
-
-    .leg-card-live[draggable="true"] {
-      cursor: grab;
-    }
-
-    .leg-card-live[draggable="true"]:active {
-      cursor: grabbing;
     }
 
     .leg-card-repo {
@@ -1021,7 +1017,7 @@
             <i class="fa-solid fa-arrows-up-down" style="color: var(--color-live);"></i>
             <div>
               <h4 style="color: white; font-size:13px; margin-bottom:2px;">Line Swapping</h4>
-              <p style="font-size:11px;">Drag any day cell up or down to swap. Dragging also swaps <strong>every day after</strong>.</p>
+              <p style="font-size:11px;">Drag any "green live leg" up or down to swap. Dragging also swaps <strong>every day after</strong>.</p>
             </div>
           </div>
           <div class="inst-card">
@@ -1735,16 +1731,20 @@
           cell.className = "grid-cell";
           if (c === 0) {
             cell.classList.add("grid-cell-locked");
+            cell.draggable = false;
+          } else {
+            cell.draggable = true;
           }
-          cell.draggable = false;
           cell.dataset.row = r;
           cell.dataset.col = c;
 
-          // Drag-and-drop event listeners on each cell (cells are drop targets)
+          // Drag-and-drop event listeners on each cell
+          cell.addEventListener("dragstart", handleDragStart);
           cell.addEventListener("dragover", handleDragOver);
           cell.addEventListener("dragenter", handleDragEnter);
           cell.addEventListener("dragleave", handleDragLeave);
           cell.addEventListener("drop", handleDrop);
+          cell.addEventListener("dragend", handleDragEnd);
 
           gridContainer.appendChild(cell);
         }
@@ -1763,15 +1763,6 @@
 
           // Find events assigned to this (row, day) cell
           const cellEvents = schedules[r].filter(ev => ev.displayDay === c);
-          const hasLiveLeg = cellEvents.some(ev => ev.type === "live");
-
-          // Determine cell visual lock state (cells themselves are never draggable)
-          cell.draggable = false;
-          if (c === 0 || testCompleted) {
-            cell.classList.add("grid-cell-locked");
-          } else {
-            cell.classList.remove("grid-cell-locked");
-          }
 
           if (cellEvents.length > 0) {
             cellEvents.forEach(ev => {
@@ -1779,15 +1770,6 @@
                 const leg = ev.legRef;
                 const card = document.createElement("div");
                 card.className = "leg-card leg-card-live";
-                
-                // Allow dragging on the live leg card itself
-                if (c > 0 && !testCompleted) {
-                  card.draggable = true;
-                  card.addEventListener("dragstart", handleDragStart);
-                  card.addEventListener("dragend", handleDragEnd);
-                } else {
-                  card.draggable = false;
-                }
                 
                 // Lock icon if on Day 1
                 const lockMarkup = (c === 0) ? `<i class="fa-solid fa-lock" style="font-size:10px; margin-right:4px; opacity:0.7;"></i>` : ``;
@@ -2076,8 +2058,8 @@
       showToast("Time's Up! Test concluded.", "error");
       
       // Lock drag & drops
-      document.querySelectorAll(".grid-cell, .leg-card-live").forEach(el => {
-        el.draggable = false;
+      document.querySelectorAll(".grid-cell").forEach(cell => {
+        cell.draggable = false;
       });
 
       openSubmitModal();
