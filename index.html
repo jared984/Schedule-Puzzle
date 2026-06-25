@@ -1221,7 +1221,7 @@
       { id: "leg-17", from: "PHL", to: "SAT", day: 3, depTimeStr: "10:30" },
       { id: "leg-18", from: "ORD", to: "STP", day: 3, depTimeStr: "13:00" },
       { id: "leg-19", from: "BZN", to: "OPF", day: 3, depTimeStr: "09:00" },
-      { id: "leg-20", from: "NUQ", to: "TNCM", day: 3, depTimeStr: "13:00" },
+      { id: "leg-20", from: "NUQ", to: "TNCM", day: 3, depTimeStr: "10:00" },
       { id: "leg-21", from: "BCT", to: "OAK", day: 3, depTimeStr: "19:00" },
       // Day 5 (index 4)
       { id: "leg-22", from: "MYNN", to: "MIA", day: 4, depTimeStr: "08:00" },
@@ -1573,13 +1573,11 @@
               if (hasConflict) {
                 conflictReason = `Reposition flight lands at ${formatMinutesToTimeString(arrRepo)} ${AIRPORTS[origB].tzName}, but next flight departs early at ${legB.depTimeStr}.`;
               } else {
-                // Check for 14-hour ground time (840 minutes) gap between passenger flights
-                const tzDiffAB = AIRPORTS[origB].tz - AIRPORTS[destA].tz;
-                const arrAInBTime = legA.arrLocalMins + tzDiffAB * 60;
-                const gapMins = legB.depLocalMins - arrAInBTime;
+                // Check for 14-hour ground time (840 minutes) gap after repo flight landing
+                const gapMins = legB.depLocalMins - arrRepo;
                 if (gapMins < 840) {
                   hasConflict = true;
-                  conflictReason = `Insufficient ground time! Only ${formatDuration(gapMins)} between landing and next takeoff (must allow at least 14 hours).`;
+                  conflictReason = `Insufficient ground time! Only ${formatDuration(gapMins)} between reposition landing and next takeoff (must allow at least 14 hours).`;
                 }
               }
               
