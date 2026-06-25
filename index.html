@@ -1282,8 +1282,8 @@
           return response.json();
         })
         .then(res => {
-          let globalScores = res.record || res;
-          if (!Array.isArray(globalScores)) globalScores = [];
+          let data = res.record || res;
+          let globalScores = Array.isArray(data) ? data : (data.scores || []);
           const globalCount = getSubmissionCount(globalScores, session.name);
           const globalEntryName = `${session.name} #${globalCount + 1} (Aborted)`;
           const globalEntry = {
@@ -1302,7 +1302,7 @@
               "Content-Type": "application/json",
               "X-Master-Key": GLOBAL_DB_MASTER_KEY
             },
-            body: JSON.stringify(globalScores)
+            body: JSON.stringify({ scores: globalScores })
           });
         })
         .then(() => {
@@ -2222,10 +2222,8 @@
           return response.json();
         })
         .then(res => {
-          let scores = res.record || res;
-          if (!Array.isArray(scores)) {
-            scores = [];
-          }
+          let data = res.record || res;
+          let scores = Array.isArray(data) ? data : (data.scores || []);
           const count = getSubmissionCount(scores, schedulerName);
           const entryName = `${schedulerName} #${count + 1}`;
           const entry = {
@@ -2244,7 +2242,7 @@
               "Content-Type": "application/json",
               "X-Master-Key": GLOBAL_DB_MASTER_KEY
             },
-            body: JSON.stringify(scores)
+            body: JSON.stringify({ scores: scores })
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
             closeModal("loadingOverlay");
@@ -2303,10 +2301,8 @@
           return response.json();
         })
         .then(res => {
-          let scores = res.record || res;
-          if (!Array.isArray(scores)) {
-            scores = [];
-          }
+          let data = res.record || res;
+          let scores = Array.isArray(data) ? data : (data.scores || []);
           scores.sort((a, b) => b.score - a.score);
           populateTable(scores);
         })
@@ -2335,7 +2331,7 @@
               "Content-Type": "application/json",
               "X-Master-Key": GLOBAL_DB_MASTER_KEY
             },
-            body: JSON.stringify([])
+            body: JSON.stringify({ scores: [] })
           })
           .then(response => {
             if (!response.ok) throw new Error("Database reset failed");
