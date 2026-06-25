@@ -58,8 +58,7 @@
 
     /* Layout Structure */
     .app-container {
-      display: grid;
-      grid-template-rows: 80px 1fr;
+      display: block;
       height: 100vh;
       width: 100vw;
     }
@@ -256,7 +255,7 @@
     .main-layout {
       display: grid;
       grid-template-columns: 320px 1fr;
-      height: calc(100vh - 80px);
+      height: 100vh;
       width: 100vw;
       overflow: hidden;
     }
@@ -881,31 +880,23 @@
 <body>
 
   <div class="app-container">
-    <!-- Header Section -->
-    <header>
-      <div class="logo-section">
-        <div class="logo-icon">
-          <i class="fa-solid fa-plane-departure"></i>
-        </div>
-        <div class="logo-text">
-          <h1>AeroScheduler</h1>
-          <span>Operations Test</span>
-        </div>
-      </div>
-
-    </header>
-
     <!-- Main Layout Container -->
     <div class="main-layout">
       <!-- Sidebar Panel -->
       <aside class="sidebar">
+        <!-- Logo Section -->
+        <div class="logo-section" style="padding-bottom: 16px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px;">
+          <div class="logo-icon">
+            <i class="fa-solid fa-plane-departure"></i>
+          </div>
+          <div class="logo-text">
+            <h1>AeroScheduler</h1>
+            <span>Operations Test</span>
+          </div>
+        </div>
+
         <!-- Controls & Timer Panel (on the left under the logo) -->
         <div class="sidebar-section" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; background: rgba(16, 22, 38, 0.4);">
-          <!-- Submit button: big, above the clock -->
-          <button id="submitBtn" class="btn btn-primary">
-            <i class="fa-solid fa-paper-plane"></i> Submit Schedule
-          </button>
-
           <!-- Timer container -->
           <div class="timer-container" style="display: flex; align-items: center; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; width: 100%; justify-content: center;">
             <div class="timer-circle-wrap">
@@ -923,6 +914,11 @@
             <span class="score-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0;">Score</span>
             <span id="scoreValue" class="score-value" style="font-size: 24px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono);">10,000</span>
           </div>
+
+          <!-- Submit button: big, below the clock -->
+          <button id="submitBtn" class="btn btn-primary">
+            <i class="fa-solid fa-paper-plane"></i> Submit Schedule
+          </button>
 
           <!-- Rules and Leaderboard buttons: smaller, inline with each other below the clock -->
           <div style="display: flex; gap: 8px; width: 100%;">
