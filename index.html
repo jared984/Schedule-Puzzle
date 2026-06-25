@@ -1,0 +1,2391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroScheduler - Intelligence & Scheduling Puzzle</title>
+  
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* CSS Variables & Theme */
+    :root {
+      --bg-dark: #070a13;
+      --bg-card: rgba(16, 22, 38, 0.7);
+      --bg-card-hover: rgba(26, 35, 60, 0.85);
+      --border-color: rgba(255, 255, 255, 0.06);
+      --border-glow: rgba(59, 130, 246, 0.3);
+      
+      --color-live: #82c341;
+      --color-live-gradient: linear-gradient(135deg, #82c341 0%, #5d932b 100%);
+      --color-repo: #5ba4cf;
+      --color-repo-gradient: linear-gradient(135deg, #5ba4cf 0%, #357399 100%);
+      --color-conflict: #ef4444;
+      --color-conflict-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+      --color-idle: #2d3748;
+      
+      --text-main: #f7fafc;
+      --text-secondary: #a0aec0;
+      --text-muted: #718096;
+      --accent: #3b82f6;
+      
+      --font-sans: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(29, 78, 216, 0.15) 0, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(13, 148, 136, 0.1) 0, transparent 50%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Layout Structure */
+    .app-container {
+      display: grid;
+      grid-template-rows: 80px 1fr;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Header */
+    header {
+      background: rgba(7, 10, 19, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 30px;
+      z-index: 10;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      font-size: 24px;
+      color: var(--accent);
+      background: rgba(59, 130, 246, 0.15);
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      border: 1px solid rgba(59, 130, 246, 0.25);
+    }
+
+    .logo-text h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-text span {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      display: block;
+    }
+
+    .status-dashboard {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+    }
+
+    .timer-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .timer-circle-wrap {
+      position: relative;
+      width: 46px;
+      height: 46px;
+    }
+
+    .timer-circle {
+      transform: rotate(-90deg);
+    }
+
+    .timer-circle-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 3.5;
+    }
+
+    .timer-circle-progress {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+    }
+
+    .timer-text-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .timer-digital {
+      font-family: var(--font-mono);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--text-main);
+      transition: color 0.3s ease;
+    }
+
+    .timer-digital.warning {
+      color: var(--color-conflict);
+      animation: pulse-red 1s infinite alternate;
+    }
+
+    .score-banner {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 8px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .score-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .score-value {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--color-live);
+      font-family: var(--font-mono);
+    }
+
+    .score-value.has-conflict {
+      color: var(--color-conflict);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 16px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Main Grid & Sidebar Layout */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      height: calc(100vh - 80px);
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: rgba(10, 14, 26, 0.9);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      padding: 24px;
+      gap: 24px;
+    }
+
+    .sidebar-section {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .sidebar-section h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+
+    .sidebar-section h3 i {
+      color: var(--accent);
+    }
+
+    .sidebar-section p, .sidebar-section ul {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .sidebar-section ul {
+      list-style-type: none;
+    }
+
+    .sidebar-section li {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .sidebar-section li i {
+      color: var(--accent);
+      margin-top: 3px;
+      font-size: 14px;
+    }
+
+    /* Live Stats inside Sidebar */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .stat-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .stat-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .stat-val.conflict-count {
+      color: var(--color-conflict);
+    }
+
+    /* Airport list scroll container */
+    .airport-list {
+      max-height: 200px;
+      overflow-y: auto;
+      padding-right: 4px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+
+    .airport-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .airport-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    .airport-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .airport-code {
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* Schedule Board Grid */
+    .board-container {
+      padding: 30px;
+      overflow: auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: 160px repeat(5, minmax(220px, 1fr));
+      grid-template-rows: 50px repeat(6, 164px);
+      gap: 10px;
+      min-width: 1200px;
+      height: auto;
+    }
+
+    /* Grid Header Items */
+    .grid-header-cell {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .grid-header-cell span.day-date {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Row Header Cells (Aircraft labels) */
+    .grid-row-header {
+      background: rgba(16, 22, 38, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .aircraft-title {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .aircraft-title i {
+      color: var(--accent);
+      font-size: 16px;
+    }
+
+    .aircraft-model {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .aircraft-tail {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 2px 6px;
+      border-radius: 4px;
+      align-self: flex-start;
+    }
+
+    /* Interactive Grid Cells */
+    .grid-cell {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      height: 164px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.2s ease, border-color 0.1s ease;
+      position: relative;
+      cursor: grab;
+      user-select: none;
+      justify-content: flex-start;
+      overflow: hidden;
+    }
+
+    .grid-cell:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .grid-cell:active {
+      cursor: grabbing;
+    }
+
+    .grid-cell.grid-cell-locked {
+      background: rgba(16, 22, 38, 0.45);
+      border: 1px dashed rgba(255, 255, 255, 0.04);
+      cursor: not-allowed;
+    }
+
+    .grid-cell.grid-cell-locked:hover {
+      background: rgba(16, 22, 38, 0.45);
+      border-color: rgba(255, 255, 255, 0.04);
+      box-shadow: none;
+    }
+
+    /* Drag & Drop Highlight States */
+    .grid-cell.drag-source-highlight {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.3) !important;
+      opacity: 0.5;
+    }
+
+    .grid-cell.drag-target-highlight {
+      background: rgba(59, 130, 246, 0.15) !important;
+      border: 1px dashed var(--accent) !important;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Card Items (Live, Repo, Idle) */
+    .leg-card {
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      height: 70px;
+      justify-content: center;
+      flex-shrink: 0;
+      flex-grow: 0;
+    }
+
+    .leg-card-live {
+      background: var(--color-live-gradient);
+      color: white;
+    }
+
+    .leg-card-repo {
+      background: var(--color-repo-gradient);
+      color: white;
+    }
+
+    .leg-card-idle {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-secondary);
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      font-style: italic;
+      text-align: center;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .leg-route {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+      gap: 12px;
+    }
+
+    .leg-arrow {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+
+    .leg-times {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      font-family: var(--font-mono);
+      opacity: 0.9;
+    }
+
+    .leg-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      opacity: 0.85;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 3px;
+      margin-top: 2px;
+    }
+
+    .leg-duration {
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+    }
+
+    /* Warning Overlay / Conflicts */
+    .conflict-badge {
+      background: var(--color-conflict);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      position: absolute;
+      top: -6px;
+      right: 6px;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+      z-index: 2;
+      animation: bounce 1s infinite alternate;
+    }
+
+    .grid-cell.has-conflict-border {
+      border: 2px solid var(--color-conflict) !important;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+    }
+
+    /* Modals & Popups */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: #0f1322;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      border-radius: 20px;
+      width: 500px;
+      max-width: 90%;
+      max-height: 90vh;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-title i {
+      color: var(--accent);
+    }
+
+    .modal-body {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px;
+      color: white;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 20px;
+    }
+
+    /* Leaderboard Styles */
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .leaderboard-table th {
+      text-align: left;
+      color: var(--text-secondary);
+      font-weight: 600;
+      padding: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .leaderboard-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .leaderboard-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .rank-col {
+      font-weight: 700;
+      width: 40px;
+    }
+
+    .rank-col i {
+      color: #ffd700; /* Gold */
+    }
+
+    .leaderboard-table tr:nth-child(2) .rank-col i {
+      color: #c0c0c0; /* Silver */
+    }
+
+    .leaderboard-table tr:nth-child(3) .rank-col i {
+      color: #cd7f32; /* Bronze */
+    }
+
+    .score-col {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--color-live);
+    }
+
+    /* Summary Dashboard list */
+    .score-details-list {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .detail-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Instructions Modal Overlay */
+    .inst-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .inst-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .inst-card i {
+      font-size: 20px;
+    }
+
+    /* Animations */
+    @keyframes pulse-red {
+      from { text-shadow: 0 0 2px rgba(239, 68, 68, 0.2); }
+      to { text-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.4); }
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-3px); }
+    }
+
+    @keyframes flipHourglass {
+      0% { transform: rotate(0deg); }
+      40% { transform: rotate(0deg); }
+      60% { transform: rotate(180deg); }
+      90% { transform: rotate(180deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes timer-blink {
+      0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+      50% { opacity: 0.4; text-shadow: none; }
+    }
+
+    .timer-digital.urgent {
+      animation: timer-blink 1.5s infinite;
+    }
+
+    /* Custom Toast Notifications */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      padding: 16px 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast.active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast-success {
+      border-left-color: var(--color-live);
+    }
+
+    .toast-error {
+      border-left-color: var(--color-conflict);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header Section -->
+    <header>
+      <div class="logo-section">
+        <div class="logo-icon">
+          <i class="fa-solid fa-plane-departure"></i>
+        </div>
+        <div class="logo-text">
+          <h1>AeroScheduler</h1>
+          <span>Operations Test</span>
+        </div>
+      </div>
+
+      <div class="status-dashboard">
+        <!-- Submission Buttons -->
+        <div class="action-buttons">
+          <button id="rulesBtn" class="btn btn-secondary">
+            <i class="fa-solid fa-circle-info"></i> Rules
+          </button>
+          <button id="leaderboardBtn" class="btn btn-secondary">
+            <i class="fa-solid fa-trophy"></i> Leaderboard
+          </button>
+          <button id="submitBtn" class="btn btn-primary">
+            <i class="fa-solid fa-paper-plane"></i> Submit Schedule
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Layout Container -->
+    <div class="main-layout">
+      <!-- Sidebar Panel -->
+      <aside class="sidebar">
+        <!-- Puzzle Context -->
+        <div class="sidebar-section">
+          <h3><i class="fa-solid fa-circle-question"></i> Puzzle Objectives</h3>
+          <ul style="display:flex; flex-direction:column; gap:6px;">
+            <li><i class="fa-solid fa-check"></i> Minimize Repositioning flight times</li>
+            <li><i class="fa-solid fa-check"></i> Complete within 10 min time limit</li>
+            <li><i class="fa-solid fa-check"></i> Allow 14 hours between Landing and takeoff</li>
+          </ul>
+        </div>
+
+
+      </aside>
+
+      <!-- Scheduling Grid Container -->
+      <main class="board-container">
+        <!-- Top Bar with Timer & Score centered over all day columns -->
+        <div class="board-top-bar" style="display: grid; grid-template-columns: 160px repeat(5, minmax(220px, 1fr)); gap: 10px; min-width: 1200px; margin-bottom: 8px; align-items: center;">
+          <div id="topBarCenterContainer" style="grid-column: 2 / span 5; display: flex; justify-content: center; align-items: center; gap: 20px;">
+            <!-- Timer container -->
+            <div class="timer-container" style="display: flex; align-items: center; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px;">
+              <div class="timer-circle-wrap">
+                <svg class="timer-circle" width="46" height="46">
+                  <circle class="timer-circle-bg" cx="23" cy="23" r="19.5"/>
+                  <circle class="timer-circle-progress" cx="23" cy="23" r="19.5" stroke-dasharray="122.5" stroke-dashoffset="0"/>
+                </svg>
+                <div class="timer-text-overlay"><i class="fa-regular fa-clock"></i></div>
+              </div>
+              <div id="timerDigital" class="timer-digital">10:00</div>
+            </div>
+            
+            <!-- Score banner (revealed next to the timer after submission) -->
+            <div id="scoreBanner" class="score-banner" style="display: none; align-items: center; flex-direction: row; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; justify-content: center;">
+              <span class="score-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0;">Score</span>
+              <span id="scoreValue" class="score-value" style="font-size: 24px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono);">10,000</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="boardGrid" class="board-grid">
+          <!-- Grid Header (Row 0) -->
+          <div class="grid-header-cell">Aircraft</div>
+          <div class="grid-header-cell">Day 1<span class="day-date">Mon</span></div>
+          <div class="grid-header-cell">Day 2<span class="day-date">Tue</span></div>
+          <div class="grid-header-cell">Day 3<span class="day-date">Wed</span></div>
+          <div class="grid-header-cell">Day 4<span class="day-date">Thu</span></div>
+          <div class="grid-header-cell">Day 5<span class="day-date">Fri</span></div>
+
+          <!-- Rows (AC1 - AC6) and cells populated dynamically -->
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Rules / Intro Modal -->
+  <div id="rulesModal" class="modal-overlay">
+    <div class="modal-box" style="width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title"><i class="fa-solid fa-plane"></i> AeroScheduler Rules</h2>
+      </div>
+      <div class="modal-body">
+        <p>Welcome to <strong>AeroScheduler</strong>. This simulation tests your logistical efficiency, timeline logic, and spatial coordination.</p>
+        
+        <div class="inst-grid">
+          <div class="inst-card">
+            <i class="fa-solid fa-arrows-up-down" style="color: var(--color-live);"></i>
+            <div>
+              <h4 style="color: white; font-size:13px; margin-bottom:2px;">Line Swapping</h4>
+              <p style="font-size:11px;">Drag any day cell up or down to swap. Dragging also swaps <strong>every day after</strong>.</p>
+            </div>
+          </div>
+          <div class="inst-card">
+            <i class="fa-solid fa-circle-exclamation" style="color: var(--color-conflict);"></i>
+            <div>
+              <h4 style="color: white; font-size:13px; margin-bottom:2px;">Schedule Conflicts</h4>
+              <p style="font-size:11px;">Aircraft cannot depart less than 14 hours before landing the day prior. Conflicts cost <strong>-2,000 points</strong>.</p>
+            </div>
+          </div>
+          <div class="inst-card">
+            <i class="fa-solid fa-route" style="color: var(--color-repo);"></i>
+            <div>
+              <h4 style="color: white; font-size:13px; margin-bottom:2px;">Auto-Repo Flights</h4>
+              <p style="font-size:11px;">Planes landing at a different airport from their next origin trigger a blue Repo. Flight time costs points.</p>
+            </div>
+          </div>
+          <div class="inst-card">
+            <i class="fa-solid fa-stopwatch" style="color: var(--accent);"></i>
+            <div>
+              <h4 style="color: white; font-size:13px; margin-bottom:2px;">Speed Bonus</h4>
+              <p style="font-size:11px;">Submitting rewards <strong>+10 points</strong> per remaining second on the clock.</p>
+            </div>
+          </div>
+        </div>
+        
+        <p><strong>Goal:</strong> Drag and arrange the flights so that all aircraft schedules are conflict-free, and total repositioning flight time is kept as low as possible.</p>
+        
+        <div id="nameInputContainer" class="form-group" style="margin-top: 15px;">
+          <label class="form-label" for="rulesNameInput" style="font-weight:700; color: white;">Scheduler Full Name</label>
+          <input type="text" id="rulesNameInput" class="form-input" placeholder="Enter your full name to start test" required autocomplete="off">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="startTestBtn" class="btn btn-primary">Start Test</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Score Modal -->
+  <div id="submitModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title"><i class="fa-solid fa-square-poll-horizontal"></i> Submit Schedule</h2>
+        <button id="closeSubmitModalBtn" class="btn btn-secondary modal-close-btn" style="padding: 6px 12px;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p id="submitModalInstructions">Confirm your details to submit your final schedule to the operations center leaderboard:</p>
+        
+        <div class="detail-row" style="margin-top: 10px; font-size: 16px; border: 1px solid var(--border-color); padding: 16px; border-radius: 10px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between;">
+          <span>Candidate Scheduler:</span>
+          <span id="submitSchedulerName" style="font-weight: 700; color: var(--accent);">-</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelSubmitBtn" class="btn btn-secondary modal-close-btn">Resume</button>
+        <button id="saveScoreBtn" class="btn btn-primary"><i class="fa-solid fa-circle-check"></i> Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Modal -->
+  <div id="leaderboardModal" class="modal-overlay">
+    <div class="modal-box" style="width: 550px;">
+      <div class="modal-header">
+        <h2 class="modal-title"><i class="fa-solid fa-trophy"></i> Global Leaderboard</h2>
+        <button class="btn btn-secondary modal-close-btn" style="padding: 6px 12px;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- User result container (shown only after submission) -->
+        <div id="userResultContainer" style="display: none; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
+          <h3 style="color: var(--accent); font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-square-check"></i> Your Submission Result</h3>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+              <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Efficiency Score</div>
+              <div id="userResultScore" style="font-size: 22px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono); margin-top: 2px;">0</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+              <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Total Repo Time</div>
+              <div id="userResultRepoTime" style="font-size: 18px; font-weight: 700; color: white; font-family: var(--font-mono); margin-top: 4px;">0h 0m</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+              <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Time Left</div>
+              <div id="userResultTimeLeft" style="font-size: 18px; font-weight: 700; color: white; font-family: var(--font-mono); margin-top: 4px;">00:00</div>
+            </div>
+          </div>
+        </div>
+        
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th class="rank-col">Rank</th>
+              <th>Scheduler</th>
+              <th style="text-align: right;">Total Repo Time</th>
+              <th style="text-align: right;">Time Left</th>
+              <th style="text-align: right;">Score</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody">
+            <!-- Populated via Javascript -->
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button id="resetLeaderboardBtn" class="btn btn-secondary" style="margin-right: auto; font-size: 11px; padding: 6px 12px;">
+          <i class="fa-solid fa-trash-can"></i> Reset Board
+        </button>
+        <button class="btn btn-primary modal-close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="modal-overlay" style="z-index: 200; background: rgba(7, 10, 19, 0.85);">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; background: rgba(16, 22, 38, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); width: 350px;">
+      <div style="font-size: 55px; color: var(--accent); animation: flipHourglass 1.8s infinite ease-in-out; margin-bottom: 5px;">
+        <i class="fa-solid fa-hourglass-half"></i>
+      </div>
+      <h3 style="font-size: 18px; font-weight: 700; color: white;">Submitting Schedule...</h3>
+      <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">Connecting to operations center database</p>
+    </div>
+  </div>
+
+  <!-- Toast Message -->
+  <div id="toastNotification" class="toast">
+    <i id="toastIcon" class="fa-solid"></i>
+    <span id="toastMessage">Notification Message</span>
+  </div>
+
+  <!-- Interactive JavaScript Logic -->
+  <script>
+    // ----------------------------------------------------
+    // CONSTANTS & CONFIGURATION
+    // ----------------------------------------------------
+    const TOTAL_TIME = 600; // 10 minutes in seconds
+    const CRUISE_SPEED = 500; // mph
+    const BASE_SCORE = 150000;
+    const REPO_PENALTY_PER_MINUTE = 50;
+    const CONFLICT_PENALTY = 15000;
+    const ADMIN_RESET_PASSWORD = "Baker123";
+
+    // Global Database Configuration using JSONBlob API
+    const GLOBAL_DB_URL = "https://jsonblob.com/api/jsonBlob/019efa6f-f70d-7421-9112-3d2562d4b3b2";
+
+    // Airport Reference Database
+    const AIRPORTS = {
+      VNY:  { name: "Van Nuys, CA", lat: 34.2098, lon: -118.4890, tz: -8, tzName: "PST" },
+      LAX:  { name: "Los Angeles, CA", lat: 33.9416, lon: -118.4085, tz: -8, tzName: "PST" },
+      CYYZ: { name: "Toronto, Canada", lat: 43.6777, lon: -79.6248, tz: -5, tzName: "EST" },
+      MYNN: { name: "Nassau, Bahamas", lat: 25.0390, lon: -77.4662, tz: -5, tzName: "EST" },
+      TNCM: { name: "St. Maarten", lat: 18.0410, lon: -63.1090, tz: -4, tzName: "AST" },
+      SJU:  { name: "San Juan, PR", lat: 18.4394, lon: -66.0018, tz: -4, tzName: "AST" },
+      DEN:  { name: "Denver, CO", lat: 39.8561, lon: -104.6737, tz: -7, tzName: "MST" },
+      ORD:  { name: "Chicago, IL", lat: 41.9742, lon: -87.9073, tz: -6, tzName: "CST" },
+      DFW:  { name: "Dallas, TX", lat: 32.8998, lon: -97.0403, tz: -6, tzName: "CST" },
+      ATL:  { name: "Atlanta, GA", lat: 33.6407, lon: -84.4277, tz: -5, tzName: "EST" },
+      MIA:  { name: "Miami, FL", lat: 25.7959, lon: -80.2870, tz: -5, tzName: "EST" },
+      STP:  { name: "St. Paul, MN", lat: 44.9345, lon: -93.0600, tz: -6, tzName: "CST" },
+      BZN:  { name: "Bozeman, MT", lat: 45.7772, lon: -111.1530, tz: -7, tzName: "MST" },
+      BFI:  { name: "Seattle, WA", lat: 47.5300, lon: -122.3020, tz: -8, tzName: "PST" },
+      PBI:  { name: "West Palm Beach, FL", lat: 26.6832, lon: -80.0956, tz: -5, tzName: "EST" },
+      BCT:  { name: "Boca Raton, FL", lat: 26.3785, lon: -80.1077, tz: -5, tzName: "EST" },
+      PHL:  { name: "Philadelphia, PA", lat: 39.8719, lon: -75.2411, tz: -5, tzName: "EST" },
+      SNA:  { name: "Santa Ana, CA", lat: 33.6757, lon: -117.8680, tz: -8, tzName: "PST" },
+      SDL:  { name: "Scottsdale, AZ", lat: 33.6090, lon: -111.9100, tz: -7, tzName: "MST" },
+      YVR:  { name: "Vancouver, Canada", lat: 49.1967, lon: -123.1815, tz: -8, tzName: "PST" },
+      MMU:  { name: "Morristown, NJ", lat: 40.7994, lon: -74.4149, tz: -5, tzName: "EST" },
+      TEB:  { name: "Teterboro, NJ", lat: 40.8501, lon: -74.0608, tz: -5, tzName: "EST" },
+      SFO:  { name: "San Francisco, CA", lat: 37.6213, lon: -122.3790, tz: -8, tzName: "PST" },
+      CLE:  { name: "Cleveland, OH", lat: 41.4109, lon: -81.8498, tz: -5, tzName: "EST" },
+      COS:  { name: "Colorado Springs, CO", lat: 38.8058, lon: -104.7008, tz: -7, tzName: "MST" },
+      NUQ:  { name: "Moffett Field, CA", lat: 37.4167, lon: -122.0489, tz: -8, tzName: "PST" },
+      OAK:  { name: "Oakland, CA", lat: 37.7214, lon: -122.2208, tz: -8, tzName: "PST" },
+      BED:  { name: "Bedford, MA", lat: 42.4700, lon: -71.2890, tz: -5, tzName: "EST" },
+      SAT:  { name: "San Antonio, TX", lat: 29.5337, lon: -98.4698, tz: -6, tzName: "CST" }
+    };
+
+    // Airplane Metadata
+    const AIRCRAFT_METADATA = [
+      { name: "Gulfstream G650", tail: "N912GD" },
+      { name: "Challenger 350", tail: "N450CL" },
+      { name: "Citation Latitude", tail: "N780CS" },
+      { name: "Falcon 2000LXS", tail: "N805FA" },
+      { name: "Phenom 300E", tail: "N300PE" },
+      { name: "Learjet 75", tail: "N140LJ" }
+    ];
+
+    // Fixed Live Leg Pairings (27 pairings: Day 1-3 have 5 legs, Day 4-5 have 6 legs)
+    const FIXED_LIVE_LEGS = [
+      // Day 1 (index 0)
+      { id: "leg-1", from: "DEN", to: "MMU", day: 0, depTimeStr: "08:00" },
+      { id: "leg-2", from: "VNY", to: "SNA", day: 0, depTimeStr: "10:00" },
+      { id: "leg-3", from: "STP", to: "PHL", day: 0, depTimeStr: "13:00" },
+      { id: "leg-4", from: "BFI", to: "BZN", day: 0, depTimeStr: "09:00" },
+      { id: "leg-5", from: "CYYZ", to: "ORD", day: 0, depTimeStr: "11:30" },
+      { id: "leg-28", from: "LAX", to: "SDL", day: 0, depTimeStr: "12:00" },
+      // Day 2 (index 1)
+      { id: "leg-6", from: "SDL", to: "DFW", day: 1, depTimeStr: "14:00" },
+      { id: "leg-7", from: "TEB", to: "BCT", day: 1, depTimeStr: "08:30" },
+      { id: "leg-8", from: "SFO", to: "CLE", day: 1, depTimeStr: "12:00" },
+      { id: "leg-9", from: "ATL", to: "PHL", day: 1, depTimeStr: "15:00" },
+      { id: "leg-10", from: "SJU", to: "BZN", day: 1, depTimeStr: "10:00" },
+      // Day 3 (index 2)
+      { id: "leg-11", from: "DFW", to: "LAX", day: 2, depTimeStr: "13:00" },
+      { id: "leg-12", from: "ORD", to: "CYYZ", day: 2, depTimeStr: "16:00" },
+      { id: "leg-13", from: "YVR", to: "BFI", day: 2, depTimeStr: "09:00" },
+      { id: "leg-14", from: "SNA", to: "SDL", day: 2, depTimeStr: "12:30" },
+      { id: "leg-15", from: "MYNN", to: "TNCM", day: 2, depTimeStr: "15:00" },
+      // Day 4 (index 3)
+      { id: "leg-16", from: "VNY", to: "BED", day: 3, depTimeStr: "08:00" },
+      { id: "leg-17", from: "PHL", to: "SAT", day: 3, depTimeStr: "10:30" },
+      { id: "leg-18", from: "ORD", to: "STP", day: 3, depTimeStr: "13:00" },
+      { id: "leg-19", from: "BZN", to: "SDL", day: 3, depTimeStr: "15:00" },
+      { id: "leg-20", from: "NUQ", to: "TNCM", day: 3, depTimeStr: "17:30" },
+      { id: "leg-21", from: "BCT", to: "OAK", day: 3, depTimeStr: "19:00" },
+      // Day 5 (index 4)
+      { id: "leg-22", from: "MYNN", to: "MIA", day: 4, depTimeStr: "08:00" },
+      { id: "leg-23", from: "CYYZ", to: "YVR", day: 4, depTimeStr: "10:30" },
+      { id: "leg-24", from: "BFI", to: "LAX", day: 4, depTimeStr: "13:00" },
+      { id: "leg-25", from: "SNA", to: "VNY", day: 4, depTimeStr: "15:00" },
+      { id: "leg-26", from: "DFW", to: "SDL", day: 4, depTimeStr: "17:30" },
+      { id: "leg-27", from: "PHL", to: "ORD", day: 4, depTimeStr: "19:00" }
+    ];
+
+    // ----------------------------------------------------
+    // STATE VARIABLES
+    // ----------------------------------------------------
+    let grid = Array(6).fill(null).map(() => Array(5).fill(null));
+    let schedulerName = "";
+    let startingLocations = Array(6).fill("LAX");
+    let timeRemaining = TOTAL_TIME;
+    let timerInterval = null;
+    let currentScore = BASE_SCORE;
+    let totalRepoDistance = 0;
+    let totalRepoDurationMins = 0;
+    let repoFlightsCount = 0;
+    let conflictsCount = 0;
+    let dragSource = null;
+    let testCompleted = false;
+    let gameStarted = false;
+
+    // ----------------------------------------------------
+    // COOKIE & ACTIVE SESSION STORAGE HELPERS
+    // ----------------------------------------------------
+    function setCookie(name, value, days = 365) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      const expires = "; expires=" + date.toUTCString();
+      document.cookie = name + "=" + encodeURIComponent(value || "") + expires + "; path=/; SameSite=Lax";
+      
+      // Fallback: Backup in localStorage for local file:// protocols (which block cookies)
+      try {
+        localStorage.setItem(name, value);
+      } catch (e) {
+        console.error("Local storage set failed", e);
+      }
+    }
+
+    function getCookie(name) {
+      const nameEQ = name + "=";
+      const ca = document.cookie.split(';');
+      for(let i=0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length,c.length));
+      }
+      
+      // Fallback: Read from localStorage if cookies are blocked (e.g. running via file://)
+      try {
+        return localStorage.getItem(name);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function saveActiveSession() {
+      if (gameStarted && !testCompleted) {
+        const session = {
+          name: schedulerName,
+          score: currentScore,
+          repoDurationMins: totalRepoDurationMins,
+          timeRemaining: timeRemaining,
+          active: true
+        };
+        localStorage.setItem("aero_active_session", JSON.stringify(session));
+      }
+    }
+
+    function autoSubmitUnfinishedSession(session) {
+      localStorage.removeItem("aero_active_session");
+      
+      const dateStr = new Date().toLocaleDateString(undefined, {month: '2-digit', day: '2-digit', year: '2-digit'});
+      const finalScore = session.score;
+      const formattedTimeLeft = "00:00";
+      
+      let scores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
+      const count = getSubmissionCount(scores, session.name);
+      const entryName = `${session.name} #${count + 1} (Aborted)`;
+      const entry = {
+        name: entryName,
+        score: finalScore,
+        repoTime: formatDuration(session.repoDurationMins),
+        timeLeft: formattedTimeLeft,
+        date: dateStr
+      };
+      scores.push(entry);
+      scores.sort((a, b) => b.score - a.score);
+      localStorage.setItem("aero_scores", JSON.stringify(scores));
+      
+      fetch(GLOBAL_DB_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Fetch failed");
+          return response.json();
+        })
+        .then(globalScores => {
+          if (!Array.isArray(globalScores)) globalScores = [];
+          const globalCount = getSubmissionCount(globalScores, session.name);
+          const globalEntryName = `${session.name} #${globalCount + 1} (Aborted)`;
+          const globalEntry = {
+            name: globalEntryName,
+            score: finalScore,
+            repoTime: formatDuration(session.repoDurationMins),
+            timeLeft: formattedTimeLeft,
+            date: dateStr
+          };
+          globalScores.push(globalEntry);
+          globalScores.sort((a, b) => b.score - a.score);
+          
+          return fetch(GLOBAL_DB_URL, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(globalScores)
+          });
+        })
+        .then(() => {
+          showToast(`Unfinished attempt for ${session.name} logged as aborted!`, "error");
+          renderLeaderboardTable();
+        })
+        .catch(err => {
+          console.error("Global database auto-submit failed", err);
+          showToast(`Unfinished attempt for ${session.name} logged locally as aborted.`, "error");
+        });
+    }
+
+    function checkUnfinishedSession() {
+      const sessionStr = localStorage.getItem("aero_active_session");
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr);
+          if (session && session.active) {
+            autoSubmitUnfinishedSession(session);
+          }
+        } catch (e) {
+          console.error("Error processing unfinished session", e);
+        }
+      }
+    }
+
+    // ----------------------------------------------------
+    // CORE MATHEMATICAL COMPUTATIONS
+    // ----------------------------------------------------
+
+    // Haversine formula to compute distance in miles
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 3958.8; // Radius of Earth in miles
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // Initialize all live legs with pre-computed coordinates, distances, flight duration, and timezone absolute minutes.
+    function precalculateLiveLegs() {
+      FIXED_LIVE_LEGS.forEach(leg => {
+        const fromA = AIRPORTS[leg.from];
+        const toA = AIRPORTS[leg.to];
+        
+        leg.distance = Math.round(calculateDistance(fromA.lat, fromA.lon, toA.lat, toA.lon));
+        leg.durationMins = Math.round((leg.distance / CRUISE_SPEED) * 60);
+        
+        const [h, m] = leg.depTimeStr.split(":").map(Number);
+        // Absolute departure minutes local to origin airport
+        leg.depLocalMins = leg.day * 1440 + h * 60 + m;
+        // Absolute arrival minutes local to destination airport
+        const tzDiff = toA.tz - fromA.tz;
+        leg.arrLocalMins = leg.depLocalMins + leg.durationMins + tzDiff * 60;
+        
+        leg.tzFrom = fromA.tzName;
+        leg.tzTo = toA.tzName;
+      });
+    }
+
+    // ----------------------------------------------------
+    // INITIALIZATION & RANDOMIZER
+    // ----------------------------------------------------
+    function initGame(isReplay = false) {
+      // Check for unfinished active session from reload or closing
+      checkUnfinishedSession();
+      
+      // Load name from cookie if available
+      const savedName = getCookie("aero_scheduler_name");
+      if (savedName) {
+        schedulerName = savedName;
+      }
+      
+      precalculateLiveLegs();
+      
+      // Randomly allocate fixed legs to different rows (aircraft) on their scheduled day.
+      for (let day = 0; day < 5; day++) {
+        const dayLegs = FIXED_LIVE_LEGS.filter(l => l.day === day);
+        // Create an array of row indexes [0..5] and shuffle it
+        const aircraftIndices = [0, 1, 2, 3, 4, 5];
+        shuffleArray(aircraftIndices);
+        
+        // Allocate the 3 legs to the first 3 randomized aircraft rows
+        for (let i = 0; i < dayLegs.length; i++) {
+          const rowIdx = aircraftIndices[i];
+          grid[rowIdx][day] = dayLegs[i];
+        }
+      }
+
+      // Initialize airplane starting locations based on Day 1 flight origins
+      for (let r = 0; r < 6; r++) {
+        if (grid[r][0]) {
+          startingLocations[r] = grid[r][0].from;
+        } else {
+          startingLocations[r] = "LAX"; // Default starting base for the plane idle on Day 1
+        }
+      }
+
+      setupGridDOM();
+      updateSchedules();
+      
+      if (isReplay === true) {
+        startTimer();
+        showToast(`Welcome back, ${schedulerName}. Test started!`, "success");
+      } else {
+        if (schedulerName) {
+          document.getElementById("rulesNameInput").value = schedulerName;
+          document.getElementById("nameInputContainer").style.display = "none";
+          document.getElementById("startTestBtn").innerText = gameStarted ? "Resume" : "Start Test";
+        } else {
+          document.getElementById("nameInputContainer").style.display = "flex";
+          document.getElementById("startTestBtn").innerText = "Start Test";
+        }
+        openModal("rulesModal");
+      }
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    // ----------------------------------------------------
+    // SCHEDULING ENGINE (CALCULATIONS & VALIDATIONS)
+    // ----------------------------------------------------
+    
+    // Computes entire operational schedule for all 6 aircraft, generates repos, flags conflicts, and scores.
+    function updateSchedules() {
+      totalRepoDistance = 0;
+      totalRepoDurationMins = 0;
+      repoFlightsCount = 0;
+      conflictsCount = 0;
+
+      // Reset conflict flags on all fixed live legs
+      FIXED_LIVE_LEGS.forEach(leg => {
+        leg.hasConflict = false;
+        leg.conflictReason = "";
+      });
+
+      // We will generate computed layout schedules for each row
+      const computedSchedules = Array(6).fill(null).map(() => []);
+
+      for (let r = 0; r < 6; r++) {
+        // Collect active live legs in chronological order (columns 0 to 4)
+        const activeLegs = [];
+        for (let c = 0; c < 5; c++) {
+          if (grid[r][c]) {
+            activeLegs.push(grid[r][c]);
+          }
+        }
+
+        const events = [];
+        const startLoc = startingLocations[r];
+
+        if (activeLegs.length > 0) {
+          const firstLeg = activeLegs[0];
+          
+          // Check if starting repo is needed
+          if (startLoc !== firstLeg.from) {
+            const depRepo = 0; // Starts at Day 1 00:00 local time
+            const dist = Math.round(calculateDistance(AIRPORTS[startLoc].lat, AIRPORTS[startLoc].lon, AIRPORTS[firstLeg.from].lat, AIRPORTS[firstLeg.from].lon));
+            const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
+            const tzDiff = AIRPORTS[firstLeg.from].tz - AIRPORTS[startLoc].tz;
+            const arrRepo = depRepo + durationMins + tzDiff * 60;
+            
+            const hasConflict = arrRepo > firstLeg.depLocalMins;
+            
+            events.push({
+              type: "repo",
+              from: startLoc,
+              to: firstLeg.from,
+              distance: dist,
+              durationMins: durationMins,
+              depLocalMins: depRepo,
+              arrLocalMins: arrRepo,
+              tzFrom: AIRPORTS[startLoc].tzName,
+              tzTo: AIRPORTS[firstLeg.from].tzName,
+              hasConflict: hasConflict,
+              displayDay: 0 // Display on Day 1
+            });
+            
+            totalRepoDistance += dist;
+            totalRepoDurationMins += durationMins;
+            repoFlightsCount++;
+            
+            if (hasConflict) {
+              conflictsCount++;
+              firstLeg.hasConflict = true;
+              firstLeg.conflictReason = `Plane starts at ${startLoc}. Reposition flight lands at ${formatMinutesToTimeString(arrRepo)} ${AIRPORTS[firstLeg.from].tzName}, but first flight departs at ${firstLeg.depTimeStr}.`;
+            }
+          }
+
+          // Add first live leg
+          events.push({
+            type: "live",
+            legRef: firstLeg,
+            displayDay: firstLeg.day
+          });
+
+          // Compute relations, repos, and conflicts for subsequent legs
+          for (let i = 0; i < activeLegs.length - 1; i++) {
+            const legA = activeLegs[i];
+            const legB = activeLegs[i+1];
+            
+            const destA = legA.to;
+            const origB = legB.from;
+
+            if (destA !== origB) {
+              // Need Repo Flight
+              const depRepo = legA.arrLocalMins + 60; // 1 hour after arrival of leg A
+              const dist = Math.round(calculateDistance(AIRPORTS[destA].lat, AIRPORTS[destA].lon, AIRPORTS[origB].lat, AIRPORTS[origB].lon));
+              const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
+              
+              const tzDiff = AIRPORTS[origB].tz - AIRPORTS[destA].tz;
+              const arrRepo = depRepo + durationMins + tzDiff * 60;
+
+              // Check if repo arrival overlaps with leg B departure (physical conflict)
+              let hasConflict = arrRepo > legB.depLocalMins;
+              let conflictReason = "";
+              
+              if (hasConflict) {
+                conflictReason = `Reposition flight lands at ${formatMinutesToTimeString(arrRepo)} ${AIRPORTS[origB].tzName}, but next flight departs early at ${legB.depTimeStr}.`;
+              } else {
+                // Check for 14-hour ground time (840 minutes) gap between passenger flights
+                const tzDiffAB = AIRPORTS[origB].tz - AIRPORTS[destA].tz;
+                const arrAInBTime = legA.arrLocalMins + tzDiffAB * 60;
+                const gapMins = legB.depLocalMins - arrAInBTime;
+                if (gapMins < 840) {
+                  hasConflict = true;
+                  conflictReason = `Insufficient ground time! Only ${formatDuration(gapMins)} between landing and next takeoff (must allow at least 14 hours).`;
+                }
+              }
+              
+              const repoEvent = {
+                type: "repo",
+                from: destA,
+                to: origB,
+                distance: dist,
+                durationMins: durationMins,
+                depLocalMins: depRepo,
+                arrLocalMins: arrRepo,
+                tzFrom: AIRPORTS[destA].tzName,
+                tzTo: AIRPORTS[origB].tzName,
+                hasConflict: hasConflict,
+                // Assign display cell: if back-to-back, assign to legA.day (after legA), else assign to legA.day + 1 (blank day)
+                displayDay: (legB.day === legA.day + 1) ? legA.day : (legA.day + 1)
+              };
+
+              events.push(repoEvent);
+              totalRepoDistance += dist;
+              totalRepoDurationMins += durationMins;
+              repoFlightsCount++;
+
+              if (hasConflict) {
+                conflictsCount++;
+                legB.hasConflict = true;
+                legB.conflictReason = conflictReason;
+              }
+            } else {
+              // Same airport - verify plane has enough ground time (14 hours)
+              let hasConflict = legA.arrLocalMins > legB.depLocalMins;
+              let conflictReason = "";
+              
+              if (hasConflict) {
+                conflictReason = `Overlapping flight timing! Previous flight lands at ${formatMinutesToTimeString(legA.arrLocalMins)} ${AIRPORTS[destA].tzName}, but next flight departs at ${legB.depTimeStr}.`;
+              } else {
+                const gapMins = legB.depLocalMins - legA.arrLocalMins;
+                if (gapMins < 840) {
+                  hasConflict = true;
+                  conflictReason = `Insufficient ground time! Only ${formatDuration(gapMins)} between landing at ${AIRPORTS[destA].tzName} and next departure (must allow at least 14 hours).`;
+                }
+              }
+              
+              if (hasConflict) {
+                conflictsCount++;
+                legB.hasConflict = true;
+                legB.conflictReason = conflictReason;
+              }
+            }
+
+            events.push({
+              type: "live",
+              legRef: legB,
+              displayDay: legB.day
+            });
+          }
+        }
+
+        // Store computed events to render
+        computedSchedules[r] = events;
+      }
+
+      // Compute score
+      const repoPenalty = totalRepoDurationMins * REPO_PENALTY_PER_MINUTE;
+      const conflictPenalty = conflictsCount * CONFLICT_PENALTY;
+      let score = BASE_SCORE - repoPenalty - conflictPenalty;
+      if (testCompleted) {
+        score += timeRemaining * 10;
+      }
+      currentScore = Math.max(0, score);
+
+      // Update Dashboard UI Elements
+      document.getElementById("scoreValue").innerText = currentScore.toLocaleString();
+      document.getElementById("scoreValue").className = conflictsCount > 0 ? "score-value has-conflict" : "score-value";
+
+      saveActiveSession();
+
+      renderGridContents(computedSchedules);
+    }
+
+    // Helper: Formats absolute day-offset minutes into digital clock string
+    function formatMinutesToTimeString(absMins) {
+      const minutesInDay = ((absMins % 1440) + 1440) % 1440;
+      const hrs = Math.floor(minutesInDay / 60);
+      const mins = Math.floor(minutesInDay % 60);
+      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    }
+
+    // Helper: Formats duration hours & mins
+    function formatDuration(mins) {
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      if (h === 0) return `${m}m`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
+    }
+
+    // Helper: Computes visual day offset text
+    function getDayOffsetText(depAbs, arrAbs) {
+      const depDay = Math.floor(depAbs / 1440);
+      const arrDay = Math.floor(arrAbs / 1440);
+      const diff = arrDay - depDay;
+      return diff > 0 ? ` (+${diff}d)` : "";
+    }
+
+    // ----------------------------------------------------
+    // DOM GENERATION & RENDERING
+    // ----------------------------------------------------
+
+
+
+    function setupGridDOM() {
+      const gridContainer = document.getElementById("boardGrid");
+      
+      // Clear existing grid rows (keep row headers)
+      const cellsToRemove = gridContainer.querySelectorAll(".grid-row-header, .grid-cell");
+      cellsToRemove.forEach(c => c.remove());
+
+      for (let r = 0; r < 6; r++) {
+        // Create row header cell
+        const rowHeader = document.createElement("div");
+        rowHeader.className = "grid-row-header";
+        rowHeader.innerHTML = `
+          <div class="aircraft-title" style="font-size: 16px; justify-content: center; gap: 8px;">
+            <i class="fa-solid fa-plane"></i>
+            <span>Airplane #${r+1}</span>
+          </div>
+          <div style="font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 4px;">
+            Starts at: <strong style="color: var(--accent);">${startingLocations[r]}</strong>
+          </div>
+        `;
+        gridContainer.appendChild(rowHeader);
+
+        // Create 5 day cells for this row
+        for (let c = 0; c < 5; c++) {
+          const cell = document.createElement("div");
+          cell.className = "grid-cell";
+          if (c === 0) {
+            cell.classList.add("grid-cell-locked");
+            cell.draggable = false;
+          } else {
+            cell.draggable = true;
+          }
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+
+          // Drag-and-drop event listeners on each cell
+          cell.addEventListener("dragstart", handleDragStart);
+          cell.addEventListener("dragover", handleDragOver);
+          cell.addEventListener("dragenter", handleDragEnter);
+          cell.addEventListener("dragleave", handleDragLeave);
+          cell.addEventListener("drop", handleDrop);
+          cell.addEventListener("dragend", handleDragEnd);
+
+          gridContainer.appendChild(cell);
+        }
+      }
+    }
+
+    // Populate each grid cell dynamically with computed events
+    function renderGridContents(schedules) {
+      for (let r = 0; r < 6; r++) {
+        for (let c = 0; c < 5; c++) {
+          const cell = document.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
+          if (!cell) continue;
+
+          cell.innerHTML = "";
+          cell.classList.remove("has-conflict-border");
+
+          // Find events assigned to this (row, day) cell
+          const cellEvents = schedules[r].filter(ev => ev.displayDay === c);
+
+          if (cellEvents.length > 0) {
+            cellEvents.forEach(ev => {
+              if (ev.type === "live") {
+                const leg = ev.legRef;
+                const card = document.createElement("div");
+                card.className = "leg-card leg-card-live";
+                
+                // Lock icon if on Day 1
+                const lockMarkup = (c === 0) ? `<i class="fa-solid fa-lock" style="font-size:10px; margin-right:4px; opacity:0.7;"></i>` : ``;
+                
+                // Details of live leg
+                card.innerHTML = `
+                  <div class="leg-route">
+                    <span>${leg.from}</span>
+                    <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
+                    <span>${leg.to}</span>
+                  </div>
+                  <div class="leg-times">
+                    <span>DEP: ${formatMinutesToTimeString(leg.depLocalMins)} ${leg.tzFrom}</span>
+                    <span>ARR: ${formatMinutesToTimeString(leg.arrLocalMins)}${getDayOffsetText(leg.depLocalMins, leg.arrLocalMins)} ${leg.tzTo}</span>
+                  </div>
+                  <div class="leg-meta">
+                    <span>${lockMarkup}PAX Flight</span>
+                    <span class="leg-duration">${formatDuration(leg.durationMins)}</span>
+                  </div>
+                `;
+
+                // If conflict flag exists
+                if (leg.hasConflict && testCompleted) {
+                  cell.classList.add("has-conflict-border");
+                  const badge = document.createElement("div");
+                  badge.className = "conflict-badge";
+                  badge.title = leg.conflictReason;
+                  badge.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Conflict`;
+                  card.appendChild(badge);
+                }
+
+                cell.appendChild(card);
+              } 
+              else if (ev.type === "repo") {
+                const card = document.createElement("div");
+                card.className = "leg-card leg-card-repo";
+                
+                card.innerHTML = `
+                  <div class="leg-route">
+                    <span>${ev.from}</span>
+                    <span class="leg-arrow">→</span>
+                    <span>${ev.to}</span>
+                  </div>
+                  <div class="leg-times">
+                    <span>DEP: ${formatMinutesToTimeString(ev.depLocalMins)} ${ev.tzFrom}</span>
+                    <span>ARR: ${formatMinutesToTimeString(ev.arrLocalMins)}${getDayOffsetText(ev.depLocalMins, ev.arrLocalMins)} ${ev.tzTo}</span>
+                  </div>
+                  <div class="leg-meta">
+                    <span>REPO Flight</span>
+                    <span class="leg-duration">${formatDuration(ev.durationMins)}</span>
+                  </div>
+                `;
+
+                // No conflict highlighting on the repo flight cell itself
+
+                cell.appendChild(card);
+              }
+            });
+          } else {
+            // Render an Idle Placeholder Card
+            const activeLegs = [];
+            for (let day = 0; day < 5; day++) {
+              if (grid[r][day]) activeLegs.push(grid[r][day]);
+            }
+            
+            const idleLoc = getAircraftLocationAtDay(r, c, activeLegs);
+            const card = document.createElement("div");
+            card.className = "leg-card leg-card-idle";
+            card.innerHTML = `
+              <i class="fa-solid fa-bed" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
+              <div style="font-weight: 500; font-size: 11px;">Idle at ${idleLoc}</div>
+            `;
+            cell.appendChild(card);
+          }
+        }
+      }
+    }
+
+    // Resolves plane position during idle blank columns
+    function getAircraftLocationAtDay(r, d, activeLegs) {
+      if (activeLegs.length === 0) {
+        return startingLocations[r]; // Default home airport base
+      }
+
+      // Find last flight before or on day d
+      let lastLeg = null;
+      for (let leg of activeLegs) {
+        if (leg.day <= d) {
+          lastLeg = leg;
+        } else {
+          break;
+        }
+      }
+
+      if (lastLeg) {
+        // Trace if a repo was generated after it
+        const idx = activeLegs.indexOf(lastLeg);
+        if (idx < activeLegs.length - 1) {
+          const nextLeg = activeLegs[idx + 1];
+          if (lastLeg.to !== nextLeg.from) {
+            // A repo occurred. If the repo finishes before Day D starts, plane is at nextLeg.from
+            const depRepo = lastLeg.arrLocalMins + 60;
+            const dist = calculateDistance(AIRPORTS[lastLeg.to].lat, AIRPORTS[lastLeg.to].lon, AIRPORTS[nextLeg.from].lat, AIRPORTS[nextLeg.from].lon);
+            const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
+            const tzDiff = AIRPORTS[nextLeg.from].tz - AIRPORTS[lastLeg.to].tz;
+            const arrRepo = depRepo + durationMins + tzDiff * 60;
+
+            const startOfDayD = d * 1440;
+            if (arrRepo <= startOfDayD) {
+              return nextLeg.from;
+            }
+          }
+        }
+        return lastLeg.to;
+      } else {
+        // No flight has occurred yet. Plane must be waiting at origin of first scheduled flight
+        return activeLegs[0].from;
+      }
+    }
+
+    // ----------------------------------------------------
+    // DRAG AND DROP SWAPPING LOGIC
+    // ----------------------------------------------------
+    function handleDragStart(e) {
+      if (testCompleted) {
+        e.preventDefault();
+        return;
+      }
+      
+      const r = parseInt(this.dataset.row);
+      const c = parseInt(this.dataset.col);
+      
+      if (c === 0) {
+        e.preventDefault();
+        return;
+      }
+      
+      dragSource = { row: r, col: c };
+      
+      // Highlight the whole suffix (cols c to 4) of this row as source
+      for (let col = c; col < 5; col++) {
+        const cell = document.querySelector(`.grid-cell[data-row="${r}"][data-col="${col}"]`);
+        if (cell) cell.classList.add("drag-source-highlight");
+      }
+      
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", `${r},${c}`);
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      return false;
+    }
+
+    function handleDragEnter(e) {
+      if (!dragSource) return;
+      
+      const targetRow = parseInt(this.dataset.row);
+      const startCol = dragSource.col;
+      
+      // Clear target highlights
+      clearDragTargetHighlights();
+
+      // Highlight the matching suffix cells in the target row
+      for (let col = startCol; col < 5; col++) {
+        const cell = document.querySelector(`.grid-cell[data-row="${targetRow}"][data-col="${col}"]`);
+        if (cell) cell.classList.add("drag-target-highlight");
+      }
+    }
+
+    function handleDragLeave(e) {
+      // Highlights are updated in DragEnter of another cell or cleared on drag end
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      if (!dragSource) return;
+
+      const targetRow = parseInt(this.dataset.row);
+      const startCol = dragSource.col;
+      const sourceRow = dragSource.row;
+
+      if (sourceRow !== targetRow) {
+        // Swap all cells in column suffix (startCol to 4) between sourceRow and targetRow
+        for (let col = startCol; col < 5; col++) {
+          const temp = grid[sourceRow][col];
+          grid[sourceRow][col] = grid[targetRow][col];
+          grid[targetRow][col] = temp;
+        }
+
+        // Recalculate and re-render
+        updateSchedules();
+      }
+
+      cleanupDragState();
+    }
+
+    function handleDragEnd(e) {
+      cleanupDragState();
+    }
+
+    function cleanupDragState() {
+      // Remove all source highlights
+      document.querySelectorAll(".grid-cell").forEach(cell => {
+        cell.classList.remove("drag-source-highlight");
+        cell.classList.remove("drag-target-highlight");
+      });
+      dragSource = null;
+    }
+
+    function clearDragTargetHighlights() {
+      document.querySelectorAll(".grid-cell").forEach(cell => {
+        cell.classList.remove("drag-target-highlight");
+      });
+    }
+
+    // ----------------------------------------------------
+    // COUNTDOWN TIMER LOGIC
+    // ----------------------------------------------------
+    function updateTimerDisplay(secs) {
+      const display = document.getElementById("timerDigital");
+      const progressCircle = document.querySelector(".timer-circle-progress");
+      const iconOverlay = document.querySelector(".timer-text-overlay");
+      
+      const totalCircumference = 122.5; // 2 * PI * r (19.5)
+      const offset = totalCircumference - (secs / TOTAL_TIME) * totalCircumference;
+      progressCircle.style.strokeDashoffset = offset;
+
+      // Digital format
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      display.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+      // Dynamic color interpolation (white -> yellow -> orange -> red)
+      const ratio = secs / TOTAL_TIME;
+      let color;
+      if (ratio > 0.75) {
+        const t = (1.0 - ratio) / 0.25; // 0 to 1
+        const sat = Math.round(t * 100);
+        const light = Math.round(100 - t * 30); // 100% down to 70%
+        color = `hsl(60, ${sat}%, ${light}%)`;
+      } else {
+        const t = ratio / 0.75; // 1 down to 0
+        const hue = Math.round(t * 60); // 60 down to 0
+        const light = 70 - (1 - t) * 15; // 70% down to 55%
+        color = `hsl(${hue}, 100%, ${light}%)`;
+      }
+
+      display.style.color = color;
+      progressCircle.style.stroke = color;
+      if (iconOverlay) iconOverlay.style.color = color;
+
+      // Add/remove warning animation below 2 minutes (120s)
+      if (secs <= 120) {
+        display.classList.add("warning");
+      } else {
+        display.classList.remove("warning");
+      }
+
+      // Add/remove urgent blinking animation below 1 minute (60s)
+      if (secs <= 60) {
+        display.classList.add("urgent");
+      } else {
+        display.classList.remove("urgent");
+      }
+    }
+
+    function startTimer() {
+      // Set initial clock state
+      updateTimerDisplay(timeRemaining);
+      
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        updateTimerDisplay(timeRemaining);
+
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          handleTimesUp();
+        }
+      }, 1000);
+    }
+
+    function handleTimesUp() {
+      testCompleted = true;
+      updateSchedules();
+      showToast("Time's Up! Test concluded.", "error");
+      
+      // Lock drag & drops
+      document.querySelectorAll(".grid-cell").forEach(cell => {
+        cell.draggable = false;
+      });
+
+      openSubmitModal();
+    }
+
+    // ----------------------------------------------------
+    // MODALS & NAVIGATION ACTIONS
+    // ----------------------------------------------------
+    function openModal(id) {
+      document.getElementById(id).classList.add("active");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("active");
+    }
+
+    // Setup modal closing behavior for close buttons
+    document.querySelectorAll(".modal-close-btn").forEach(btn => {
+      btn.addEventListener("click", function() {
+        const modal = this.closest(".modal-overlay");
+        if (modal && modal.id !== "rulesModal") modal.classList.remove("active");
+      });
+    });
+
+    // Start Test Action
+    document.getElementById("startTestBtn").addEventListener("click", () => {
+      if (gameStarted) {
+        closeModal("rulesModal");
+        return;
+      }
+      if (schedulerName) {
+        gameStarted = true;
+        setCookie("aero_scheduler_name", schedulerName);
+        saveActiveSession();
+        closeModal("rulesModal");
+        startTimer();
+        showToast(`Welcome back, ${schedulerName}. Test started!`, "success");
+        return;
+      }
+      const nameVal = document.getElementById("rulesNameInput").value.trim();
+      if (!nameVal) {
+        showToast("Please enter your name to start the test.", "error");
+        return;
+      }
+      schedulerName = nameVal;
+      setCookie("aero_scheduler_name", schedulerName);
+      gameStarted = true;
+      saveActiveSession();
+      closeModal("rulesModal");
+      startTimer();
+      showToast(`Welcome, ${schedulerName}. Test started!`, "success");
+    });
+
+    document.getElementById("rulesBtn").addEventListener("click", () => {
+      if (schedulerName) {
+        document.getElementById("rulesNameInput").value = schedulerName;
+        document.getElementById("nameInputContainer").style.display = "none";
+        document.getElementById("startTestBtn").innerText = gameStarted ? "Resume" : "Start Test";
+      } else {
+        document.getElementById("nameInputContainer").style.display = "flex";
+        document.getElementById("startTestBtn").innerText = "Start Test";
+      }
+      openModal("rulesModal");
+    });
+    
+    document.getElementById("leaderboardBtn").addEventListener("click", () => {
+      renderLeaderboardTable();
+      openModal("leaderboardModal");
+    });
+    
+    document.getElementById("submitBtn").addEventListener("click", () => {
+      if (testCompleted) {
+        resetGame();
+      } else {
+        openSubmitModal();
+      }
+    });
+
+    function openSubmitModal() {
+      document.getElementById("submitSchedulerName").innerText = schedulerName;
+      const inst = document.getElementById("submitModalInstructions");
+      const cancelBtn = document.getElementById("cancelSubmitBtn");
+      const closeHeaderBtn = document.getElementById("closeSubmitModalBtn");
+      
+      if (timeRemaining <= 0) {
+        inst.innerHTML = `<span style="color: var(--color-conflict); font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-triangle-exclamation"></i> Time is up!</span> Please submit your final schedule to the operations center leaderboard:`;
+        if (cancelBtn) cancelBtn.style.display = "none";
+        if (closeHeaderBtn) closeHeaderBtn.style.display = "none";
+      } else {
+        inst.innerText = "Confirm your details to submit your final schedule to the operations center leaderboard:";
+        if (cancelBtn) cancelBtn.style.display = "flex";
+        if (closeHeaderBtn) closeHeaderBtn.style.display = "flex";
+      }
+      openModal("submitModal");
+    }
+
+    function getSubmissionCount(scoresList, baseName) {
+      if (!Array.isArray(scoresList)) return 0;
+      let count = 0;
+      const lowerBase = baseName.toLowerCase().trim();
+      scoresList.forEach(item => {
+        if (!item || !item.name) return;
+        const parts = item.name.split(" #");
+        const itemBaseName = parts[0].toLowerCase().trim();
+        if (itemBaseName === lowerBase) {
+          count++;
+        }
+      });
+      return count;
+    }
+
+    function resetGame() {
+      clearInterval(timerInterval);
+      timeRemaining = TOTAL_TIME;
+      testCompleted = false;
+      gameStarted = false;
+      localStorage.removeItem("aero_active_session");
+      updateTimerDisplay(timeRemaining);
+      
+      // Hide score banner
+      document.getElementById("scoreBanner").style.display = "none";
+      
+      // Restore Submit button state
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Submit Schedule`;
+      submitBtn.className = "btn btn-primary";
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      
+      // Re-shuffle and initialize
+      grid = Array(6).fill(null).map(() => Array(5).fill(null));
+      initGame(false);
+    }
+
+    document.getElementById("saveScoreBtn").addEventListener("click", () => {
+      if (!schedulerName) {
+        showToast("Please enter your name to log score.", "error");
+        return;
+      }
+
+      const repoPenalty = totalRepoDurationMins * REPO_PENALTY_PER_MINUTE;
+      const conflictPenalty = conflictsCount * CONFLICT_PENALTY;
+      const timeBonus = timeRemaining * 10;
+      const finalScore = Math.max(0, BASE_SCORE - repoPenalty - conflictPenalty + timeBonus);
+
+      const formatTimeLeft = () => {
+        const m = Math.floor(timeRemaining / 60);
+        const s = timeRemaining % 60;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      };
+
+      const dateStr = new Date().toLocaleDateString(undefined, {month: '2-digit', day: '2-digit', year: '2-digit'});
+
+      // Helper function to log score locally
+      const saveLocalScore = () => {
+        let scores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
+        const count = getSubmissionCount(scores, schedulerName);
+        const entryName = `${schedulerName} #${count + 1}`;
+        const entry = {
+          name: entryName,
+          score: finalScore,
+          repoTime: formatDuration(totalRepoDurationMins),
+          timeLeft: formatTimeLeft(),
+          date: dateStr
+        };
+        scores.push(entry);
+        scores.sort((a, b) => b.score - a.score);
+        localStorage.setItem("aero_scores", JSON.stringify(scores));
+        finalizeSubmission(entry);
+      };
+
+      // Helper function to finish UI flow
+      const finalizeSubmission = (entry) => {
+        postMockSlackWebhook(entry);
+        closeModal("submitModal");
+        
+        // Clear active session record upon successful submission
+        localStorage.removeItem("aero_active_session");
+        
+        // Show result banner on the leaderboard modal
+        document.getElementById("userResultScore").innerText = entry.score.toLocaleString();
+        document.getElementById("userResultRepoTime").innerText = entry.repoTime;
+        document.getElementById("userResultTimeLeft").innerText = entry.timeLeft;
+        document.getElementById("userResultContainer").style.display = "block";
+        
+        // Reveal score next to the timer in the top bar
+        document.getElementById("scoreBanner").style.display = "flex";
+        
+        renderLeaderboardTable();
+        openModal("leaderboardModal");
+
+        testCompleted = true;
+        clearInterval(timerInterval);
+        updateSchedules();
+        
+        // Change submit button to Try Again button
+        const submitBtn = document.getElementById("submitBtn");
+        submitBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Try Again`;
+        submitBtn.className = "btn btn-primary";
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = 1;
+        
+        showToast(`Score logged for ${schedulerName}!`, "success");
+      };
+
+      // Show loading overlay
+      openModal("loadingOverlay");
+
+      // Save to global database via API
+      fetch(GLOBAL_DB_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Database fetch failed");
+          return response.json();
+        })
+        .then(scores => {
+          if (!Array.isArray(scores)) {
+            scores = [];
+          }
+          const count = getSubmissionCount(scores, schedulerName);
+          const entryName = `${schedulerName} #${count + 1}`;
+          const entry = {
+            name: entryName,
+            score: finalScore,
+            repoTime: formatDuration(totalRepoDurationMins),
+            timeLeft: formatTimeLeft(),
+            date: dateStr
+          };
+          scores.push(entry);
+          scores.sort((a, b) => b.score - a.score);
+          
+          return fetch(GLOBAL_DB_URL, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(scores)
+          }).then(response => {
+            if (!response.ok) throw new Error("Database update failed");
+            closeModal("loadingOverlay");
+            finalizeSubmission(entry);
+          });
+        })
+        .catch(err => {
+          console.error("Global database save failed, falling back to local storage.", err);
+          closeModal("loadingOverlay");
+          saveLocalScore();
+        });
+    });
+
+    function populateTable(scores) {
+      const tbody = document.getElementById("leaderboardBody");
+      tbody.innerHTML = "";
+      
+      if (!scores || scores.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color: var(--text-muted); font-style: italic; padding: 20px;'>No scores logged yet. Be the first!</td></tr>";
+        return;
+      }
+      
+      scores.forEach((entry, idx) => {
+        const tr = document.createElement("tr");
+        let rankDisplay = idx + 1;
+        if (idx === 0) rankDisplay = `<i class="fa-solid fa-trophy"></i>`;
+        else if (idx === 1 || idx === 2) rankDisplay = `<i class="fa-solid fa-medal"></i>`;
+
+        tr.innerHTML = `
+          <td class="rank-col">${rankDisplay}</td>
+          <td style="font-weight:600; color:white;">${entry.name}</td>
+          <td style="text-align: right; font-family: var(--font-mono);">${entry.repoTime || formatDuration(Math.round((entry.distance || 0) / CRUISE_SPEED * 60))}</td>
+          <td style="text-align: right; font-family: var(--font-mono);">${entry.timeLeft}</td>
+          <td style="text-align: right;" class="score-col">${entry.score.toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderLocalLeaderboardTable() {
+      let scores = JSON.parse(localStorage.getItem("aero_scores"));
+      if (!scores) {
+        scores = [];
+        localStorage.setItem("aero_scores", JSON.stringify(scores));
+      }
+      populateTable(scores);
+    }
+
+    function renderLeaderboardTable() {
+      const tbody = document.getElementById("leaderboardBody");
+      tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px;'>Loading global scores...</td></tr>";
+
+      fetch(GLOBAL_DB_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Database fetch failed");
+          return response.json();
+        })
+        .then(scores => {
+          if (!Array.isArray(scores)) {
+            scores = [];
+          }
+          scores.sort((a, b) => b.score - a.score);
+          populateTable(scores);
+        })
+        .catch(err => {
+          console.error("Global database load failed, falling back to local storage.", err);
+          renderLocalLeaderboardTable();
+        });
+    }
+
+    document.getElementById("resetLeaderboardBtn").addEventListener("click", () => {
+      const password = prompt("Enter Administrator Password to reset the leaderboard:");
+      if (password === null) return;
+      
+      if (password === ADMIN_RESET_PASSWORD) {
+        if (confirm("Are you sure you want to reset the leaderboard? All saved scores will be permanently deleted.")) {
+          const resetLocal = () => {
+            localStorage.setItem("aero_scores", JSON.stringify([]));
+            document.getElementById("userResultContainer").style.display = "none";
+            renderLeaderboardTable();
+            showToast("Local Leaderboard Reset Successful.", "success");
+          };
+
+          fetch(GLOBAL_DB_URL, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify([])
+          })
+          .then(response => {
+            if (!response.ok) throw new Error("Database reset failed");
+            document.getElementById("userResultContainer").style.display = "none";
+            showToast("Global Leaderboard Reset Successful.", "success");
+            renderLeaderboardTable();
+          })
+          .catch(err => {
+            console.error("Global database reset failed, doing local reset.", err);
+            resetLocal();
+          });
+        }
+      } else {
+        showToast("Access Denied: Invalid Password.", "error");
+      }
+    });
+
+    // ----------------------------------------------------
+    // TOAST NOTIFICATIONS
+    // ----------------------------------------------------
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toastNotification");
+      const icon = document.getElementById("toastIcon");
+      const text = document.getElementById("toastMessage");
+
+      text.innerText = message;
+      toast.className = `toast toast-${type} active`;
+
+      if (type === "success") {
+        icon.className = "fa-solid fa-circle-check";
+        icon.style.color = "var(--color-live)";
+      } else {
+        icon.className = "fa-solid fa-circle-exclamation";
+        icon.style.color = "var(--color-conflict)";
+      }
+
+      setTimeout(() => {
+        toast.classList.remove("active");
+      }, 3500);
+    }
+
+    // ----------------------------------------------------
+    // MOCK SLACK INTEGRATION
+    // ----------------------------------------------------
+    function postMockSlackWebhook(entry) {
+      const mockPayload = {
+        text: `📊 *AeroScheduler Operations Result* 📊\n*Scheduler Name:* ${entry.name}\n*Efficiency Score:* ${entry.score.toLocaleString()} points\n*Total Repositioning Time:* ${entry.repoTime || formatDuration(Math.round((entry.distance || 0) / CRUISE_SPEED * 60))}\n*Remaining Time:* ${entry.timeLeft}\n*Date Recorded:* ${entry.date}\n*Operational Rating:* ${entry.score >= 9000 ? '🥇 Master Dispatcher' : entry.score >= 7500 ? '🥈 Senior Planner' : '🥉 Operational Trainee'}`
+      };
+
+      console.log("---------------- MOCK SLACK WEBHOOK SUBMISSION ----------------");
+      console.log("POST https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX");
+      console.log("Headers: { 'Content-type': 'application/json' }");
+      console.log("Payload:", JSON.stringify(mockPayload, null, 2));
+      console.log("---------------------------------------------------------------");
+    }
+
+    // Initialize Web App on Load
+    window.onload = () => initGame(false);
+  </script>
+</body>
+</html>
