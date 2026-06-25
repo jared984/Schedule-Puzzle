@@ -473,17 +473,9 @@
       overflow: hidden;
     }
 
-    .grid-cell[draggable="true"] {
-      cursor: grab;
-    }
-
-    .grid-cell[draggable="true"]:hover {
+    .grid-cell:not(.grid-cell-locked):hover {
       background: var(--bg-card-hover);
       border-color: rgba(255, 255, 255, 0.12);
-    }
-
-    .grid-cell[draggable="true"]:active {
-      cursor: grabbing;
     }
 
     .grid-cell.grid-cell-locked {
@@ -531,6 +523,14 @@
     .leg-card-live {
       background: var(--color-live-gradient);
       color: white;
+    }
+
+    .leg-card-live[draggable="true"] {
+      cursor: grab;
+    }
+
+    .leg-card-live[draggable="true"]:active {
+      cursor: grabbing;
     }
 
     .leg-card-repo {
@@ -1735,20 +1735,16 @@
           cell.className = "grid-cell";
           if (c === 0) {
             cell.classList.add("grid-cell-locked");
-            cell.draggable = false;
-          } else {
-            cell.draggable = true;
           }
+          cell.draggable = false;
           cell.dataset.row = r;
           cell.dataset.col = c;
 
-          // Drag-and-drop event listeners on each cell
-          cell.addEventListener("dragstart", handleDragStart);
+          // Drag-and-drop event listeners on each cell (cells are drop targets)
           cell.addEventListener("dragover", handleDragOver);
           cell.addEventListener("dragenter", handleDragEnter);
           cell.addEventListener("dragleave", handleDragLeave);
           cell.addEventListener("drop", handleDrop);
-          cell.addEventListener("dragend", handleDragEnd);
 
           gridContainer.appendChild(cell);
         }
@@ -1769,13 +1765,12 @@
           const cellEvents = schedules[r].filter(ev => ev.displayDay === c);
           const hasLiveLeg = cellEvents.some(ev => ev.type === "live");
 
-          // Determine draggable and visual lock state dynamically
+          // Determine cell visual lock state (cells themselves are never draggable)
+          cell.draggable = false;
           if (c === 0 || testCompleted) {
-            cell.draggable = false;
             cell.classList.add("grid-cell-locked");
           } else {
             cell.classList.remove("grid-cell-locked");
-            cell.draggable = hasLiveLeg;
           }
 
           if (cellEvents.length > 0) {
@@ -1784,6 +1779,15 @@
                 const leg = ev.legRef;
                 const card = document.createElement("div");
                 card.className = "leg-card leg-card-live";
+                
+                // Allow dragging on the live leg card itself
+                if (c > 0 && !testCompleted) {
+                  card.draggable = true;
+                  card.addEventListener("dragstart", handleDragStart);
+                  card.addEventListener("dragend", handleDragEnd);
+                } else {
+                  card.draggable = false;
+                }
                 
                 // Lock icon if on Day 1
                 const lockMarkup = (c === 0) ? `<i class="fa-solid fa-lock" style="font-size:10px; margin-right:4px; opacity:0.7;"></i>` : ``;
@@ -2072,8 +2076,8 @@
       showToast("Time's Up! Test concluded.", "error");
       
       // Lock drag & drops
-      document.querySelectorAll(".grid-cell").forEach(cell => {
-        cell.draggable = false;
+      document.querySelectorAll(".grid-cell, .leg-card-live").forEach(el => {
+        el.draggable = false;
       });
 
       openSubmitModal();
