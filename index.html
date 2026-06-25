@@ -467,18 +467,22 @@
       gap: 4px;
       transition: all 0.2s ease, border-color 0.1s ease;
       position: relative;
-      cursor: grab;
+      cursor: default;
       user-select: none;
       justify-content: flex-start;
       overflow: hidden;
     }
 
-    .grid-cell:hover {
+    .grid-cell[draggable="true"] {
+      cursor: grab;
+    }
+
+    .grid-cell[draggable="true"]:hover {
       background: var(--bg-card-hover);
       border-color: rgba(255, 255, 255, 0.12);
     }
 
-    .grid-cell:active {
+    .grid-cell[draggable="true"]:active {
       cursor: grabbing;
     }
 
@@ -1763,6 +1767,16 @@
 
           // Find events assigned to this (row, day) cell
           const cellEvents = schedules[r].filter(ev => ev.displayDay === c);
+          const hasLiveLeg = cellEvents.some(ev => ev.type === "live");
+
+          // Determine draggable and visual lock state dynamically
+          if (c === 0 || testCompleted) {
+            cell.draggable = false;
+            cell.classList.add("grid-cell-locked");
+          } else {
+            cell.classList.remove("grid-cell-locked");
+            cell.draggable = hasLiveLeg;
+          }
 
           if (cellEvents.length > 0) {
             cellEvents.forEach(ev => {
