@@ -202,11 +202,17 @@
       gap: 12px;
     }
 
+    .action-buttons .btn {
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
     .btn {
       font-family: var(--font-sans);
       font-weight: 600;
-      font-size: 16px;
-      padding: 10px 20px;
+      font-size: 15px;
+      padding: 9px 18px;
       border-radius: 10px;
       cursor: pointer;
       display: flex;
@@ -898,6 +904,27 @@
     <div class="main-layout">
       <!-- Sidebar Panel -->
       <aside class="sidebar">
+        <!-- Timer & Score Context (on the left under the logo) -->
+        <div class="sidebar-section" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; background: rgba(16, 22, 38, 0.4);">
+          <!-- Timer container -->
+          <div class="timer-container" style="display: flex; align-items: center; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; width: 100%; justify-content: center;">
+            <div class="timer-circle-wrap">
+              <svg class="timer-circle" width="46" height="46">
+                <circle class="timer-circle-bg" cx="23" cy="23" r="19.5"/>
+                <circle class="timer-circle-progress" cx="23" cy="23" r="19.5" stroke-dasharray="122.5" stroke-dashoffset="0"/>
+              </svg>
+              <div class="timer-text-overlay"><i class="fa-regular fa-clock"></i></div>
+            </div>
+            <div id="timerDigital" class="timer-digital">10:00</div>
+          </div>
+          
+          <!-- Score banner (revealed next to the timer after submission) -->
+          <div id="scoreBanner" class="score-banner" style="display: none; align-items: center; flex-direction: row; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; width: 100%; justify-content: center;">
+            <span class="score-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0;">Score</span>
+            <span id="scoreValue" class="score-value" style="font-size: 24px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono);">10,000</span>
+          </div>
+        </div>
+
         <!-- Puzzle Context -->
         <div class="sidebar-section">
           <h3><i class="fa-solid fa-circle-question"></i> Puzzle Objectives</h3>
@@ -951,28 +978,7 @@
 
       <!-- Scheduling Grid Container -->
       <main class="board-container">
-        <!-- Top Bar with Timer & Score centered over all day columns -->
-        <div class="board-top-bar" style="display: grid; grid-template-columns: 160px repeat(5, minmax(220px, 1fr)); gap: 10px; min-width: 1200px; margin-bottom: 8px; align-items: center;">
-          <div id="topBarCenterContainer" style="grid-column: 2 / span 5; display: flex; justify-content: center; align-items: center; gap: 20px;">
-            <!-- Timer container -->
-            <div class="timer-container" style="display: flex; align-items: center; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px;">
-              <div class="timer-circle-wrap">
-                <svg class="timer-circle" width="46" height="46">
-                  <circle class="timer-circle-bg" cx="23" cy="23" r="19.5"/>
-                  <circle class="timer-circle-progress" cx="23" cy="23" r="19.5" stroke-dasharray="122.5" stroke-dashoffset="0"/>
-                </svg>
-                <div class="timer-text-overlay"><i class="fa-regular fa-clock"></i></div>
-              </div>
-              <div id="timerDigital" class="timer-digital">10:00</div>
-            </div>
-            
-            <!-- Score banner (revealed next to the timer after submission) -->
-            <div id="scoreBanner" class="score-banner" style="display: none; align-items: center; flex-direction: row; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; justify-content: center;">
-              <span class="score-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0;">Score</span>
-              <span id="scoreValue" class="score-value" style="font-size: 24px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono);">10,000</span>
-            </div>
-          </div>
-        </div>
+
 
         <div id="boardGrid" class="board-grid">
           <!-- Grid Header (Row 0) -->
