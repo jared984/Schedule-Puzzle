@@ -1471,6 +1471,17 @@
       }
     }
 
+    function formatSubmissionName(baseName, count, isAborted = false) {
+      let name = baseName;
+      if (count > 0) {
+        name += " #" + (count + 1);
+      }
+      if (isAborted) {
+        name += " (Aborted)";
+      }
+      return name;
+    }
+
     function autoSubmitUnfinishedSession(session) {
       localStorage.removeItem("aero_active_session");
       
@@ -1480,7 +1491,7 @@
       
       let scores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
       const count = getSubmissionCount(scores, session.name);
-      const entryName = `${session.name} #${count + 1} (Aborted)`;
+      const entryName = formatSubmissionName(session.name, count, true);
       const entry = {
         name: entryName,
         score: finalScore,
@@ -1501,7 +1512,7 @@
           let data = res.record || res;
           let globalScores = Array.isArray(data) ? data : (data.scores || []);
           const globalCount = getSubmissionCount(globalScores, session.name);
-          const globalEntryName = `${session.name} #${globalCount + 1} (Aborted)`;
+          const globalEntryName = formatSubmissionName(session.name, globalCount, true);
           const globalEntry = {
             name: globalEntryName,
             score: finalScore,
@@ -2463,7 +2474,7 @@
       scoresList.forEach(item => {
         if (!item || !item.name) return;
         const parts = item.name.split(" #");
-        const itemBaseName = parts[0].toLowerCase().trim();
+        const itemBaseName = parts[0].split(" (Aborted)")[0].toLowerCase().trim();
         if (itemBaseName === lowerBase) {
           count++;
         }
@@ -2530,7 +2541,7 @@
       const saveLocalScore = () => {
         let scores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
         const count = getSubmissionCount(scores, schedulerName);
-        const entryName = `${schedulerName} #${count + 1}`;
+        const entryName = formatSubmissionName(schedulerName, count, false);
         const entry = {
           name: entryName,
           score: finalScore,
@@ -2587,7 +2598,7 @@
           let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
           
           const count = getSubmissionCount(scores, schedulerName);
-          const entryName = `${schedulerName} #${count + 1}`;
+          const entryName = formatSubmissionName(schedulerName, count, false);
           const entry = {
             name: entryName,
             score: finalScore,
@@ -2683,7 +2694,8 @@
       scores.forEach(s => {
         if (s.name) {
           const parts = s.name.split(" #");
-          baseNames.add(parts[0]);
+          const cleanName = parts[0].split(" (Aborted)")[0].trim();
+          baseNames.add(cleanName);
         }
       });
       
@@ -2766,14 +2778,26 @@
           // Update all matching scores in the leaderboard
           let updatedCount = 0;
           scores.forEach(entry => {
-            const prefix = oldName + " #";
-            if (entry.name && entry.name.startsWith(prefix)) {
-              entry.name = newName + " #" + entry.name.slice(prefix.length);
+            if (!entry || !entry.name) return;
+            
+            const numPrefix = oldName + " #";
+            if (entry.name.startsWith(numPrefix)) {
+              entry.name = newName + " #" + entry.name.slice(numPrefix.length);
               updatedCount++;
+              return;
             }
+            
+            const abortSuffix = oldName + " (Aborted)";
+            if (entry.name === abortSuffix) {
+              entry.name = newName + " (Aborted)";
+              updatedCount++;
+              return;
+            }
+            
             if (entry.name === oldName) {
               entry.name = newName;
               updatedCount++;
+              return;
             }
           });
           
