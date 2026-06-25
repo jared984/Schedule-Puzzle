@@ -203,9 +203,40 @@
       padding: 14px 20px;
       border-radius: 12px;
       font-weight: 700;
-      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
       margin-top: 6px;
       margin-bottom: 12px;
+      border: 2px solid transparent !important;
+      background: linear-gradient(#0a0e1a, #0a0e1a) padding-box,
+                  linear-gradient(135deg, var(--accent), #a855f7, var(--accent)) border-box !important;
+      background-size: 200% 200% !important;
+      animation: movingBorder 6s linear infinite, submitGlow 3s ease-in-out infinite alternate;
+      color: white !important;
+    }
+
+    #submitBtn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.15);
+    }
+
+    @keyframes movingBorder {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    @keyframes submitGlow {
+      0% {
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+      }
+      100% {
+        box-shadow: 0 4px 25px rgba(168, 85, 247, 0.5);
+      }
     }
 
     .sidebar-section #rulesBtn,
@@ -1155,7 +1186,9 @@
           </p>
           <div class="form-group">
             <label class="form-label" for="adminOldName">Old Name</label>
-            <input type="text" id="adminOldName" class="form-input" placeholder="e.g. SarahS">
+            <select id="adminOldName" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
+              <option value="" style="background: #0f1322; color: white;">-- Loading Players --</option>
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label" for="adminNewName">New Name</label>
@@ -2466,20 +2499,60 @@
     }
 
     // Admin features
+    function populateAdminOldNameDropdown(scores) {
+      const select = document.getElementById("adminOldName");
+      if (!select) return;
+      
+      const baseNames = new Set();
+      scores.forEach(s => {
+        if (s.name) {
+          const parts = s.name.split(" #");
+          baseNames.add(parts[0]);
+        }
+      });
+      
+      select.innerHTML = '<option value="" style="background: #0f1322; color: white;">-- Select a Player --</option>';
+      Array.from(baseNames).sort().forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        opt.style.background = "#0f1322";
+        opt.style.color = "white";
+        select.appendChild(opt);
+      });
+    }
+
     document.getElementById("adminLink").addEventListener("click", (e) => {
       e.preventDefault();
       const password = prompt("Enter Administrator Password to access Admin Panel:");
       if (password === null) return;
       
       if (password === ADMIN_RESET_PASSWORD) {
-        openModal("adminModal");
+        openModal("loadingOverlay");
+        fetch(GLOBAL_DB_READ_URL)
+          .then(response => {
+            if (!response.ok) throw new Error("Database fetch failed");
+            return response.json();
+          })
+          .then(res => {
+            closeModal("loadingOverlay");
+            let data = res.record || res;
+            let scores = Array.isArray(data) ? data : (data.scores || []);
+            populateAdminOldNameDropdown(scores);
+            openModal("adminModal");
+          })
+          .catch(err => {
+            closeModal("loadingOverlay");
+            console.error("Admin initialization failed:", err);
+            showToast("Failed to fetch database for admin initialization.", "error");
+          });
       } else {
         showToast("Access Denied: Invalid Password.", "error");
       }
     });
 
     document.getElementById("adminRenameBtn").addEventListener("click", () => {
-      const oldName = document.getElementById("adminOldName").value.trim();
+      const oldName = document.getElementById("adminOldName").value;
       const newName = document.getElementById("adminNewName").value.trim();
       
       if (!oldName || !newName) {
@@ -2539,8 +2612,10 @@
             if (!response.ok) throw new Error("Database update failed");
             closeModal("loadingOverlay");
             
+            // Re-populate dropdown with updated scores
+            populateAdminOldNameDropdown(scores);
+            
             // Clear inputs
-            document.getElementById("adminOldName").value = "";
             document.getElementById("adminNewName").value = "";
             
             showToast(`Renamed "${oldName}" to "${newName}" (${updatedCount} entries updated).`, "success");
@@ -2587,6 +2662,10 @@
             if (!response.ok) throw new Error("Database reset failed");
             closeModal("loadingOverlay");
             closeModal("adminModal");
+            
+            // Clear dropdown options since board was reset
+            populateAdminOldNameDropdown([]);
+            
             document.getElementById("userResultContainer").style.display = "none";
             showToast("Global Leaderboard Reset Successful.", "success");
             renderLeaderboardTable();
