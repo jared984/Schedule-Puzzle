@@ -304,6 +304,19 @@
       transform: translateY(-1px);
     }
 
+    .modal-box .btn-primary {
+      animation: modalBtnGlow 2.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes modalBtnGlow {
+      0% {
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2), 0 4px 10px rgba(168, 85, 247, 0.15) !important;
+      }
+      100% {
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 1.0), 0 4px 25px rgba(168, 85, 247, 0.6) !important;
+      }
+    }
+
     .btn-secondary {
       background: rgba(255, 255, 255, 0.05);
       color: var(--text-main);
