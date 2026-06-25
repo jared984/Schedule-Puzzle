@@ -243,8 +243,7 @@
     }
 
     #rulesExitLink:hover {
-      opacity: 1 !important;
-      text-decoration: underline !important;
+      filter: brightness(1.25) !important;
     }
 
     #rulesLeaderboardLink:hover {
@@ -1083,8 +1082,8 @@
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
         <h2 class="modal-title"><i class="fa-solid fa-plane"></i> AeroScheduler Rules</h2>
         <!-- Exit link in the top right of the modal -->
-        <a href="#" id="rulesExitLink" style="font-size: 13px; color: #fca5a5; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 4px; transition: opacity 0.2s; opacity: 0.85;">
-          <i class="fa-solid fa-xmark" style="color: #ef4444;"></i> Exit
+        <a href="#" id="rulesExitLink" style="font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: filter 0.2s;">
+          <i class="fa-solid fa-xmark"></i>
         </a>
       </div>
       <div class="modal-body">
