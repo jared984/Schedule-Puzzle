@@ -906,6 +906,44 @@
             <li><i class="fa-solid fa-check"></i> Complete within 10 min time limit</li>
             <li><i class="fa-solid fa-check"></i> Allow 14 hours between Landing and takeoff</li>
           </ul>
+          
+          <div style="margin-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Flight Leg Examples:</div>
+            
+            <!-- Live Leg Example -->
+            <div class="leg-card leg-card-live" style="cursor: default; pointer-events: none; height: auto; min-height: 70px;">
+              <div class="leg-route">
+                <span>Departure</span>
+                <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
+                <span>Arrival</span>
+              </div>
+              <div class="leg-times" style="font-size: 8.5px;">
+                <span>DEP: Local departure time</span>
+                <span>ARR: Local arrival time</span>
+              </div>
+              <div class="leg-meta">
+                <span>PAX Flight</span>
+                <span class="leg-duration">Duration</span>
+              </div>
+            </div>
+
+            <!-- Repo Leg Example -->
+            <div class="leg-card leg-card-repo" style="cursor: default; pointer-events: none; height: auto; min-height: 70px;">
+              <div class="leg-route">
+                <span>Departure</span>
+                <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
+                <span>Arrival</span>
+              </div>
+              <div class="leg-times" style="font-size: 8.5px;">
+                <span>DEP: Local departure time</span>
+                <span>ARR: Local arrival time</span>
+              </div>
+              <div class="leg-meta">
+                <span>REPO Flight</span>
+                <span class="leg-duration">Duration</span>
+              </div>
+            </div>
+          </div>
         </div>
 
 
@@ -1757,7 +1795,7 @@
                 card.innerHTML = `
                   <div class="leg-route">
                     <span>${ev.from}</span>
-                    <span class="leg-arrow">→</span>
+                    <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
                     <span>${ev.to}</span>
                   </div>
                   <div class="leg-times">
