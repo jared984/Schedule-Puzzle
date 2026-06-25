@@ -197,15 +197,24 @@
       color: var(--color-conflict);
     }
 
-    .action-buttons {
-      display: flex;
-      gap: 12px;
+    #submitBtn {
+      width: 100%;
+      justify-content: center;
+      font-size: 16px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
     }
 
-    .action-buttons .btn {
-      font-size: 13px;
-      padding: 6px 12px;
+    .sidebar-section #rulesBtn,
+    .sidebar-section #leaderboardBtn {
+      flex: 1;
+      justify-content: center;
+      font-size: 12px;
+      padding: 7px 10px;
       border-radius: 8px;
+      font-weight: 600;
     }
 
     .btn {
@@ -884,28 +893,19 @@
         </div>
       </div>
 
-      <div class="status-dashboard">
-        <!-- Submission Buttons -->
-        <div class="action-buttons">
-          <button id="rulesBtn" class="btn btn-secondary">
-            <i class="fa-solid fa-circle-info"></i> Rules
-          </button>
-          <button id="leaderboardBtn" class="btn btn-secondary">
-            <i class="fa-solid fa-trophy"></i> Leaderboard
-          </button>
-          <button id="submitBtn" class="btn btn-primary">
-            <i class="fa-solid fa-paper-plane"></i> Submit Schedule
-          </button>
-        </div>
-      </div>
     </header>
 
     <!-- Main Layout Container -->
     <div class="main-layout">
       <!-- Sidebar Panel -->
       <aside class="sidebar">
-        <!-- Timer & Score Context (on the left under the logo) -->
+        <!-- Controls & Timer Panel (on the left under the logo) -->
         <div class="sidebar-section" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; background: rgba(16, 22, 38, 0.4);">
+          <!-- Submit button: big, above the clock -->
+          <button id="submitBtn" class="btn btn-primary">
+            <i class="fa-solid fa-paper-plane"></i> Submit Schedule
+          </button>
+
           <!-- Timer container -->
           <div class="timer-container" style="display: flex; align-items: center; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; width: 100%; justify-content: center;">
             <div class="timer-circle-wrap">
@@ -922,6 +922,16 @@
           <div id="scoreBanner" class="score-banner" style="display: none; align-items: center; flex-direction: row; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; width: 100%; justify-content: center;">
             <span class="score-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0;">Score</span>
             <span id="scoreValue" class="score-value" style="font-size: 24px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono);">10,000</span>
+          </div>
+
+          <!-- Rules and Leaderboard buttons: smaller, inline with each other below the clock -->
+          <div style="display: flex; gap: 8px; width: 100%;">
+            <button id="rulesBtn" class="btn btn-secondary">
+              <i class="fa-solid fa-circle-info"></i> Rules
+            </button>
+            <button id="leaderboardBtn" class="btn btn-secondary">
+              <i class="fa-solid fa-trophy"></i> Leaderboard
+            </button>
           </div>
         </div>
 
@@ -983,11 +993,11 @@
         <div id="boardGrid" class="board-grid">
           <!-- Grid Header (Row 0) -->
           <div class="grid-header-cell">Aircraft</div>
-          <div class="grid-header-cell">Day 1<span class="day-date">Mon</span></div>
-          <div class="grid-header-cell">Day 2<span class="day-date">Tue</span></div>
-          <div class="grid-header-cell">Day 3<span class="day-date">Wed</span></div>
-          <div class="grid-header-cell">Day 4<span class="day-date">Thu</span></div>
-          <div class="grid-header-cell">Day 5<span class="day-date">Fri</span></div>
+          <div class="grid-header-cell">Day 1</div>
+          <div class="grid-header-cell">Day 2</div>
+          <div class="grid-header-cell">Day 3</div>
+          <div class="grid-header-cell">Day 4</div>
+          <div class="grid-header-cell">Day 5</div>
 
           <!-- Rows (AC1 - AC6) and cells populated dynamically -->
         </div>
