@@ -314,12 +314,12 @@
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       background: #2563eb;
       transform: translateY(-1px);
     }
 
-    .modal-box .btn-primary {
+    .modal-box .btn-primary:not(:disabled) {
       animation: modalBtnGlow 2.5s ease-in-out infinite alternate !important;
     }
 
@@ -330,6 +330,31 @@
       100% {
         box-shadow: 0 0 0 2px rgba(168, 85, 247, 1.0), 0 4px 25px rgba(168, 85, 247, 0.6);
       }
+    }
+
+    .input-glow {
+      animation: inputBtnGlow 2.5s ease-in-out infinite alternate !important;
+      border-color: rgba(168, 85, 247, 0.5) !important;
+    }
+
+    @keyframes inputBtnGlow {
+      0% {
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2), 0 0 10px rgba(168, 85, 247, 0.15);
+      }
+      100% {
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 1.0), 0 0 25px rgba(168, 85, 247, 0.6);
+      }
+    }
+
+    .btn:disabled {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: rgba(255, 255, 255, 0.25) !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      box-shadow: none !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+      animation: none !important;
+      pointer-events: none;
     }
 
     .btn-secondary {
@@ -1205,7 +1230,7 @@
         
         <div id="nameInputContainer" class="form-group" style="margin-top: 15px;">
           <label class="form-label" for="rulesNameInput" style="font-weight:700; color: white;">Scheduler Full Name</label>
-          <input type="text" id="rulesNameInput" class="form-input" placeholder="Enter your full name to start test" required autocomplete="off">
+          <input type="text" id="rulesNameInput" class="form-input" placeholder="Enter your name here" required autocomplete="off">
         </div>
       </div>
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-top: 15px; border-top: 1px solid var(--border-color);">
@@ -1773,6 +1798,7 @@
               document.getElementById("nameInputContainer").style.display = "flex";
             }
             updateRulesModalFooter();
+            updateRulesNameState();
             return "";
           }
 
@@ -1799,6 +1825,7 @@
               document.getElementById("nameInputContainer").style.display = "flex";
             }
             updateRulesModalFooter();
+            updateRulesNameState();
 
             // Asynchronously remove name from deletedUsers list on server
             const updatedDeletedUsers = deletedUsers.filter(u => u !== finalName);
@@ -1844,6 +1871,7 @@
               nameInput.value = finalName;
             }
           }
+          updateRulesNameState();
         });
       }
       
@@ -1890,6 +1918,7 @@
         } else {
           document.getElementById("nameInputContainer").style.display = "flex";
         }
+        updateRulesNameState();
         openModal("rulesModal");
       }
     }
@@ -2544,6 +2573,29 @@
       }
     }
 
+    function updateRulesNameState() {
+      const nameInput = document.getElementById("rulesNameInput");
+      const startTestBtn = document.getElementById("startTestBtn");
+      if (!nameInput || !startTestBtn) return;
+
+      const container = document.getElementById("nameInputContainer");
+      const isHidden = container && container.style.display === "none";
+      const nameVal = nameInput.value.trim();
+
+      if (isHidden) {
+        nameInput.classList.remove("input-glow");
+        startTestBtn.disabled = false;
+      } else {
+        if (nameVal.length >= 2) {
+          nameInput.classList.remove("input-glow");
+          startTestBtn.disabled = false;
+        } else {
+          nameInput.classList.add("input-glow");
+          startTestBtn.disabled = true;
+        }
+      }
+    }
+
     function updateSubmitButtonState() {
       const submitBtn = document.getElementById("submitBtn");
       if (!submitBtn) return;
@@ -2616,6 +2668,9 @@
       });
     });
 
+    document.getElementById("rulesNameInput").addEventListener("input", updateRulesNameState);
+    document.getElementById("rulesNameInput").addEventListener("change", updateRulesNameState);
+
     document.getElementById("rulesBtn").addEventListener("click", () => {
       if (schedulerName) {
         document.getElementById("rulesNameInput").value = schedulerName;
@@ -2624,6 +2679,7 @@
         document.getElementById("nameInputContainer").style.display = "flex";
       }
       updateRulesModalFooter();
+      updateRulesNameState();
       openModal("rulesModal");
     });
 
@@ -2669,6 +2725,7 @@
           });
         } else {
           updateRulesModalFooter();
+          updateRulesNameState();
           openModal("rulesModal");
         }
       } else if (testCompleted) {
