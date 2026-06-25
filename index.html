@@ -985,6 +985,12 @@
           </div>
         </div>
 
+        <!-- Admin Link -->
+        <div style="margin-top: auto; padding-top: 10px; text-align: left;">
+          <a href="#" id="adminLink" style="font-size: 10px; color: var(--text-secondary); opacity: 0.4; text-decoration: none; font-weight: 500; transition: opacity 0.2s;">
+            <i class="fa-solid fa-lock" style="font-size: 8px; margin-right: 2px;"></i> admin
+          </a>
+        </div>
 
       </aside>
 
@@ -1125,9 +1131,56 @@
         </table>
       </div>
       <div class="modal-footer">
-        <button id="resetLeaderboardBtn" class="btn btn-secondary" style="margin-right: auto; font-size: 11px; padding: 6px 12px;">
-          <i class="fa-solid fa-trash-can"></i> Reset Board
-        </button>
+        <button class="btn btn-primary modal-close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Modal -->
+  <div id="adminModal" class="modal-overlay">
+    <div class="modal-box" style="width: 480px;">
+      <div class="modal-header">
+        <h2 class="modal-title"><i class="fa-solid fa-user-gear"></i> Admin Panel</h2>
+        <button class="btn btn-secondary modal-close-btn" style="padding: 6px 12px;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Rename Player Section -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <h3 style="color: white; font-size: 14px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-user-pen" style="color: var(--accent);"></i> Rename Player Globally
+          </h3>
+          <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+            Change a player's name across all past leaderboard entries. The player's browser will automatically sync to their new name upon loading the page.
+          </p>
+          <div class="form-group">
+            <label class="form-label" for="adminOldName">Old Name</label>
+            <input type="text" id="adminOldName" class="form-input" placeholder="e.g. SarahS">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adminNewName">New Name</label>
+            <input type="text" id="adminNewName" class="form-input" placeholder="e.g. Sarah Smith">
+          </div>
+          <button id="adminRenameBtn" class="btn btn-primary" style="font-size: 13px; padding: 10px 16px;">
+            <i class="fa-solid fa-circle-check"></i> Apply Name Change
+          </button>
+        </div>
+
+        <!-- Reset Board Section -->
+        <div style="background: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <h3 style="color: #ef4444; font-size: 14px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-trash-can"></i> Reset Leaderboard
+          </h3>
+          <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+            Permanently delete all scores on the global and local leaderboard. This action is irreversible.
+          </p>
+          <button id="adminResetLeaderboardBtn" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 13px; padding: 10px 16px;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Reset Leaderboard
+          </button>
+        </div>
+
+      </div>
+      <div class="modal-footer">
         <button class="btn btn-primary modal-close-btn">Close</button>
       </div>
     </div>
@@ -1429,6 +1482,35 @@
     // ----------------------------------------------------
     // INITIALIZATION & RANDOMIZER
     // ----------------------------------------------------
+    function syncPlayerName() {
+      const savedName = getCookie("aero_scheduler_name");
+      if (!savedName) return;
+
+      fetch(GLOBAL_DB_READ_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Sync fetch failed");
+          return response.json();
+        })
+        .then(res => {
+          const data = res.record || res;
+          if (data && data.nameMappings && data.nameMappings[savedName]) {
+            const newName = data.nameMappings[savedName];
+            schedulerName = newName;
+            setCookie("aero_scheduler_name", newName, 365);
+            
+            const nameInput = document.getElementById("rulesNameInput");
+            if (nameInput) {
+              nameInput.value = newName;
+            }
+            
+            showToast(`Your name has been updated to "${newName}" by the administrator.`, "info");
+          }
+        })
+        .catch(err => {
+          console.error("Player name synchronization failed:", err);
+        });
+    }
+
     function initGame(isReplay = false) {
       // Check for unfinished active session from reload or closing
       checkUnfinishedSession();
@@ -1437,6 +1519,7 @@
       const savedName = getCookie("aero_scheduler_name");
       if (savedName) {
         schedulerName = savedName;
+        syncPlayerName();
       }
       
       precalculateLiveLegs();
@@ -2292,6 +2375,8 @@
         .then(res => {
           let data = res.record || res;
           let scores = Array.isArray(data) ? data : (data.scores || []);
+          let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
+          
           const count = getSubmissionCount(scores, schedulerName);
           const entryName = `${schedulerName} #${count + 1}`;
           const entry = {
@@ -2310,7 +2395,7 @@
               "Content-Type": "application/json",
               "X-Master-Key": GLOBAL_DB_MASTER_KEY
             },
-            body: JSON.stringify({ scores: scores })
+            body: JSON.stringify({ scores: scores, nameMappings: nameMappings })
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
             closeModal("loadingOverlay");
@@ -2380,40 +2465,137 @@
         });
     }
 
-    document.getElementById("resetLeaderboardBtn").addEventListener("click", () => {
-      const password = prompt("Enter Administrator Password to reset the leaderboard:");
+    // Admin features
+    document.getElementById("adminLink").addEventListener("click", (e) => {
+      e.preventDefault();
+      const password = prompt("Enter Administrator Password to access Admin Panel:");
       if (password === null) return;
       
       if (password === ADMIN_RESET_PASSWORD) {
-        if (confirm("Are you sure you want to reset the leaderboard? All saved scores will be permanently deleted.")) {
-          const resetLocal = () => {
-            localStorage.setItem("aero_scores", JSON.stringify([]));
-            document.getElementById("userResultContainer").style.display = "none";
-            renderLeaderboardTable();
-            showToast("Local Leaderboard Reset Successful.", "success");
-          };
+        openModal("adminModal");
+      } else {
+        showToast("Access Denied: Invalid Password.", "error");
+      }
+    });
 
-          fetch(GLOBAL_DB_WRITE_URL, {
+    document.getElementById("adminRenameBtn").addEventListener("click", () => {
+      const oldName = document.getElementById("adminOldName").value.trim();
+      const newName = document.getElementById("adminNewName").value.trim();
+      
+      if (!oldName || !newName) {
+        showToast("Please enter both Old Name and New Name.", "error");
+        return;
+      }
+      
+      if (oldName === newName) {
+        showToast("Old Name and New Name must be different.", "error");
+        return;
+      }
+      
+      openModal("loadingOverlay");
+      
+      fetch(GLOBAL_DB_READ_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Database fetch failed");
+          return response.json();
+        })
+        .then(res => {
+          let data = res.record || res;
+          let scores = Array.isArray(data) ? data : (data.scores || []);
+          let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
+          
+          // Add/update rename mapping
+          nameMappings[oldName] = newName;
+          
+          // Resolve mapping chains (e.g. if UserA was renamed to UserB, and now UserB to UserC, update UserA to UserC)
+          for (const key in nameMappings) {
+            if (nameMappings[key] === oldName) {
+              nameMappings[key] = newName;
+            }
+          }
+          
+          // Update all matching scores in the leaderboard
+          let updatedCount = 0;
+          scores.forEach(entry => {
+            const prefix = oldName + " #";
+            if (entry.name && entry.name.startsWith(prefix)) {
+              entry.name = newName + " #" + entry.name.slice(prefix.length);
+              updatedCount++;
+            }
+            if (entry.name === oldName) {
+              entry.name = newName;
+              updatedCount++;
+            }
+          });
+          
+          return fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
               "X-Master-Key": GLOBAL_DB_MASTER_KEY
             },
-            body: JSON.stringify({ scores: [] })
+            body: JSON.stringify({ scores: scores, nameMappings: nameMappings })
+          }).then(response => {
+            if (!response.ok) throw new Error("Database update failed");
+            closeModal("loadingOverlay");
+            
+            // Clear inputs
+            document.getElementById("adminOldName").value = "";
+            document.getElementById("adminNewName").value = "";
+            
+            showToast(`Renamed "${oldName}" to "${newName}" (${updatedCount} entries updated).`, "success");
+            renderLeaderboardTable();
+          });
+        })
+        .catch(err => {
+          console.error("Admin rename error:", err);
+          closeModal("loadingOverlay");
+          showToast("Failed to rename player. Please try again.", "error");
+        });
+    });
+
+    document.getElementById("adminResetLeaderboardBtn").addEventListener("click", () => {
+      if (confirm("Are you sure you want to reset the leaderboard? All saved scores will be permanently deleted.")) {
+        const resetLocal = () => {
+          localStorage.setItem("aero_scores", JSON.stringify([]));
+          document.getElementById("userResultContainer").style.display = "none";
+          renderLeaderboardTable();
+          showToast("Local Leaderboard Reset Successful.", "success");
+        };
+
+        openModal("loadingOverlay");
+
+        fetch(GLOBAL_DB_READ_URL)
+          .then(response => {
+            if (!response.ok) throw new Error("Fetch failed");
+            return response.json();
+          })
+          .then(res => {
+            let data = res.record || res;
+            let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
+            
+            return fetch(GLOBAL_DB_WRITE_URL, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": GLOBAL_DB_MASTER_KEY
+              },
+              body: JSON.stringify({ scores: [], nameMappings: nameMappings })
+            });
           })
           .then(response => {
             if (!response.ok) throw new Error("Database reset failed");
+            closeModal("loadingOverlay");
+            closeModal("adminModal");
             document.getElementById("userResultContainer").style.display = "none";
             showToast("Global Leaderboard Reset Successful.", "success");
             renderLeaderboardTable();
           })
           .catch(err => {
             console.error("Global database reset failed, doing local reset.", err);
+            closeModal("loadingOverlay");
             resetLocal();
           });
-        }
-      } else {
-        showToast("Access Denied: Invalid Password.", "error");
       }
     });
 
