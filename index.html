@@ -3856,9 +3856,21 @@
           if (ips.length === 0) {
             displayArea.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No IP Address Recorded --</p>';
           } else {
-            let listHtml = '<ul style="list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">';
+            let listHtml = '<ul style="list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">';
             ips.forEach(ip => {
-              listHtml += `<li style="font-size: 12px; color: white; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); font-family: monospace;">${ip}</li>`;
+              const safeIp = ip.replace(/\./g, '-').replace(/:/g, '-');
+              listHtml += `
+                <li style="margin-bottom: 4px;">
+                  <div onclick="toggleIpDetails('${ip}', this)" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 12px; color: white; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); font-family: monospace; transition: background-color 0.2s, border-color 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='var(--accent)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.08)';">
+                    <span>
+                      <i class="fa-solid fa-chevron-right" style="font-size: 9px; margin-right: 8px; transition: transform 0.2s; color: var(--text-secondary); display: inline-block;"></i>
+                      ${ip}
+                    </span>
+                    <span style="font-size: 10px; color: var(--text-muted); font-family: sans-serif;">Click to inspect</span>
+                  </div>
+                  <div id="ip-details-${safeIp}" style="display: none; margin-top: 6px; transition: all 0.3s ease;"></div>
+                </li>
+              `;
             });
             listHtml += '</ul>';
             displayArea.innerHTML = listHtml;
@@ -3872,6 +3884,124 @@
           showToast("Failed to fetch IP tracking data.", "error");
         });
     });
+
+    window.toggleIpDetails = function(ip, headerEl) {
+      const safeIp = ip.replace(/\./g, '-').replace(/:/g, '-');
+      const detailsEl = document.getElementById(`ip-details-${safeIp}`);
+      const chevron = headerEl.querySelector(".fa-chevron-right");
+      
+      if (!detailsEl) return;
+      
+      if (detailsEl.style.display === "block") {
+        detailsEl.style.display = "none";
+        if (chevron) chevron.style.transform = "rotate(0deg)";
+        return;
+      }
+      
+      // Close other opened IP details
+      document.querySelectorAll("[id^='ip-details-']").forEach(el => {
+        if (el.id !== `ip-details-${safeIp}`) {
+          el.style.display = "none";
+          const parentItem = el.parentElement;
+          if (parentItem) {
+            const ch = parentItem.querySelector(".fa-chevron-right");
+            if (ch) ch.style.transform = "rotate(0deg)";
+          }
+        }
+      });
+      
+      detailsEl.style.display = "block";
+      if (chevron) chevron.style.transform = "rotate(90deg)";
+      
+      if (detailsEl.innerHTML !== "") {
+        return;
+      }
+      
+      detailsEl.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; background: rgba(16, 22, 38, 0.4); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 8px; font-size: 11px; color: var(--text-muted);">
+          <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent);"></i> Geotargeting IP address...
+        </div>
+      `;
+      
+      fetch(`https://ipwho.is/${ip}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            throw new Error(data.message || "Failed to locate IP");
+          }
+          
+          detailsEl.innerHTML = `
+            <div style="background: rgba(16, 22, 38, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 12px; font-size: 12px; color: var(--text-secondary); box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                  <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Country</span>
+                  <span style="color: white; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                    <img src="${data.flag ? data.flag.img : ''}" style="width: 16px; height: 11px; object-fit: cover; border-radius: 1px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none';" />
+                    ${data.country || 'Unknown'} (${data.country_code || 'N/A'})
+                  </span>
+                </div>
+                <div>
+                  <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">State / Region</span>
+                  <span style="color: white; font-weight: 500;"><i class="fa-solid fa-map-location-dot" style="color: var(--accent); margin-right: 4px;"></i> ${data.region || 'Unknown'}</span>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                  <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">City</span>
+                  <span style="color: white; font-weight: 500;"><i class="fa-solid fa-city" style="color: var(--accent); margin-right: 4px;"></i> ${data.city || 'Unknown'}</span>
+                </div>
+                <div>
+                  <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Postal Code</span>
+                  <span style="color: white; font-weight: 500;"><i class="fa-solid fa-envelope" style="color: var(--accent); margin-right: 4px;"></i> ${data.postal || 'Unknown'}</span>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                  <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Latitude</span>
+                  <span style="color: white; font-family: monospace;">${data.latitude || 'N/A'}</span>
+                </div>
+                <div>
+                  <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Longitude</span>
+                  <span style="color: white; font-family: monospace;">${data.longitude || 'N/A'}</span>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid rgba(255,255,255,0.04); padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                  <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">ISP</span>
+                  <span style="color: white; font-weight: 500; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${data.connection ? data.connection.isp : ''}">${data.connection ? data.connection.isp : 'Unknown'}</span>
+                </div>
+                <div>
+                  <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Organization</span>
+                  <span style="color: white; font-weight: 500; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${data.connection ? data.connection.org : ''}">${data.connection ? data.connection.org : 'Unknown'}</span>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid rgba(255,255,255,0.04); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <span style="font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">TZ: ${data.timezone ? data.timezone.id : 'N/A'}</span>
+                <a href="https://iplocation.io/ip/${ip}" target="_blank" style="font-size: 11px; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 4px; font-weight: 600; flex-shrink: 0;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
+                  <i class="fa-solid fa-map-pin"></i> View Map ↗
+                </a>
+              </div>
+
+            </div>
+          `;
+        })
+        .catch(err => {
+          console.error("IP lookup error:", err);
+          detailsEl.innerHTML = `
+            <div style="padding: 12px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 8px; font-size: 11px; color: var(--color-conflict); display: flex; flex-direction: column; gap: 6px;">
+              <span><i class="fa-solid fa-circle-exclamation"></i> Failed to auto-retrieve IP details.</span>
+              <a href="https://iplocation.io/ip/${ip}" target="_blank" style="color: var(--accent); text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                Open iplocation.io Report <i class="fa-solid fa-up-right-from-square" style="font-size: 9px;"></i>
+              </a>
+            </div>
+          `;
+        });
+    };
 
     document.getElementById("adminPuzzleName").addEventListener("change", (e) => {
       const selectedPuzzle = e.target.value;
