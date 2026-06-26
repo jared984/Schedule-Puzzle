@@ -2024,18 +2024,6 @@
       }
       updateRulesNameState();
       openModal("rulesModal");
-      
-      // Show penalty warning for returning users with previous attempts
-      if (schedulerAttemptCount > 0) {
-        showConfirm(
-          "Retest Penalty",
-          "Each subsequent schedule attempt receives a 30 second penalty",
-          null,
-          null,
-          "OK",
-          "blue"
-        );
-      }
     }
 
     function shuffleArray(arr) {
@@ -2719,7 +2707,7 @@
       
       if (!gameStarted) {
         submitBtn.innerHTML = (schedulerAttemptCount > 0)
-          ? `<i class="fa-solid fa-rotate-right"></i> Retake Test`
+          ? `<i class="fa-solid fa-rotate-right"></i> Retry`
           : `<i class="fa-solid fa-play"></i> Start Test`;
       } else if (testCompleted) {
         submitBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Try Again`;
@@ -2775,35 +2763,35 @@
         return;
       }
 
-      const proceedWithStart = () => {
-        openModal("loadingOverlay");
-        resolvePlayerName(nameToUse).then(finalName => {
-          closeModal("loadingOverlay");
-          schedulerName = finalName;
-          setCookie("aero_scheduler_name", schedulerName, 365);
-          
-          // Update input field just in case
-          const nameInput = document.getElementById("rulesNameInput");
-          if (nameInput) {
-            nameInput.value = schedulerName;
-          }
-          
-          startGameFlow();
-        });
-      };
+      openModal("loadingOverlay");
+      resolvePlayerName(nameToUse).then(finalName => {
+        closeModal("loadingOverlay");
+        schedulerName = finalName;
+        setCookie("aero_scheduler_name", schedulerName, 365);
+        
+        // Update input field just in case
+        const nameInput = document.getElementById("rulesNameInput");
+        if (nameInput) {
+          nameInput.value = schedulerName;
+        }
 
-      if (schedulerAttemptCount > 0) {
-        showConfirm(
-          "Retest Penalty",
-          "Each subsequent schedule attempt receives a 30 second penalty",
-          proceedWithStart,
-          null,
-          "OK",
-          "blue"
-        );
-      } else {
-        proceedWithStart();
-      }
+        const proceedWithStart = () => {
+          startGameFlow();
+        };
+
+        if (schedulerAttemptCount > 0) {
+          showConfirm(
+            "Retest Penalty",
+            "Each subsequent schedule attempt receives a 30 second penalty",
+            proceedWithStart,
+            null,
+            "OK",
+            "blue"
+          );
+        } else {
+          proceedWithStart();
+        }
+      });
     });
 
     document.getElementById("rulesNameInput").addEventListener("input", updateRulesNameState);
@@ -2848,34 +2836,34 @@
         const nameToUse = schedulerName || cookieName || inputName;
         
         if (nameToUse) {
-          const proceedWithStart = () => {
-            openModal("loadingOverlay");
-            resolvePlayerName(nameToUse).then(finalName => {
-              closeModal("loadingOverlay");
-              schedulerName = finalName;
-              setCookie("aero_scheduler_name", schedulerName, 365);
-              
-              const nameInput = document.getElementById("rulesNameInput");
-              if (nameInput) {
-                nameInput.value = schedulerName;
-              }
-              
+          openModal("loadingOverlay");
+          resolvePlayerName(nameToUse).then(finalName => {
+            closeModal("loadingOverlay");
+            schedulerName = finalName;
+            setCookie("aero_scheduler_name", schedulerName, 365);
+            
+            const nameInput = document.getElementById("rulesNameInput");
+            if (nameInput) {
+              nameInput.value = schedulerName;
+            }
+            
+            const proceedWithStart = () => {
               startGameFlow();
-            });
-          };
+            };
 
-          if (schedulerAttemptCount > 0) {
-            showConfirm(
-              "Retest Penalty",
-              "Each subsequent schedule attempt receives a 30 second penalty",
-              proceedWithStart,
-              null,
-              "OK",
-              "blue"
-            );
-          } else {
-            proceedWithStart();
-          }
+            if (schedulerAttemptCount > 0) {
+              showConfirm(
+                "Retest Penalty",
+                "Each subsequent schedule attempt receives a 30 second penalty",
+                proceedWithStart,
+                null,
+                "OK",
+                "blue"
+              );
+            } else {
+              proceedWithStart();
+            }
+          });
         } else {
           updateRulesModalFooter();
           updateRulesNameState();
