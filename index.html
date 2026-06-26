@@ -4134,6 +4134,23 @@
     };
 
     window.adminDeleteSpecificScore = function(itemName, itemPuzzle, btnEl) {
+      function add30SecondsToTimeString(timeStr) {
+        if (!timeStr || timeStr === "00:00") return "00:00";
+        const parts = timeStr.split(":");
+        if (parts.length !== 2) return timeStr;
+        let mins = parseInt(parts[0], 10);
+        let secs = parseInt(parts[1], 10);
+        if (isNaN(mins) || isNaN(secs)) return timeStr;
+        
+        secs += 30;
+        if (secs >= 60) {
+          mins += 1;
+          secs -= 60;
+        }
+        
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+
       showConfirm(
         "Delete Specific Score",
         `Are you sure you want to delete the score entry for "${itemName}"? This will permanently erase this score, rename any subsequent attempts, and reset attempt penalties on the user side.`,
@@ -4193,6 +4210,11 @@
                       let newAttempt = sAttempt - 1;
                       let isAborted = s.name.includes(" (Aborted)");
                       s.name = formatSubmissionName(baseName, newAttempt - 1, isAborted);
+                      
+                      if (!isAborted && s.timeLeft && s.timeLeft !== "00:00") {
+                        s.score = (s.score || 0) + 300;
+                        s.timeLeft = add30SecondsToTimeString(s.timeLeft);
+                      }
                     }
                   }
                 }
