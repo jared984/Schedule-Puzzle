@@ -832,6 +832,11 @@
       box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
     }
 
+    select option {
+      background-color: #0c1322 !important;
+      color: white !important;
+    }
+
     /* Admin Accordion Styles */
     .accordion-item {
       border: 1px solid var(--border-color);
@@ -1064,7 +1069,7 @@
           </div>
           <div class="logo-text">
             <h1>AeroScheduler</h1>
-            <span>Operations Test</span>
+            <span id="puzzleSubtitle">Operations Test</span>
           </div>
         </div>
 
@@ -1324,7 +1329,25 @@
       </div>
       <div class="modal-body" style="gap: 12px; max-height: 70vh; overflow-y: auto;">
         
-        <!-- Accordion Section 1: Reset Leader Board -->
+        <div class="accordion-item">
+          <div class="accordion-header">
+            <span><i class="fa-solid fa-puzzle-piece" style="color: var(--accent); margin-right: 8px;"></i> Puzzle to Load</span>
+            <i class="fa-solid fa-chevron-down chevron"></i>
+          </div>
+          <div class="accordion-content">
+            <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+              The currently active puzzle for all candidates.
+            </p>
+            <div class="form-group" style="margin-top: 8px;">
+              <label class="form-label" for="adminPuzzleName">Puzzle Name</label>
+              <select id="adminPuzzleName" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
+                <option value="Introduction Puzzle">Introduction Puzzle</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion Section 2: Reset Leader Board -->
         <div class="accordion-item">
           <div class="accordion-header">
             <span><i class="fa-solid fa-trash-can" style="color: #ef4444; margin-right: 8px;"></i> Reset Leader Board</span>
@@ -1454,7 +1477,7 @@
   <!-- Reusable Confirmation Modal -->
   <div id="confirmModal" class="modal-overlay" style="z-index: 150;">
     <div class="modal-box" style="width: 400px; text-align: center; gap: 16px; align-items: center; justify-content: center;">
-      <div style="font-size: 40px; color: #ef4444; margin-bottom: 8px; text-align: center;">
+      <div id="confirmIconContainer" style="font-size: 40px; color: #ef4444; margin-bottom: 8px; text-align: center;">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
       <h3 id="confirmTitle" style="font-size: 18px; font-weight: 700; color: white; margin: 0; text-align: center; width: 100%;">Are you sure?</h3>
@@ -1572,6 +1595,7 @@
     let grid = Array(6).fill(null).map(() => Array(5).fill(null));
     let schedulerName = "";
     let schedulerAttemptCount = 0;
+    let currentPuzzleName = "Introduction Puzzle";
     let startingLocations = Array(6).fill("LAX");
     let timeRemaining = TOTAL_TIME;
     let timerInterval = null;
@@ -1626,6 +1650,7 @@
           score: currentScore,
           repoDurationMins: totalRepoDurationMins,
           timeRemaining: timeRemaining,
+          puzzle: currentPuzzleName,
           active: true
         };
         localStorage.setItem("aero_active_session", JSON.stringify(session));
@@ -1651,14 +1676,15 @@
       const formattedTimeLeft = "00:00";
       
       let scores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
-      const count = getSubmissionCount(scores, session.name);
+      const count = getSubmissionCount(scores, session.name, session.puzzle || currentPuzzleName);
       const entryName = formatSubmissionName(session.name, count, true);
       const entry = {
         name: entryName,
         score: finalScore,
         repoTime: formatDuration(session.repoDurationMins),
         timeLeft: formattedTimeLeft,
-        date: dateStr
+        date: dateStr,
+        puzzle: session.puzzle || currentPuzzleName
       };
       scores.push(entry);
       scores.sort((a, b) => b.score - a.score);
@@ -1683,14 +1709,15 @@
           }
           const resolvedSessionName = current;
           
-          const globalCount = getSubmissionCount(globalScores, resolvedSessionName);
+          const globalCount = getSubmissionCount(globalScores, resolvedSessionName, session.puzzle || currentPuzzleName);
           const globalEntryName = formatSubmissionName(resolvedSessionName, globalCount, true);
           const globalEntry = {
             name: globalEntryName,
             score: finalScore,
             repoTime: formatDuration(session.repoDurationMins),
             timeLeft: formattedTimeLeft,
-            date: dateStr
+            date: dateStr,
+            puzzle: session.puzzle || currentPuzzleName
           };
           globalScores.push(globalEntry);
           globalScores.sort((a, b) => b.score - a.score);
@@ -1705,7 +1732,8 @@
               scores: globalScores,
               nameMappings: nameMappings,
               deletedUsers: data.deletedUsers || [],
-              resetVersion: data.resetVersion || 0
+              resetVersion: data.resetVersion || 0,
+              puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
             })
           }).then(writeRes => {
             if (!writeRes.ok) throw new Error("Write failed");
@@ -1842,7 +1870,8 @@
                 scores: data.scores || [],
                 nameMappings: nameMappings,
                 deletedUsers: updatedDeletedUsers,
-                resetVersion: dbResetVersion
+                resetVersion: dbResetVersion,
+                puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
               })
             }).catch(e => console.error("Failed to clean deletedUsers array:", e));
 
@@ -1850,7 +1879,7 @@
           }
 
           const scoresList = Array.isArray(data) ? data : (data.scores || []);
-          schedulerAttemptCount = getSubmissionCount(scoresList, finalName);
+          schedulerAttemptCount = getSubmissionCount(scoresList, finalName, currentPuzzleName);
 
           return finalName;
         })
@@ -1858,7 +1887,7 @@
           console.error("Name resolution error:", err);
           try {
             const localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
-            schedulerAttemptCount = getSubmissionCount(localScores, rawName);
+            schedulerAttemptCount = getSubmissionCount(localScores, rawName, currentPuzzleName);
           } catch(e) {
             schedulerAttemptCount = 0;
           }
@@ -1872,66 +1901,140 @@
       
       // Load name from cookie if available
       const savedName = getCookie("aero_scheduler_name");
-      if (savedName) {
-        schedulerName = savedName;
-        resolvePlayerName(savedName).then(finalName => {
-          if (finalName && finalName !== savedName) {
-            schedulerName = finalName;
-            setCookie("aero_scheduler_name", finalName, 365);
-            const nameInput = document.getElementById("rulesNameInput");
-            if (nameInput) {
-              nameInput.value = finalName;
+      
+      openModal("loadingOverlay");
+      fetch(GLOBAL_DB_READ_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("DB read failed");
+          return response.json();
+        })
+        .then(res => {
+          closeModal("loadingOverlay");
+          const data = res.record || res;
+          
+          // Force re-login check (Delete All Users / global reset)
+          const dbResetVersion = data.resetVersion || 0;
+          const localResetVersion = parseInt(getCookie("aero_reset_version") || "0", 10);
+          if (localResetVersion < dbResetVersion) {
+            setCookie("aero_reset_version", dbResetVersion, 365);
+            setCookie("aero_scheduler_name", "", -1);
+            localStorage.removeItem("aero_scheduler_name");
+            localStorage.removeItem("aero_active_session");
+            schedulerName = "";
+            schedulerAttemptCount = 0;
+          }
+          
+          // Sync puzzleToLoad
+          let puzzleToLoad = data.puzzleToLoad || "Introduction Puzzle";
+          if (puzzleToLoad === 1 || puzzleToLoad === "1") {
+            puzzleToLoad = "Introduction Puzzle";
+          }
+          currentPuzzleName = puzzleToLoad;
+          const subtitle = document.getElementById("puzzleSubtitle");
+          if (subtitle) {
+            subtitle.innerText = puzzleToLoad;
+          }
+          
+          if (savedName) {
+            let current = savedName.trim();
+            const nameMappings = data.nameMappings || {};
+            let seen = new Set();
+            while (nameMappings[current] && !seen.has(current)) {
+              seen.add(current);
+              current = nameMappings[current].trim();
+            }
+            const finalName = current;
+            
+            const deletedUsers = data.deletedUsers || [];
+            if (finalName && deletedUsers.includes(finalName)) {
+              setCookie("aero_scheduler_name", "", -1);
+              localStorage.removeItem("aero_scheduler_name");
+              localStorage.removeItem("aero_active_session");
+              schedulerName = "";
+              schedulerAttemptCount = 0;
+            } else {
+              schedulerName = finalName;
+              setCookie("aero_scheduler_name", finalName, 365);
+              const scoresList = data.scores || [];
+              schedulerAttemptCount = getSubmissionCount(scoresList, finalName, currentPuzzleName);
             }
           }
-          updateRulesNameState();
+          
+          setupGameInitialUI();
+        })
+        .catch(err => {
+          closeModal("loadingOverlay");
+          console.error("Failed to fetch database on initGame, using defaults:", err);
+          currentPuzzleName = "Introduction Puzzle";
+          const subtitle = document.getElementById("puzzleSubtitle");
+          if (subtitle) {
+            subtitle.innerText = "Introduction Puzzle";
+          }
+          if (savedName) {
+            schedulerName = savedName;
+            try {
+              const localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
+              schedulerAttemptCount = getSubmissionCount(localScores, savedName, currentPuzzleName);
+            } catch (e) {
+              schedulerAttemptCount = 0;
+            }
+          }
+          setupGameInitialUI();
         });
-      }
-      
+    }
+
+    function setupGameInitialUI() {
       precalculateLiveLegs();
       
       // Randomly allocate fixed legs to different rows (aircraft) on their scheduled day.
       for (let day = 0; day < 5; day++) {
         const dayLegs = FIXED_LIVE_LEGS.filter(l => l.day === day);
-        // Create an array of row indexes [0..5] and shuffle it
         const aircraftIndices = [0, 1, 2, 3, 4, 5];
         shuffleArray(aircraftIndices);
-        
-        // Allocate the 3 legs to the first 3 randomized aircraft rows
         for (let i = 0; i < dayLegs.length; i++) {
           const rowIdx = aircraftIndices[i];
           grid[rowIdx][day] = dayLegs[i];
         }
       }
 
-      // Initialize airplane starting locations based on Day 1 flight origins
       for (let r = 0; r < 6; r++) {
         if (grid[r][0]) {
           startingLocations[r] = grid[r][0].from;
         } else {
-          startingLocations[r] = "LAX"; // Default starting base for the plane idle on Day 1
+          startingLocations[r] = "LAX";
         }
       }
 
       setupGridDOM();
       updateSchedules();
       
-      if (isReplay === true) {
-        gameStarted = true;
-        updateSubmitButtonState();
-        updateSchedules();
-        startTimer();
-        showToast(`Welcome back, ${schedulerName}. Test started!`, "success");
+      updateSubmitButtonState();
+      updateRulesModalFooter();
+      
+      // Preload the timer with the correct time for this attempt
+      const attemptTimeRemaining = Math.max(0, TOTAL_TIME - (schedulerAttemptCount * 30));
+      updateTimerDisplay(attemptTimeRemaining);
+      
+      if (schedulerName) {
+        document.getElementById("rulesNameInput").value = schedulerName;
+        document.getElementById("nameInputContainer").style.display = "none";
       } else {
-        updateSubmitButtonState();
-        updateRulesModalFooter();
-        if (schedulerName) {
-          document.getElementById("rulesNameInput").value = schedulerName;
-          document.getElementById("nameInputContainer").style.display = "none";
-        } else {
-          document.getElementById("nameInputContainer").style.display = "flex";
-        }
-        updateRulesNameState();
-        openModal("rulesModal");
+        document.getElementById("rulesNameInput").value = "";
+        document.getElementById("nameInputContainer").style.display = "flex";
+      }
+      updateRulesNameState();
+      openModal("rulesModal");
+      
+      // Show penalty warning for returning users with previous attempts
+      if (schedulerAttemptCount > 0) {
+        showConfirm(
+          "Retest Penalty",
+          "Each subsequent schedule attempt receives a 30 second penalty",
+          null,
+          null,
+          "OK",
+          "blue"
+        );
       }
     }
 
@@ -2581,7 +2684,9 @@
       } else {
         if (exitLink) exitLink.style.display = "flex";
         if (leaderboardLink) leaderboardLink.style.display = "flex";
-        if (startBtn) startBtn.innerText = "Start Test";
+        if (startBtn) {
+          startBtn.innerText = (schedulerAttemptCount > 0) ? "Retry" : "Start Test";
+        }
       }
     }
 
@@ -2613,7 +2718,9 @@
       if (!submitBtn) return;
       
       if (!gameStarted) {
-        submitBtn.innerHTML = `<i class="fa-solid fa-play"></i> Start Test`;
+        submitBtn.innerHTML = (schedulerAttemptCount > 0)
+          ? `<i class="fa-solid fa-rotate-right"></i> Retake Test`
+          : `<i class="fa-solid fa-play"></i> Start Test`;
       } else if (testCompleted) {
         submitBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Try Again`;
       } else {
@@ -2668,20 +2775,35 @@
         return;
       }
 
-      openModal("loadingOverlay");
-      resolvePlayerName(nameToUse).then(finalName => {
-        closeModal("loadingOverlay");
-        schedulerName = finalName;
-        setCookie("aero_scheduler_name", schedulerName, 365);
-        
-        // Update input field just in case
-        const nameInput = document.getElementById("rulesNameInput");
-        if (nameInput) {
-          nameInput.value = schedulerName;
-        }
-        
-        startGameFlow();
-      });
+      const proceedWithStart = () => {
+        openModal("loadingOverlay");
+        resolvePlayerName(nameToUse).then(finalName => {
+          closeModal("loadingOverlay");
+          schedulerName = finalName;
+          setCookie("aero_scheduler_name", schedulerName, 365);
+          
+          // Update input field just in case
+          const nameInput = document.getElementById("rulesNameInput");
+          if (nameInput) {
+            nameInput.value = schedulerName;
+          }
+          
+          startGameFlow();
+        });
+      };
+
+      if (schedulerAttemptCount > 0) {
+        showConfirm(
+          "Retest Penalty",
+          "Each subsequent schedule attempt receives a 30 second penalty",
+          proceedWithStart,
+          null,
+          "OK",
+          "blue"
+        );
+      } else {
+        proceedWithStart();
+      }
     });
 
     document.getElementById("rulesNameInput").addEventListener("input", updateRulesNameState);
@@ -2726,19 +2848,34 @@
         const nameToUse = schedulerName || cookieName || inputName;
         
         if (nameToUse) {
-          openModal("loadingOverlay");
-          resolvePlayerName(nameToUse).then(finalName => {
-            closeModal("loadingOverlay");
-            schedulerName = finalName;
-            setCookie("aero_scheduler_name", schedulerName, 365);
-            
-            const nameInput = document.getElementById("rulesNameInput");
-            if (nameInput) {
-              nameInput.value = schedulerName;
-            }
-            
-            startGameFlow();
-          });
+          const proceedWithStart = () => {
+            openModal("loadingOverlay");
+            resolvePlayerName(nameToUse).then(finalName => {
+              closeModal("loadingOverlay");
+              schedulerName = finalName;
+              setCookie("aero_scheduler_name", schedulerName, 365);
+              
+              const nameInput = document.getElementById("rulesNameInput");
+              if (nameInput) {
+                nameInput.value = schedulerName;
+              }
+              
+              startGameFlow();
+            });
+          };
+
+          if (schedulerAttemptCount > 0) {
+            showConfirm(
+              "Retest Penalty",
+              "Each subsequent schedule attempt receives a 30 second penalty",
+              proceedWithStart,
+              null,
+              "OK",
+              "blue"
+            );
+          } else {
+            proceedWithStart();
+          }
         } else {
           updateRulesModalFooter();
           updateRulesNameState();
@@ -2747,10 +2884,13 @@
       } else if (testCompleted) {
         showConfirm(
           "Retest Penalty",
-          "Retesting will incur a 30-second penalty. Your starting time will be reduced by 30 seconds. Do you want to proceed?",
+          "Each subsequent schedule attempt receives a 30 second penalty",
           () => {
             resetGame();
-          }
+          },
+          null,
+          "OK",
+          "blue"
         );
       } else {
         openSubmitModal();
@@ -2775,12 +2915,27 @@
       openModal("submitModal");
     }
 
-    function getSubmissionCount(scoresList, baseName) {
+    function getSubmissionCount(scoresList, baseName, puzzleNum) {
       if (!Array.isArray(scoresList)) return 0;
       let count = 0;
       const lowerBase = baseName.toLowerCase().trim();
+      
+      let filterPuzzle = puzzleNum || "Introduction Puzzle";
+      if (filterPuzzle === 1 || filterPuzzle === "1") {
+        filterPuzzle = "Introduction Puzzle";
+      }
+
       scoresList.forEach(item => {
         if (!item || !item.name) return;
+        
+        let itemPuzzle = item.puzzle || "Introduction Puzzle";
+        if (itemPuzzle === 1 || itemPuzzle === "1") {
+          itemPuzzle = "Introduction Puzzle";
+        }
+
+        // If puzzleNum is specified, only count entries for that puzzle
+        if (filterPuzzle !== itemPuzzle) return;
+        
         const parts = item.name.split(" #");
         const itemBaseName = parts[0].split(" (Aborted)")[0].toLowerCase().trim();
         if (itemBaseName === lowerBase) {
@@ -2850,14 +3005,15 @@
       // Helper function to log score locally
       const saveLocalScore = () => {
         let scores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
-        const count = getSubmissionCount(scores, schedulerName);
+        const count = getSubmissionCount(scores, schedulerName, currentPuzzleName);
         const entryName = formatSubmissionName(schedulerName, count, false);
         const entry = {
           name: entryName,
           score: finalScore,
           repoTime: formatDuration(totalRepoDurationMins),
           timeLeft: formatTimeLeft(),
-          date: dateStr
+          date: dateStr,
+          puzzle: currentPuzzleName
         };
         scores.push(entry);
         scores.sort((a, b) => b.score - a.score);
@@ -2917,14 +3073,15 @@
           schedulerName = current;
           setCookie("aero_scheduler_name", schedulerName, 365);
           
-          const count = getSubmissionCount(scores, schedulerName);
+          const count = getSubmissionCount(scores, schedulerName, currentPuzzleName);
           const entryName = formatSubmissionName(schedulerName, count, false);
           const entry = {
             name: entryName,
             score: finalScore,
             repoTime: formatDuration(totalRepoDurationMins),
             timeLeft: formatTimeLeft(),
-            date: dateStr
+            date: dateStr,
+            puzzle: currentPuzzleName
           };
           scores.push(entry);
           scores.sort((a, b) => b.score - a.score);
@@ -2939,7 +3096,8 @@
               scores: scores,
               nameMappings: nameMappings,
               deletedUsers: data.deletedUsers || [],
-              resetVersion: data.resetVersion || 0
+              resetVersion: data.resetVersion || 0,
+              puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
             })
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
@@ -2986,7 +3144,20 @@
         scores = [];
         localStorage.setItem("aero_scores", JSON.stringify(scores));
       }
-      populateTable(scores);
+      
+      let filterPuzzle = currentPuzzleName || "Introduction Puzzle";
+      if (filterPuzzle === 1 || filterPuzzle === "1") {
+        filterPuzzle = "Introduction Puzzle";
+      }
+
+      const filteredScores = scores.filter(s => {
+        let itemPuzzle = s.puzzle || "Introduction Puzzle";
+        if (itemPuzzle === 1 || itemPuzzle === "1") {
+          itemPuzzle = "Introduction Puzzle";
+        }
+        return itemPuzzle === filterPuzzle;
+      });
+      populateTable(filteredScores);
     }
 
     function renderLeaderboardTable() {
@@ -3001,6 +3172,20 @@
         .then(res => {
           let data = res.record || res;
           let scores = Array.isArray(data) ? data : (data.scores || []);
+          
+          let filterPuzzle = currentPuzzleName || "Introduction Puzzle";
+          if (filterPuzzle === 1 || filterPuzzle === "1") {
+            filterPuzzle = "Introduction Puzzle";
+          }
+
+          scores = scores.filter(s => {
+            let itemPuzzle = s.puzzle || "Introduction Puzzle";
+            if (itemPuzzle === 1 || itemPuzzle === "1") {
+              itemPuzzle = "Introduction Puzzle";
+            }
+            return itemPuzzle === filterPuzzle;
+          });
+
           scores.sort((a, b) => b.score - a.score);
           populateTable(scores);
         })
@@ -3011,7 +3196,7 @@
     }
 
     // Reusable Confirmation Modal Helper
-    function showConfirm(title, message, onYes, onCancel) {
+    function showConfirm(title, message, onYes, onCancel, yesText = "Yes, Proceed", yesStyle = "danger") {
       document.getElementById("confirmTitle").innerText = title;
       document.getElementById("confirmMessage").innerText = message;
       
@@ -3021,6 +3206,26 @@
       // Clone buttons to clear previous event listeners
       const newYesBtn = yesBtn.cloneNode(true);
       const newCancelBtn = cancelBtn.cloneNode(true);
+      
+      newYesBtn.innerText = yesText;
+      if (yesStyle === "primary" || yesStyle === "blue") {
+        newYesBtn.style.background = "var(--accent)";
+        newYesBtn.style.borderColor = "var(--accent)";
+        newYesBtn.style.boxShadow = "0 0 10px rgba(59, 130, 246, 0.3)";
+      } else {
+        newYesBtn.style.background = "#ef4444";
+        newYesBtn.style.borderColor = "#ef4444";
+        newYesBtn.style.boxShadow = "0 0 10px rgba(239, 68, 68, 0.3)";
+      }
+      
+      const iconContainer = document.getElementById("confirmIconContainer");
+      if (iconContainer) {
+        if (yesStyle === "primary" || yesStyle === "blue") {
+          iconContainer.style.color = "var(--accent)";
+        } else {
+          iconContainer.style.color = "#ef4444";
+        }
+      }
       
       yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
       cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
@@ -3082,6 +3287,16 @@
           let data = res.record || res;
           let scores = Array.isArray(data) ? data : (data.scores || []);
           populateAdminDropdowns(scores);
+          
+          // Sync puzzleToLoad dropdown
+          let puzzleVal = data.puzzleToLoad || "Introduction Puzzle";
+          if (puzzleVal === 1 || puzzleVal === "1") {
+            puzzleVal = "Introduction Puzzle";
+          }
+          const puzzleSelect = document.getElementById("adminPuzzleName");
+          if (puzzleSelect) {
+            puzzleSelect.value = puzzleVal;
+          }
           
           // Collapse all accordion sections on load
           document.querySelectorAll(".accordion-item").forEach(item => {
@@ -3204,7 +3419,8 @@
               scores: scores,
               nameMappings: nameMappings,
               deletedUsers: deletedUsers,
-              resetVersion: resetVersion
+              resetVersion: resetVersion,
+              puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
             })
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
@@ -3288,7 +3504,8 @@
                   scores: scores,
                   nameMappings: nameMappings,
                   deletedUsers: deletedUsers,
-                  resetVersion: resetVersion
+                  resetVersion: resetVersion,
+                  puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
                 })
               }).then(writeRes => {
                 if (!writeRes.ok) throw new Error("Database delete failed");
@@ -3308,6 +3525,72 @@
             });
         }
       );
+    });
+
+    document.getElementById("adminPuzzleName").addEventListener("change", (e) => {
+      const selectedPuzzle = e.target.value;
+      openModal("loadingOverlay");
+      
+      fetch(GLOBAL_DB_READ_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Database fetch failed");
+          return response.json();
+        })
+        .then(res => {
+          let data = res.record || res;
+          let scores = Array.isArray(data) ? data : (data.scores || []);
+          let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
+          let deletedUsers = (data && data.deletedUsers) ? data.deletedUsers : [];
+          let resetVersion = data.resetVersion || 0;
+          
+          return fetch(GLOBAL_DB_WRITE_URL, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Master-Key": GLOBAL_DB_MASTER_KEY
+            },
+            body: JSON.stringify({
+              scores: scores,
+              nameMappings: nameMappings,
+              deletedUsers: deletedUsers,
+              resetVersion: resetVersion,
+              puzzleToLoad: selectedPuzzle
+            })
+          }).then(writeRes => {
+            if (!writeRes.ok) throw new Error("Database update failed");
+            closeModal("loadingOverlay");
+            
+            currentPuzzleName = selectedPuzzle;
+            const subtitle = document.getElementById("puzzleSubtitle");
+            if (subtitle) {
+              subtitle.innerText = selectedPuzzle;
+            }
+            
+            // Re-fetch count/re-load UI with new attempt counts for this puzzle
+            if (schedulerName) {
+              schedulerAttemptCount = getSubmissionCount(scores, schedulerName, currentPuzzleName);
+            } else {
+              schedulerAttemptCount = 0;
+            }
+            
+            // Preload the timer with the correct time for this attempt
+            const attemptTimeRemaining = Math.max(0, TOTAL_TIME - (schedulerAttemptCount * 30));
+            updateTimerDisplay(attemptTimeRemaining);
+            updateSubmitButtonState();
+            updateRulesModalFooter();
+            
+            showToast(`Puzzle changed to "${selectedPuzzle}".`, "success");
+            renderLeaderboardTable();
+          });
+        })
+        .catch(err => {
+          console.error("Admin change puzzle error:", err);
+          closeModal("loadingOverlay");
+          showToast("Failed to change puzzle. Please try again.", "error");
+          
+          // Revert selection on failure
+          e.target.value = currentPuzzleName;
+        });
     });
 
     document.getElementById("adminResetLeaderboardBtn").addEventListener("click", () => {
@@ -3345,7 +3628,8 @@
                   scores: [],
                   nameMappings: nameMappings,
                   deletedUsers: deletedUsers,
-                  resetVersion: resetVersion
+                  resetVersion: resetVersion,
+                  puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
                 })
               });
             })
@@ -3397,7 +3681,8 @@
                   scores: [],
                   nameMappings: {},
                   deletedUsers: [],
-                  resetVersion: nextResetVersion
+                  resetVersion: nextResetVersion,
+                  puzzleToLoad: "Introduction Puzzle"
                 })
               });
             })
