@@ -1914,6 +1914,43 @@
           }
           const finalName = current;
 
+          // If the player has been renamed, synchronize their local scores names in localStorage
+          if (finalName && finalName !== rawName.trim()) {
+            try {
+              let localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
+              let localUpdated = false;
+              localScores.forEach(entry => {
+                if (!entry || !entry.name) return;
+                
+                const numPrefix = rawName.trim() + " #";
+                if (entry.name.startsWith(numPrefix)) {
+                  entry.name = finalName + " #" + entry.name.slice(numPrefix.length);
+                  localUpdated = true;
+                  return;
+                }
+                
+                const abortSuffix = rawName.trim() + " (Aborted)";
+                if (entry.name === abortSuffix) {
+                  entry.name = finalName + " (Aborted)";
+                  localUpdated = true;
+                  return;
+                }
+                
+                if (entry.name === rawName.trim()) {
+                  entry.name = finalName;
+                  localUpdated = true;
+                  return;
+                }
+              });
+              
+              if (localUpdated) {
+                localStorage.setItem("aero_scores", JSON.stringify(localScores));
+              }
+            } catch (err) {
+              console.error("Local scores rename sync failed:", err);
+            }
+          }
+
           // --- Specific player deletion check ---
           const deletedUsers = data.deletedUsers || [];
           if (finalName && deletedUsers.includes(finalName)) {
@@ -2016,6 +2053,43 @@
               current = nameMappings[current].trim();
             }
             const finalName = current;
+
+            // If the player was renamed on load, sync their local scores names in localStorage
+            if (finalName && finalName !== savedName.trim()) {
+              try {
+                let localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
+                let localUpdated = false;
+                localScores.forEach(entry => {
+                  if (!entry || !entry.name) return;
+                  
+                  const numPrefix = savedName.trim() + " #";
+                  if (entry.name.startsWith(numPrefix)) {
+                    entry.name = finalName + " #" + entry.name.slice(numPrefix.length);
+                    localUpdated = true;
+                    return;
+                  }
+                  
+                  const abortSuffix = savedName.trim() + " (Aborted)";
+                  if (entry.name === abortSuffix) {
+                    entry.name = finalName + " (Aborted)";
+                    localUpdated = true;
+                    return;
+                  }
+                  
+                  if (entry.name === savedName.trim()) {
+                    entry.name = finalName;
+                    localUpdated = true;
+                    return;
+                  }
+                });
+                
+                if (localUpdated) {
+                  localStorage.setItem("aero_scores", JSON.stringify(localScores));
+                }
+              } catch (err) {
+                console.error("Local scores rename sync failed on load:", err);
+              }
+            }
             
             const deletedUsers = data.deletedUsers || [];
             if (finalName && deletedUsers.includes(finalName)) {
@@ -3052,6 +3126,12 @@
         showToast("Please enter your name to log score.", "error");
         return;
       }
+
+      // Freeze game timer and state immediately to prevent score discrepancy due to network latency
+      clearInterval(timerInterval);
+      testCompleted = true;
+      updateSchedules();
+      updateSubmitButtonState();
 
       const repoPenalty = totalRepoDurationMins * REPO_PENALTY_PER_MINUTE;
       const conflictPenalty = conflictsCount * CONFLICT_PENALTY;
