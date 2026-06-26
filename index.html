@@ -1327,14 +1327,6 @@
           </div>
         </div>
         
-        <!-- Puzzle Selector for Leaderboard -->
-        <div class="form-group" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-          <label class="form-label" for="leaderboardPuzzleFilter" style="margin: 0; font-size: 11px; white-space: nowrap; color: var(--text-secondary);">Puzzle:</label>
-          <select id="leaderboardPuzzleFilter" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white; padding: 8px 12px; font-size: 13px; border-radius: 8px; border: 1px solid var(--border-color); width: auto; min-width: 200px;">
-            <option value="Introduction Puzzle">Introduction Puzzle</option>
-          </select>
-        </div>
-        
         <div class="leaderboard-table-container">
           <table class="leaderboard-table">
             <thead>
@@ -1352,7 +1344,14 @@
           </table>
         </div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <!-- Puzzle Selector for Leaderboard -->
+        <div class="form-group" style="margin: 0; display: flex; align-items: center; gap: 8px;">
+          <label class="form-label" for="leaderboardPuzzleFilter" style="margin: 0; font-size: 11px; white-space: nowrap; color: var(--text-secondary);">Puzzle:</label>
+          <select id="leaderboardPuzzleFilter" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white; padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid var(--border-color); width: auto; min-width: 180px;">
+            <option value="Introduction Puzzle">Introduction Puzzle</option>
+          </select>
+        </div>
         <button class="btn btn-primary modal-close-btn">Close</button>
       </div>
     </div>
