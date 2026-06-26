@@ -870,14 +870,16 @@
     .accordion-item {
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      overflow: hidden;
       background: rgba(255, 255, 255, 0.01);
       margin-bottom: 12px;
-      transition: border-color 0.2s, background-color 0.2s;
+      transition: border-color 0.2s, background-color 0.2s, border-radius 0.2s;
+      position: relative;
     }
     .accordion-item.active {
       border-color: var(--accent);
       background: rgba(255, 255, 255, 0.02);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
     }
     .accordion-header {
       padding: 14px 16px;
@@ -890,6 +892,7 @@
       font-size: 14px;
       color: white;
       transition: background 0.2s;
+      border-radius: 11px;
     }
     .accordion-header:hover {
       background: rgba(255, 255, 255, 0.03);
@@ -904,9 +907,19 @@
       color: var(--accent);
     }
     .accordion-content {
+      position: absolute;
+      top: 100%;
+      left: -1px;
+      right: -1px;
+      z-index: 50;
+      background: #0f1322;
+      border: 1px solid transparent;
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+      transition: max-height 0.3s ease-out, padding 0.3s ease-out, border-color 0.3s;
       padding: 0 16px;
       display: flex;
       flex-direction: column;
@@ -914,9 +927,8 @@
     }
     .accordion-item.active .accordion-content {
       max-height: 500px;
-      padding: 0 16px 16px 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      padding-top: 16px;
+      padding: 16px;
+      border-color: var(--accent);
     }
 
     .modal-footer {
@@ -1388,12 +1400,12 @@
 
   <!-- Admin Modal -->
   <div id="adminModal" class="modal-overlay">
-    <div class="modal-box" style="width: 480px;">
+    <div class="modal-box" style="width: 480px; overflow: visible;">
       <div class="modal-header">
         <h2 class="modal-title"><i class="fa-solid fa-user-gear"></i> Admin Panel</h2>
         <button class="btn btn-secondary modal-close-btn" style="padding: 6px 12px;"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="modal-body" style="gap: 12px; max-height: 70vh; overflow-y: auto;">
+      <div class="modal-body" style="gap: 12px; overflow: visible; padding-right: 0; position: relative;">
         
         <div class="accordion-item">
           <div class="accordion-header">
