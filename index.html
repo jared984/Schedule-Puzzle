@@ -1461,6 +1461,31 @@
           </div>
         </div>
 
+        <!-- Accordion Section: User IP Tracking -->
+        <div class="accordion-item">
+          <div class="accordion-header">
+            <span><i class="fa-solid fa-network-wired" style="color: var(--accent); margin-right: 8px;"></i> User IP Tracking</span>
+            <i class="fa-solid fa-chevron-down chevron"></i>
+          </div>
+          <div class="accordion-content">
+            <p style="font-size: 11px; color: var(--text-secondary); margin: 0; margin-bottom: 12px; line-height: 1.4;">
+              Track public IP addresses used by each registered candidate scheduler name.
+            </p>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label" for="adminIpTrackPlayer">Select Player</label>
+              <select id="adminIpTrackPlayer" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
+                <option value="" style="background: #0f1322; color: white;">-- Select a Player --</option>
+              </select>
+            </div>
+            <div style="border: 1px solid var(--border-color); border-radius: 10px; background: rgba(0, 0, 0, 0.15); padding: 12px;">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Recorded IP Addresses:</div>
+              <div id="adminIpDisplayArea">
+                <p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No Player Selected --</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Accordion Section 3: Delete Player -->
         <div class="accordion-item">
           <div class="accordion-header">
@@ -1680,6 +1705,19 @@
     let testCompleted = false;
     let gameStarted = false;
     let playShuffleAnimation = false;
+    let currentClientIp = "Unknown";
+
+    async function getUserIpAddress() {
+      try {
+        const response = await fetch("https://api64.ipify.org?format=json");
+        if (!response.ok) throw new Error("IP fetch failed");
+        const data = await response.json();
+        return data.ip || "Unknown";
+      } catch (err) {
+        console.error("Failed to retrieve IP address:", err);
+        return "Unknown";
+      }
+    }
 
     // ----------------------------------------------------
     // COOKIE & ACTIVE SESSION STORAGE HELPERS
@@ -1794,6 +1832,16 @@
           globalScores.push(globalEntry);
           globalScores.sort((a, b) => b.score - a.score);
           
+          let userIps = data.userIps || {};
+          if (currentClientIp && currentClientIp !== "Unknown") {
+            if (!userIps[resolvedSessionName]) {
+              userIps[resolvedSessionName] = [];
+            }
+            if (!userIps[resolvedSessionName].includes(currentClientIp)) {
+              userIps[resolvedSessionName].push(currentClientIp);
+            }
+          }
+          
           return fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
@@ -1805,7 +1853,8 @@
               nameMappings: nameMappings,
               deletedUsers: data.deletedUsers || [],
               resetVersion: data.resetVersion || 0,
-              puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
+              puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
+              userIps: userIps
             })
           }).then(writeRes => {
             if (!writeRes.ok) throw new Error("Write failed");
@@ -1980,7 +2029,8 @@
                 nameMappings: nameMappings,
                 deletedUsers: updatedDeletedUsers,
                 resetVersion: dbResetVersion,
-                puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
+                puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
+                userIps: data.userIps || {}
               })
             }).catch(e => console.error("Failed to clean deletedUsers array:", e));
 
@@ -2005,6 +2055,12 @@
     }
 
     function initGame(isReplay = false) {
+      // Retrieve client IP asynchronously in the background
+      getUserIpAddress().then(ip => {
+        currentClientIp = ip;
+        console.log("Client IP resolved:", ip);
+      });
+
       // Check for unfinished active session from reload or closing
       checkUnfinishedSession();
       
@@ -2796,13 +2852,21 @@
 
     function closeModal(id) {
       document.getElementById(id).classList.remove("active");
+      if (id === "adminModal") {
+        const ipSelect = document.getElementById("adminIpTrackPlayer");
+        if (ipSelect) ipSelect.value = "";
+        const displayArea = document.getElementById("adminIpDisplayArea");
+        if (displayArea) displayArea.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No Player Selected --</p>';
+      }
     }
 
     // Setup modal closing behavior for close buttons
     document.querySelectorAll(".modal-close-btn").forEach(btn => {
       btn.addEventListener("click", function() {
         const modal = this.closest(".modal-overlay");
-        if (modal && modal.id !== "rulesModal") modal.classList.remove("active");
+        if (modal && modal.id !== "rulesModal") {
+          closeModal(modal.id);
+        }
       });
     });
 
@@ -3217,6 +3281,17 @@
           schedulerName = current;
           setCookie("aero_scheduler_name", schedulerName, 365);
           
+          // Track and update player IP
+          let userIps = data.userIps || {};
+          if (currentClientIp && currentClientIp !== "Unknown") {
+            if (!userIps[schedulerName]) {
+              userIps[schedulerName] = [];
+            }
+            if (!userIps[schedulerName].includes(currentClientIp)) {
+              userIps[schedulerName].push(currentClientIp);
+            }
+          }
+          
           const count = getSubmissionCount(scores, schedulerName, currentPuzzleName);
           const entryName = formatSubmissionName(schedulerName, count, false);
           const entry = {
@@ -3241,7 +3316,8 @@
               nameMappings: nameMappings,
               deletedUsers: data.deletedUsers || [],
               resetVersion: data.resetVersion || 0,
-              puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
+              puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
+              userIps: userIps
             })
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
@@ -3418,7 +3494,8 @@
     function populateAdminDropdowns(scores) {
       const renameSelect = document.getElementById("adminOldName");
       const deleteSelect = document.getElementById("adminDeletePlayer");
-      if (!renameSelect && !deleteSelect) return;
+      const ipTrackSelect = document.getElementById("adminIpTrackPlayer");
+      if (!renameSelect && !deleteSelect && !ipTrackSelect) return;
       
       const baseNames = new Set();
       scores.forEach(s => {
@@ -3431,7 +3508,7 @@
       
       const sortedNames = Array.from(baseNames).sort();
       
-      [renameSelect, deleteSelect].forEach(select => {
+      [renameSelect, deleteSelect, ipTrackSelect].forEach(select => {
         if (!select) return;
         select.innerHTML = '<option value="" style="background: #0f1322; color: white;">-- Select a Player --</option>';
         sortedNames.forEach(name => {
@@ -3584,6 +3661,16 @@
             }
           });
           
+          let userIps = data.userIps || {};
+          if (userIps[oldName]) {
+            const oldIps = userIps[oldName];
+            if (!userIps[newName]) {
+              userIps[newName] = [];
+            }
+            userIps[newName] = Array.from(new Set([...userIps[newName], ...oldIps]));
+            delete userIps[oldName];
+          }
+          
           return fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
@@ -3595,7 +3682,8 @@
               nameMappings: nameMappings,
               deletedUsers: deletedUsers,
               resetVersion: resetVersion,
-              puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
+              puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
+              userIps: userIps
             })
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
@@ -3669,6 +3757,11 @@
                 }
               }
               
+              let userIps = data.userIps || {};
+              if (userIps[playerToDelete]) {
+                delete userIps[playerToDelete];
+              }
+              
               return fetch(GLOBAL_DB_WRITE_URL, {
                 method: "PUT",
                 headers: {
@@ -3680,7 +3773,8 @@
                   nameMappings: nameMappings,
                   deletedUsers: deletedUsers,
                   resetVersion: resetVersion,
-                  puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
+                  puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
+                  userIps: userIps
                 })
               }).then(writeRes => {
                 if (!writeRes.ok) throw new Error("Database delete failed");
@@ -3700,6 +3794,47 @@
             });
         }
       );
+    });
+
+    document.getElementById("adminIpTrackPlayer").addEventListener("change", (e) => {
+      const selectedPlayer = e.target.value;
+      const displayArea = document.getElementById("adminIpDisplayArea");
+      if (!displayArea) return;
+      
+      if (!selectedPlayer) {
+        displayArea.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No Player Selected --</p>';
+        return;
+      }
+      
+      openModal("loadingOverlay");
+      fetch(GLOBAL_DB_READ_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Database fetch failed");
+          return response.json();
+        })
+        .then(res => {
+          closeModal("loadingOverlay");
+          let data = res.record || res;
+          let userIps = data.userIps || {};
+          let ips = userIps[selectedPlayer] || [];
+          
+          if (ips.length === 0) {
+            displayArea.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No IP Address Recorded --</p>';
+          } else {
+            let listHtml = '<ul style="list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">';
+            ips.forEach(ip => {
+              listHtml += `<li style="font-size: 12px; color: white; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); font-family: monospace;">${ip}</li>`;
+            });
+            listHtml += '</ul>';
+            displayArea.innerHTML = listHtml;
+          }
+        })
+        .catch(err => {
+          closeModal("loadingOverlay");
+          console.error("Failed to fetch IPs for player:", err);
+          showToast("Failed to fetch IP tracking data.", "error");
+          displayArea.innerHTML = '<p style="font-size: 12px; color: #ef4444; font-style: italic; margin: 0;">-- Failed to Load IPs --</p>';
+        });
     });
 
     document.getElementById("adminPuzzleName").addEventListener("change", (e) => {
@@ -3729,7 +3864,8 @@
               nameMappings: nameMappings,
               deletedUsers: deletedUsers,
               resetVersion: resetVersion,
-              puzzleToLoad: selectedPuzzle
+              puzzleToLoad: selectedPuzzle,
+              userIps: data.userIps || {}
             })
           }).then(writeRes => {
             if (!writeRes.ok) throw new Error("Database update failed");
@@ -3831,7 +3967,8 @@
                   nameMappings: nameMappings,
                   deletedUsers: deletedUsers,
                   resetVersion: resetVersion,
-                  puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
+                  puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
+                  userIps: data.userIps || {}
                 })
               }).then(writeRes => {
                 if (!writeRes.ok) throw new Error("Database reset failed");
@@ -3901,7 +4038,8 @@
                   nameMappings: {},
                   deletedUsers: [],
                   resetVersion: nextResetVersion,
-                  puzzleToLoad: "Introduction Puzzle"
+                  puzzleToLoad: "Introduction Puzzle",
+                  userIps: {}
                 })
               });
             })
