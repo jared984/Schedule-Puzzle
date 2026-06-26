@@ -1469,19 +1469,13 @@
           </div>
           <div class="accordion-content">
             <p style="font-size: 11px; color: var(--text-secondary); margin: 0; margin-bottom: 12px; line-height: 1.4;">
-              Track public IP addresses used by each registered candidate scheduler name.
+              Track public IP addresses used by each registered candidate scheduler name. Selecting a player will show their recorded IP addresses in a pop-up window.
             </p>
-            <div class="form-group" style="margin-bottom: 12px;">
+            <div class="form-group" style="margin: 0;">
               <label class="form-label" for="adminIpTrackPlayer">Select Player</label>
               <select id="adminIpTrackPlayer" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
                 <option value="" style="background: #0f1322; color: white;">-- Select a Player --</option>
               </select>
-            </div>
-            <div style="border: 1px solid var(--border-color); border-radius: 10px; background: rgba(0, 0, 0, 0.15); padding: 12px;">
-              <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Recorded IP Addresses:</div>
-              <div id="adminIpDisplayArea">
-                <p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No Player Selected --</p>
-              </div>
             </div>
           </div>
         </div>
@@ -1582,6 +1576,24 @@
       <div style="display: flex; gap: 12px; justify-content: center; margin-top: 8px; width: 100%;">
         <button id="confirmCancelBtn" class="btn btn-secondary" style="padding: 10px 20px; font-size: 13px;">Cancel</button>
         <button id="confirmYesBtn" class="btn btn-primary" style="background: #ef4444; border-color: #ef4444; color: white; padding: 10px 20px; font-size: 13px; outline: none; border: none; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">Yes, Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User IP Tracking Popup Modal -->
+  <div id="adminIpTrackModal" class="modal-overlay" style="z-index: 160;">
+    <div class="modal-box" style="width: 400px; gap: 16px;">
+      <div class="modal-header">
+        <h2 id="adminIpTrackModalTitle" class="modal-title" style="font-size: 16px;"><i class="fa-solid fa-network-wired"></i> IP Addresses for Player</h2>
+        <button class="btn btn-secondary modal-close-btn" style="padding: 6px 12px;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="gap: 12px; max-height: 50vh; overflow-y: auto;">
+        <div id="adminIpTrackDisplayArea">
+          <p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No IP Address Recorded --</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 16px; width: 100%;">
+        <button class="btn btn-secondary modal-close-btn" style="padding: 8px 16px; font-size: 13px;">Close</button>
       </div>
     </div>
   </div>
@@ -2852,11 +2864,11 @@
 
     function closeModal(id) {
       document.getElementById(id).classList.remove("active");
-      if (id === "adminModal") {
+      if (id === "adminModal" || id === "adminIpTrackModal") {
         const ipSelect = document.getElementById("adminIpTrackPlayer");
         if (ipSelect) ipSelect.value = "";
-        const displayArea = document.getElementById("adminIpDisplayArea");
-        if (displayArea) displayArea.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No Player Selected --</p>';
+        const displayArea = document.getElementById("adminIpTrackDisplayArea");
+        if (displayArea) displayArea.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No IP Address Recorded --</p>';
       }
     }
 
@@ -3798,13 +3810,11 @@
 
     document.getElementById("adminIpTrackPlayer").addEventListener("change", (e) => {
       const selectedPlayer = e.target.value;
-      const displayArea = document.getElementById("adminIpDisplayArea");
-      if (!displayArea) return;
+      if (!selectedPlayer) return;
       
-      if (!selectedPlayer) {
-        displayArea.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No Player Selected --</p>';
-        return;
-      }
+      const displayArea = document.getElementById("adminIpTrackDisplayArea");
+      const titleArea = document.getElementById("adminIpTrackModalTitle");
+      if (!displayArea) return;
       
       openModal("loadingOverlay");
       fetch(GLOBAL_DB_READ_URL)
@@ -3818,6 +3828,10 @@
           let userIps = data.userIps || {};
           let ips = userIps[selectedPlayer] || [];
           
+          if (titleArea) {
+            titleArea.innerHTML = `<i class="fa-solid fa-network-wired"></i> IP Addresses for ${selectedPlayer}`;
+          }
+          
           if (ips.length === 0) {
             displayArea.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No IP Address Recorded --</p>';
           } else {
@@ -3828,12 +3842,13 @@
             listHtml += '</ul>';
             displayArea.innerHTML = listHtml;
           }
+          
+          openModal("adminIpTrackModal");
         })
         .catch(err => {
           closeModal("loadingOverlay");
           console.error("Failed to fetch IPs for player:", err);
           showToast("Failed to fetch IP tracking data.", "error");
-          displayArea.innerHTML = '<p style="font-size: 12px; color: #ef4444; font-style: italic; margin: 0;">-- Failed to Load IPs --</p>';
         });
     });
 
