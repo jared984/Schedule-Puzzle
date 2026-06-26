@@ -1448,6 +1448,28 @@
           </div>
         </div>
 
+        <!-- Accordion Section: Delete Specific Score -->
+        <div class="accordion-item">
+          <div class="accordion-header">
+            <span><i class="fa-solid fa-square-minus" style="color: #ef4444; margin-right: 8px;"></i> Delete Specific Score</span>
+            <i class="fa-solid fa-chevron-down chevron"></i>
+          </div>
+          <div class="accordion-content">
+            <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+              Permanently remove a specific score from the leaderboard for the selected puzzle, re-sequencing all subsequent attempts and updating attempt counts/penalties.
+            </p>
+            <div class="form-group" style="margin-top: 8px; margin-bottom: 12px;">
+              <label class="form-label" for="adminDelScorePuzzle">Select Puzzle</label>
+              <select id="adminDelScorePuzzle" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
+                <option value="Introduction Puzzle">Introduction Puzzle</option>
+              </select>
+            </div>
+            <div id="adminDelScoresContainer" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 4px; display: flex; flex-direction: column; gap: 4px;">
+              <p style="font-size: 11px; color: var(--text-muted); font-style: italic; margin: 0; text-align: center; padding: 12px;">-- Select a puzzle to view scores --</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Accordion Section 2: Rename Player -->
         <div class="accordion-item">
           <div class="accordion-header">
@@ -2022,6 +2044,38 @@
               }
             } catch (err) {
               console.error("Local scores rename sync failed:", err);
+            }
+          }
+
+          // Synchronize local storage aero_scores with the server scores for this resolved player
+          if (finalName) {
+            try {
+              let localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
+              const lowerFinalName = finalName.toLowerCase().trim();
+              
+              // 1. Filter out all local scores for this player name (case-insensitive) across all puzzles
+              let otherPlayersScores = localScores.filter(entry => {
+                if (!entry || !entry.name) return true;
+                const parts = entry.name.split(" #");
+                const entryBase = parts[0].split(" (Aborted)")[0].toLowerCase().trim();
+                return entryBase !== lowerFinalName;
+              });
+              
+              // 2. Extract all server scores for this player name
+              const scoresList = Array.isArray(data) ? data : (data.scores || []);
+              const serverScoresForPlayer = scoresList.filter(entry => {
+                if (!entry || !entry.name) return false;
+                const parts = entry.name.split(" #");
+                const entryBase = parts[0].split(" (Aborted)")[0].toLowerCase().trim();
+                return entryBase === lowerFinalName;
+              });
+              
+              // 3. Combine other players' scores with the synchronized server scores for this player
+              let combinedScores = [...otherPlayersScores, ...serverScoresForPlayer];
+              combinedScores.sort((a, b) => b.score - a.score);
+              localStorage.setItem("aero_scores", JSON.stringify(combinedScores));
+            } catch (err) {
+              console.error("Local scores database synchronization failed:", err);
             }
           }
 
@@ -3582,6 +3636,15 @@
           if (resetPuzzleSelect) {
             resetPuzzleSelect.value = puzzleVal;
           }
+          const delScorePuzzleSelect = document.getElementById("adminDelScorePuzzle");
+          if (delScorePuzzleSelect) {
+            delScorePuzzleSelect.innerHTML = "";
+            if (puzzleSelect) {
+              delScorePuzzleSelect.innerHTML = puzzleSelect.innerHTML;
+            }
+            delScorePuzzleSelect.value = puzzleVal;
+          }
+          renderAdminDeleteScoresList(scores);
           
           // Collapse all accordion sections on load
           document.querySelectorAll(".accordion-item").forEach(item => {
@@ -4001,6 +4064,190 @@
             </div>
           `;
         });
+    };
+
+    document.getElementById("adminDelScorePuzzle").addEventListener("change", () => {
+      showLoading("Loading Leaderboard...", "Fetching score entries");
+      fetch(GLOBAL_DB_READ_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Database fetch failed");
+          return response.json();
+        })
+        .then(res => {
+          closeModal("loadingOverlay");
+          let data = res.record || res;
+          let scores = Array.isArray(data) ? data : (data.scores || []);
+          renderAdminDeleteScoresList(scores);
+        })
+        .catch(err => {
+          closeModal("loadingOverlay");
+          console.error("Failed to load scores for admin:", err);
+          showToast("Failed to fetch leaderboard data.", "error");
+        });
+    });
+
+    window.renderAdminDeleteScoresList = function(scores) {
+      const container = document.getElementById("adminDelScoresContainer");
+      const selectedPuzzle = document.getElementById("adminDelScorePuzzle").value;
+      if (!container) return;
+      
+      let filterPuzzle = selectedPuzzle;
+      if (filterPuzzle === 1 || filterPuzzle === "1") {
+        filterPuzzle = "Introduction Puzzle";
+      }
+      
+      const filteredScores = scores.filter(s => {
+        let itemPuzzle = s.puzzle || "Introduction Puzzle";
+        if (itemPuzzle === 1 || itemPuzzle === "1") {
+          itemPuzzle = "Introduction Puzzle";
+        }
+        return itemPuzzle === filterPuzzle;
+      });
+      
+      filteredScores.sort((a, b) => b.score - a.score);
+      
+      if (filteredScores.length === 0) {
+        container.innerHTML = `<p style="font-size: 11px; color: var(--text-muted); font-style: italic; margin: 0; text-align: center; padding: 12px; width: 100%;">-- No scores submitted for this puzzle --</p>`;
+        return;
+      }
+      
+      let html = '<div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">';
+      filteredScores.forEach((item, idx) => {
+        const rank = idx + 1;
+        html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; font-size: 12px; color: white;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 10px; color: var(--text-muted); font-weight: 700; width: 16px;">#${rank}</span>
+              <span style="font-family: monospace; color: white; font-weight: 500;">${item.name}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="color: var(--accent); font-weight: 600; font-family: monospace;">${item.score.toLocaleString()} pts</span>
+              <button onclick="adminDeleteSpecificScore('${item.name}', '${item.puzzle || 'Introduction Puzzle'}', this)" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px 6px; font-size: 14px; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" title="Delete Score">
+                <i class="fa-solid fa-circle-xmark"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    };
+
+    window.adminDeleteSpecificScore = function(itemName, itemPuzzle, btnEl) {
+      showConfirm(
+        "Delete Specific Score",
+        `Are you sure you want to delete the score entry for "${itemName}"? This will permanently erase this score, rename any subsequent attempts, and reset attempt penalties on the user side.`,
+        () => {
+          showLoading("Deleting Score...", "Updating database records");
+          fetch(GLOBAL_DB_READ_URL)
+            .then(response => {
+              if (!response.ok) throw new Error("Database fetch failed");
+              return response.json();
+            })
+            .then(res => {
+              let data = res.record || res;
+              let scores = data.scores || [];
+              let nameMappings = data.nameMappings || {};
+              let deletedUsers = data.deletedUsers || [];
+              let userIps = data.userIps || {};
+              
+              let cleanTarget = itemName.split(" (Aborted)")[0].trim();
+              let parts = cleanTarget.split(" #");
+              let baseName = parts[0].trim();
+              let targetAttempt = 1;
+              if (parts.length > 1) {
+                targetAttempt = parseInt(parts[1], 10);
+              }
+              const lowerBaseName = baseName.toLowerCase().trim();
+              
+              let targetPuzzle = itemPuzzle || "Introduction Puzzle";
+              if (targetPuzzle === 1 || targetPuzzle === "1") {
+                targetPuzzle = "Introduction Puzzle";
+              }
+              
+              let deleted = false;
+              let updatedScores = [];
+              
+              scores.forEach(s => {
+                let sPuzzle = s.puzzle || "Introduction Puzzle";
+                if (sPuzzle === 1 || sPuzzle === "1") {
+                  sPuzzle = "Introduction Puzzle";
+                }
+                
+                if (!deleted && s.name === itemName && sPuzzle === targetPuzzle) {
+                  deleted = true;
+                  return;
+                }
+                
+                if (sPuzzle === targetPuzzle) {
+                  let cleanS = s.name.split(" (Aborted)")[0].trim();
+                  let sParts = cleanS.split(" #");
+                  let sBase = sParts[0].trim();
+                  if (sBase.toLowerCase().trim() === lowerBaseName) {
+                    let sAttempt = 1;
+                    if (sParts.length > 1) {
+                      sAttempt = parseInt(sParts[1], 10);
+                    }
+                    
+                    if (sAttempt > targetAttempt) {
+                      let newAttempt = sAttempt - 1;
+                      let isAborted = s.name.includes(" (Aborted)");
+                      s.name = formatSubmissionName(baseName, newAttempt - 1, isAborted);
+                    }
+                  }
+                }
+                
+                updatedScores.push(s);
+              });
+              
+              if (!deleted) {
+                closeModal("loadingOverlay");
+                showToast("Score entry not found in database.", "error");
+                return;
+              }
+              
+              return fetch(GLOBAL_DB_WRITE_URL, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Master-Key": GLOBAL_DB_MASTER_KEY
+                },
+                body: JSON.stringify({
+                  scores: updatedScores,
+                  nameMappings: nameMappings,
+                  deletedUsers: deletedUsers,
+                  resetVersion: data.resetVersion || 0,
+                  puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
+                  userIps: userIps
+                })
+              }).then(writeRes => {
+                if (!writeRes.ok) throw new Error("Write failed");
+                closeModal("loadingOverlay");
+                showToast("Score successfully deleted and re-sequenced.", "success");
+                
+                if (schedulerName) {
+                  resolvePlayerName(schedulerName).then(() => {
+                    const localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
+                    schedulerAttemptCount = getSubmissionCount(localScores, schedulerName, currentPuzzleName);
+                    
+                    setupGameInitialUI();
+                    renderLeaderboardTable();
+                  });
+                } else {
+                  renderLeaderboardTable();
+                }
+                
+                renderAdminDeleteScoresList(updatedScores);
+                populateAdminDropdowns(updatedScores);
+              });
+            })
+            .catch(err => {
+              closeModal("loadingOverlay");
+              console.error("Admin delete score error:", err);
+              showToast("Failed to delete score. Please try again.", "error");
+            });
+        }
+      );
     };
 
     document.getElementById("adminPuzzleName").addEventListener("change", (e) => {
