@@ -1643,7 +1643,7 @@
     const BASE_SCORE = 150000;
     const REPO_PENALTY_PER_MINUTE = 50;
     const CONFLICT_PENALTY = 15000;
-    const ADMIN_RESET_PASSWORD = "Baker123";
+    const ADMIN_PASSWORD_HASH = "39c7bb8a9163e9885e78f4cc610e38d29883b290008a0d9a7356d80d3548a0f0";
 
     // Global Database Configuration using JSONBin.io API
     const GLOBAL_DB_READ_URL = "https://api.jsonbin.io/v3/b/6a3d856fda38895dfeff408e/latest";
@@ -3675,10 +3675,20 @@
       closeModal("adminAuthModal");
     });
 
+    // Helper to generate SHA-256 hash of a string
+    async function hashPassword(password) {
+      const msgBuffer = new TextEncoder().encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+
     // Authenticate Admin Password
-    function authenticateAdmin() {
+    async function authenticateAdmin() {
       const password = document.getElementById("adminAuthPassword").value;
-      if (password === ADMIN_RESET_PASSWORD) {
+      const hash = await hashPassword(password);
+      if (hash === ADMIN_PASSWORD_HASH) {
         closeModal("adminAuthModal");
         openAdminPanel();
       } else {
