@@ -1355,8 +1355,14 @@
           </div>
           <div class="accordion-content">
             <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
-              Permanently delete all scores on the global and local leaderboard. Active player name mappings will be preserved.
+              Permanently delete all scores on the global and local leaderboard for the selected puzzle. Active player name mappings will be preserved.
             </p>
+            <div class="form-group" style="margin-top: 8px; margin-bottom: 12px;">
+              <label class="form-label" for="adminResetPuzzleName">Select Puzzle</label>
+              <select id="adminResetPuzzleName" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
+                <option value="Introduction Puzzle">Introduction Puzzle</option>
+              </select>
+            </div>
             <button id="adminResetLeaderboardBtn" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 13px; padding: 10px 16px;">
               <i class="fa-solid fa-triangle-exclamation"></i> Reset Leader Board
             </button>
@@ -3285,6 +3291,10 @@
           if (puzzleSelect) {
             puzzleSelect.value = puzzleVal;
           }
+          const resetPuzzleSelect = document.getElementById("adminResetPuzzleName");
+          if (resetPuzzleSelect) {
+            resetPuzzleSelect.value = puzzleVal;
+          }
           
           // Collapse all accordion sections on load
           document.querySelectorAll(".accordion-item").forEach(item => {
@@ -3582,15 +3592,28 @@
     });
 
     document.getElementById("adminResetLeaderboardBtn").addEventListener("click", () => {
+      const puzzleToReset = document.getElementById("adminResetPuzzleName").value;
       showConfirm(
         "Reset Leader Board",
-        "Are you sure you want to reset the leaderboard? All saved scores will be permanently deleted.",
+        `Are you sure you want to reset the leaderboard for "${puzzleToReset}"? All saved scores for this puzzle will be permanently deleted and attempt limits for this puzzle will be reset for all players.`,
         () => {
           const resetLocal = () => {
-            localStorage.setItem("aero_scores", JSON.stringify([]));
+            let localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
+            localScores = localScores.filter(entry => {
+              let entryPuzzle = entry.puzzle || "Introduction Puzzle";
+              if (entryPuzzle === 1 || entryPuzzle === "1") {
+                entryPuzzle = "Introduction Puzzle";
+              }
+              let filterPuzzle = puzzleToReset;
+              if (filterPuzzle === 1 || filterPuzzle === "1") {
+                filterPuzzle = "Introduction Puzzle";
+              }
+              return entryPuzzle !== filterPuzzle;
+            });
+            localStorage.setItem("aero_scores", JSON.stringify(localScores));
             document.getElementById("userResultContainer").style.display = "none";
             renderLeaderboardTable();
-            showToast("Local Leaderboard Reset Successful.", "success");
+            showToast(`Local Leaderboard Reset for "${puzzleToReset}" Successful.`, "success");
           };
 
           openModal("loadingOverlay");
@@ -3605,6 +3628,20 @@
               let nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
               let deletedUsers = (data && data.deletedUsers) ? data.deletedUsers : [];
               let resetVersion = data.resetVersion || 0;
+              let scores = Array.isArray(data) ? data : (data.scores || []);
+              
+              // Filter out scores matching puzzleToReset
+              scores = scores.filter(entry => {
+                let entryPuzzle = entry.puzzle || "Introduction Puzzle";
+                if (entryPuzzle === 1 || entryPuzzle === "1") {
+                  entryPuzzle = "Introduction Puzzle";
+                }
+                let filterPuzzle = puzzleToReset;
+                if (filterPuzzle === 1 || filterPuzzle === "1") {
+                  filterPuzzle = "Introduction Puzzle";
+                }
+                return entryPuzzle !== filterPuzzle;
+              });
               
               return fetch(GLOBAL_DB_WRITE_URL, {
                 method: "PUT",
@@ -3613,25 +3650,42 @@
                   "X-Master-Key": GLOBAL_DB_MASTER_KEY
                 },
                 body: JSON.stringify({
-                  scores: [],
+                  scores: scores,
                   nameMappings: nameMappings,
                   deletedUsers: deletedUsers,
                   resetVersion: resetVersion,
                   puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle"
                 })
+              }).then(writeRes => {
+                if (!writeRes.ok) throw new Error("Database reset failed");
+                closeModal("loadingOverlay");
+                closeModal("adminModal");
+                
+                // Re-populate dropdown options with remaining scores
+                populateAdminDropdowns(scores);
+                
+                // If the reset puzzle is the currently loaded one, refresh client limits
+                let filterPuzzle = puzzleToReset;
+                if (filterPuzzle === 1 || filterPuzzle === "1") {
+                  filterPuzzle = "Introduction Puzzle";
+                }
+                let activePuzzle = currentPuzzleName || "Introduction Puzzle";
+                if (activePuzzle === 1 || activePuzzle === "1") {
+                  activePuzzle = "Introduction Puzzle";
+                }
+                
+                if (activePuzzle === filterPuzzle) {
+                  schedulerAttemptCount = 0;
+                  const attemptTimeRemaining = Math.max(0, TOTAL_TIME - (schedulerAttemptCount * 30));
+                  updateTimerDisplay(attemptTimeRemaining);
+                  updateSubmitButtonState();
+                  updateRulesModalFooter();
+                }
+                
+                document.getElementById("userResultContainer").style.display = "none";
+                showToast(`Global Leaderboard Reset for "${puzzleToReset}" Successful.`, "success");
+                renderLeaderboardTable();
               });
-            })
-            .then(response => {
-              if (!response.ok) throw new Error("Database reset failed");
-              closeModal("loadingOverlay");
-              closeModal("adminModal");
-              
-              // Clear dropdown options since board was reset
-              populateAdminDropdowns([]);
-              
-              document.getElementById("userResultContainer").style.display = "none";
-              showToast("Global Leaderboard Reset Successful.", "success");
-              renderLeaderboardTable();
             })
             .catch(err => {
               console.error("Global database reset failed, doing local reset.", err);
