@@ -911,7 +911,7 @@
       position: absolute;
       top: 100%;
       left: -1px;
-      width: calc(100% + 2px);
+      right: -1px;
       z-index: 50;
       background: #0f1322;
       border: 1px solid transparent;
@@ -1544,8 +1544,8 @@
       <div style="font-size: 55px; color: var(--accent); animation: flipHourglass 1.8s infinite ease-in-out; margin-bottom: 5px;">
         <i class="fa-solid fa-hourglass-half"></i>
       </div>
-      <h3 style="font-size: 18px; font-weight: 700; color: white;">Submitting Schedule...</h3>
-      <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">Connecting to operations center database</p>
+      <h3 id="loadingOverlayTitle" style="font-size: 18px; font-weight: 700; color: white;">Loading...</h3>
+      <p id="loadingOverlaySub" style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">Please wait...</p>
     </div>
   </div>
 
@@ -2092,7 +2092,7 @@
       // Load name from cookie if available
       const savedName = getCookie("aero_scheduler_name");
       
-      openModal("loadingOverlay");
+      showLoading("Loading Game State...", "Connecting to database");
       fetch(GLOBAL_DB_READ_URL)
         .then(response => {
           if (!response.ok) throw new Error("DB read failed");
@@ -2875,6 +2875,14 @@
       document.getElementById(id).classList.add("active");
     }
 
+    function showLoading(title = "Loading...", subtitle = "Please wait...") {
+      const titleEl = document.getElementById("loadingOverlayTitle");
+      const subEl = document.getElementById("loadingOverlaySub");
+      if (titleEl) titleEl.innerText = title;
+      if (subEl) subEl.innerText = subtitle;
+      openModal("loadingOverlay");
+    }
+
     function closeModal(id) {
       document.getElementById(id).classList.remove("active");
       if (id === "adminModal" || id === "adminIpTrackModal") {
@@ -2998,7 +3006,7 @@
         return;
       }
 
-      openModal("loadingOverlay");
+      showLoading("Resolving Player Name...", "Verifying database registration");
       resolvePlayerName(nameToUse).then(finalName => {
         closeModal("loadingOverlay");
         schedulerName = finalName;
@@ -3075,7 +3083,7 @@
         const nameToUse = schedulerName || cookieName || inputName;
         
         if (nameToUse) {
-          openModal("loadingOverlay");
+          showLoading("Resolving Player Name...", "Verifying database registration");
           resolvePlayerName(nameToUse).then(finalName => {
             closeModal("loadingOverlay");
             schedulerName = finalName;
@@ -3203,7 +3211,7 @@
       setupGridDOM();
       
       // Fetch latest attempt count from server before starting game flow
-      openModal("loadingOverlay");
+      showLoading("Refreshing Attempt Count...", "Checking player records");
       resolvePlayerName(schedulerName).then(() => {
         closeModal("loadingOverlay");
         startGameFlow();
@@ -3283,7 +3291,7 @@
       };
 
       // Show loading overlay
-      openModal("loadingOverlay");
+      showLoading("Submitting Score...", "Saving schedule to leaderboard");
 
       // Save to global database via API
       fetch(GLOBAL_DB_READ_URL)
@@ -3549,7 +3557,7 @@
 
     // Helper to open the admin panel after successful authentication
     function openAdminPanel() {
-      openModal("loadingOverlay");
+      showLoading("Loading Admin Panel...", "Initializing administrator controls");
       fetch(GLOBAL_DB_READ_URL)
         .then(response => {
           if (!response.ok) throw new Error("Database fetch failed");
@@ -3636,7 +3644,7 @@
         return;
       }
       
-      openModal("loadingOverlay");
+      showLoading("Updating Player Name...", "Renaming entries and mappings");
       
       fetch(GLOBAL_DB_READ_URL)
         .then(response => {
@@ -3742,7 +3750,7 @@
         "Delete Player",
         `Are you sure you want to delete "${playerToDelete}"? This will erase all their scores and force them to re-login next time they access the app.`,
         () => {
-          openModal("loadingOverlay");
+          showLoading("Deleting Player...", "Removing entries and mapping records");
           
           fetch(GLOBAL_DB_READ_URL)
             .then(response => {
@@ -3829,7 +3837,7 @@
       const titleArea = document.getElementById("adminIpTrackModalTitle");
       if (!displayArea) return;
       
-      openModal("loadingOverlay");
+      showLoading("Loading IP Address Records...", "Fetching tracking data");
       fetch(GLOBAL_DB_READ_URL)
         .then(response => {
           if (!response.ok) throw new Error("Database fetch failed");
@@ -3867,7 +3875,7 @@
 
     document.getElementById("adminPuzzleName").addEventListener("change", (e) => {
       const selectedPuzzle = e.target.value;
-      openModal("loadingOverlay");
+      showLoading("Changing Puzzle...", "Updating active schedule version");
       
       fetch(GLOBAL_DB_READ_URL)
         .then(response => {
@@ -3957,7 +3965,7 @@
             showToast(`Local Leaderboard Reset for "${puzzleToReset}" Successful.`, "success");
           };
 
-          openModal("loadingOverlay");
+          showLoading("Resetting Leaderboard...", "Wiping puzzle scores and attempts");
 
           fetch(GLOBAL_DB_READ_URL)
             .then(response => {
@@ -4043,7 +4051,7 @@
         "Delete All Players",
         "Are you sure you want to delete ALL players? This will wipe out all leaderboard scores, all rename mappings, and immediately force every client to re-login on reload. This is a complete system wipe.",
         () => {
-          openModal("loadingOverlay");
+          showLoading("Wiping Database...", "Performing complete system reset");
           
           fetch(GLOBAL_DB_READ_URL)
             .then(response => {
