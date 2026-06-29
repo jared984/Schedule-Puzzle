@@ -16,11 +16,11 @@
   <style>
     /* CSS Variables & Theme */
     :root {
-      --bg-dark: #070a13;
-      --bg-card: rgba(16, 22, 38, 0.7);
-      --bg-card-hover: rgba(26, 35, 60, 0.85);
-      --border-color: rgba(255, 255, 255, 0.06);
-      --border-glow: rgba(59, 130, 246, 0.3);
+      --bg-dark: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-glow: rgba(59, 130, 246, 0.15);
       
       --color-live: #82c341;
       --color-live-gradient: linear-gradient(135deg, #82c341 0%, #5d932b 100%);
@@ -28,11 +28,11 @@
       --color-repo-gradient: linear-gradient(135deg, #5ba4cf 0%, #357399 100%);
       --color-conflict: #ef4444;
       --color-conflict-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-      --color-idle: #2d3748;
+      --color-idle: #e2e8f0;
       
-      --text-main: #f7fafc;
-      --text-secondary: #a0aec0;
-      --text-muted: #718096;
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
       --accent: #3b82f6;
       
       --font-sans: 'Outfit', sans-serif;
@@ -44,7 +44,7 @@
       margin: 0;
       padding: 0;
       scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+      scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
     }
 
     /* Global Custom Scrollbars */
@@ -56,13 +56,13 @@
       background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.1);
       border-radius: 4px;
       border: 2px solid transparent;
       background-clip: padding-box;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.2);
       border: 2px solid transparent;
       background-clip: padding-box;
     }
@@ -71,8 +71,8 @@
     body {
       background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(at 0% 0%, rgba(29, 78, 216, 0.15) 0, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(13, 148, 136, 0.1) 0, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.04) 0, transparent 60%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.03) 0, transparent 60%);
       color: var(--text-main);
       font-family: var(--font-sans);
       min-height: 100vh;
@@ -155,7 +155,7 @@
 
     .timer-circle-bg {
       fill: none;
-      stroke: rgba(255, 255, 255, 0.05);
+      stroke: rgba(255, 255, 255, 0.15);
       stroke-width: 3.5;
     }
 
@@ -174,7 +174,7 @@
       transform: translate(-50%, -50%);
       font-size: 13px;
       font-weight: 700;
-      color: var(--text-main);
+      color: #ffffff;
     }
 
     .timer-digital {
@@ -182,7 +182,7 @@
       font-size: 26px;
       font-weight: 700;
       letter-spacing: 1px;
-      color: var(--text-main);
+      color: #ffffff;
       transition: color 0.3s ease;
     }
 
@@ -192,7 +192,7 @@
     }
 
     .score-banner {
-      background: rgba(255, 255, 255, 0.03);
+      background: #f8fafc;
       border: 1px solid var(--border-color);
       border-radius: 12px;
       padding: 8px 20px;
@@ -370,9 +370,9 @@
     }
 
     .btn:disabled {
-      background: rgba(255, 255, 255, 0.08) !important;
-      color: rgba(255, 255, 255, 0.25) !important;
-      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      background: #e2e8f0 !important;
+      color: #94a3b8 !important;
+      border: 1px solid #cbd5e1 !important;
       box-shadow: none !important;
       cursor: not-allowed !important;
       transform: none !important;
@@ -381,13 +381,13 @@
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
+      background: #f1f5f9;
       color: var(--text-main);
       border: 1px solid var(--border-color);
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: #e2e8f0;
     }
 
     /* Main Grid & Sidebar Layout */
@@ -399,9 +399,8 @@
       overflow: hidden;
     }
 
-    /* Sidebar */
     .sidebar {
-      background: rgba(10, 14, 26, 0.9);
+      background: #cbd5e1;
       border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
@@ -418,10 +417,11 @@
 
 
     .sidebar-section {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border-color);
+      background: #ffffff;
+      border: 1.5px solid #378ad8;
       border-radius: 14px;
       padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
 
     .sidebar-section h3 {
@@ -432,7 +432,7 @@
       align-items: center;
       gap: 8px;
       color: var(--text-main);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--border-color);
       padding-bottom: 8px;
     }
 
@@ -499,7 +499,7 @@
     }
 
     .airport-list::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.1);
       border-radius: 2px;
     }
 
@@ -507,7 +507,7 @@
       display: flex;
       justify-content: space-between;
       padding: 6px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
     }
 
     .airport-code {
@@ -527,11 +527,16 @@
 
     .board-grid {
       display: grid;
-      grid-template-columns: 160px repeat(5, minmax(220px, 1fr));
+      grid-template-columns: 160px repeat(5, minmax(170px, 1fr));
       grid-template-rows: 40px repeat(6, 120px);
-      gap: 8px;
-      min-width: 1200px;
+      gap: 1px;
+      background: #cbd5e1;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      overflow: hidden;
+      min-width: 1010px;
       height: auto;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
     /* Grid Header Items */
@@ -541,9 +546,9 @@
       justify-content: center;
       align-items: center;
       font-weight: 700;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
+      background: #ffffff;
+      border: none;
+      border-radius: 0;
       font-size: 18px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -558,15 +563,15 @@
 
     /* Row Header Cells (Aircraft labels) */
     .grid-row-header {
-      background: rgba(16, 22, 38, 0.85);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
+      background: #ffffff;
+      border: none;
+      border-radius: 0;
       padding: 8px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       gap: 4px;
-      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
+      box-shadow: none;
     }
 
     .aircraft-title {
@@ -591,8 +596,8 @@
     .aircraft-tail {
       font-family: var(--font-mono);
       font-size: 10px;
-      color: var(--text-muted);
-      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-secondary);
+      background: #f1f5f9;
       padding: 1px 4px;
       border-radius: 4px;
       align-self: flex-start;
@@ -601,14 +606,15 @@
     /* Interactive Grid Cells */
     .grid-cell {
       background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
+      border: none;
+      border-radius: 0;
       height: 120px;
-      padding: 6px;
+      padding: 2px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      transition: all 0.2s ease, border-color 0.1s ease;
+      gap: 2px;
+      align-items: stretch;
+      transition: all 0.2s ease;
       position: relative;
       cursor: default;
       user-select: none;
@@ -618,7 +624,6 @@
 
     .grid-cell:hover {
       background: var(--bg-card-hover);
-      border-color: rgba(255, 255, 255, 0.12);
     }
 
     .grid-cell:not(.grid-cell-locked):has(.leg-card-live) {
@@ -630,21 +635,24 @@
     }
 
     .grid-cell.grid-cell-locked {
-      background: rgba(16, 22, 38, 0.45);
-      border: 1px dashed rgba(255, 255, 255, 0.04);
+      background: #fffae0;
+      border: none;
       cursor: not-allowed;
     }
 
     .grid-cell.grid-cell-locked:hover {
-      background: rgba(16, 22, 38, 0.45);
-      border-color: rgba(255, 255, 255, 0.04);
+      background: #fffae0;
       box-shadow: none;
+    }
+
+    .grid-cell.grid-cell-locked .leg-card-idle {
+      background: #fffae0;
     }
 
     /* Drag & Drop Highlight States */
     .grid-cell.drag-source-highlight {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px dashed rgba(255, 255, 255, 0.3) !important;
+      background: #cbd5e1;
+      border: none !important;
       opacity: 0.5;
     }
 
@@ -656,15 +664,15 @@
 
     /* Card Items (Live, Repo, Idle) */
     .leg-card {
-      border-radius: 8px;
+      font-family: 'Avenir', 'Avenir Next', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      border-radius: 0;
       padding: 4px 8px;
       font-size: 13px;
       display: flex;
       flex-direction: column;
       gap: 1px;
       position: relative;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: none;
       height: 48px;
       justify-content: center;
       flex-shrink: 0;
@@ -672,31 +680,34 @@
     }
 
     .leg-card-live {
-      background: var(--color-live-gradient);
-      color: white;
+      background: #b4e78b;
+      color: var(--text-main);
+      border: 1px solid #378ad8;
     }
 
     .leg-card-repo {
-      background: var(--color-repo-gradient);
-      color: white;
+      background: #c2ead8;
+      color: var(--text-main);
+      border: 1px solid #378ad8;
     }
 
     .leg-card-idle {
-      background: rgba(255, 255, 255, 0.02);
+      background: #ffffff;
       color: var(--text-secondary);
-      border: 1px dashed rgba(255, 255, 255, 0.08);
+      border: none;
       font-style: italic;
       text-align: center;
       justify-content: center;
       align-items: center;
+      height: 100% !important;
     }
 
     .leg-route {
       display: flex;
       justify-content: center;
       align-items: center;
-      font-weight: 800;
-      font-size: 10.5px;
+      font-weight: normal;
+      font-size: 12px;
       letter-spacing: 0.5px;
       margin-bottom: 0px;
       gap: 8px;
@@ -704,6 +715,7 @@
 
     .leg-arrow {
       font-size: 9px;
+      font-weight: bold;
       opacity: 0.8;
     }
 
@@ -711,7 +723,8 @@
       display: flex;
       justify-content: space-between;
       font-size: 9.5px;
-      font-family: var(--font-mono);
+      font-family: 'Avenir', 'Avenir Next', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-weight: bold;
       opacity: 0.9;
     }
 
@@ -720,7 +733,7 @@
       justify-content: space-between;
       font-size: 9px;
       opacity: 0.85;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
       padding-top: 1px;
       margin-top: 0px;
     }
@@ -728,7 +741,7 @@
     .leg-duration {
       font-size: 9.5px;
       font-weight: 700;
-      color: white;
+      color: var(--text-main);
     }
 
     /* Warning Overlay / Conflicts */
@@ -737,22 +750,37 @@
       color: white;
       font-size: 11px;
       font-weight: 700;
-      padding: 2px 6px;
+      padding: 4px 8px;
       border-radius: 4px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 3px;
+      justify-content: center;
+      text-align: center;
       position: absolute;
-      top: -6px;
-      right: 6px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
-      z-index: 2;
-      animation: bounce 1s infinite alternate;
+      z-index: 10;
+      animation: pulse-scale 1s infinite alternate;
+      line-height: 1.15;
+    }
+
+    @keyframes pulse-scale {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.1);
+      }
     }
 
     .grid-cell.has-conflict-border {
-      border: 2px solid var(--color-conflict) !important;
+      outline: 2px solid var(--color-conflict) !important;
+      outline-offset: -2px;
       box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+      z-index: 1;
     }
 
     /* Modals & Popups */
@@ -762,7 +790,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
@@ -781,9 +809,9 @@
     }
 
     .modal-box {
-      background: #0f1322;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
       border-radius: 20px;
       width: 500px;
       max-width: 90%;
@@ -844,11 +872,11 @@
     }
 
     .form-input {
-      background: rgba(255, 255, 255, 0.04);
+      background: #ffffff;
       border: 1px solid var(--border-color);
       border-radius: 10px;
       padding: 12px;
-      color: white;
+      color: var(--text-main);
       font-family: var(--font-sans);
       font-size: 14px;
       width: 100%;
@@ -862,22 +890,22 @@
     }
 
     select option {
-      background-color: #0c1322 !important;
-      color: white !important;
+      background-color: #ffffff !important;
+      color: var(--text-main) !important;
     }
 
     /* Admin Accordion Styles */
     .accordion-item {
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.01);
+      background: #f8fafc;
       margin-bottom: 12px;
       transition: border-color 0.2s, background-color 0.2s, border-radius 0.2s;
       position: relative;
     }
     .accordion-item.active {
       border-color: var(--accent);
-      background: rgba(255, 255, 255, 0.02);
+      background: #ffffff;
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
       z-index: 100;
@@ -891,12 +919,12 @@
       user-select: none;
       font-weight: 700;
       font-size: 14px;
-      color: white;
+      color: var(--text-main);
       transition: background 0.2s;
       border-radius: 11px;
     }
     .accordion-header:hover {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(0, 0, 0, 0.02);
     }
     .accordion-header .chevron {
       transition: transform 0.2s;
@@ -913,11 +941,11 @@
       left: -1px;
       right: -1px;
       z-index: 50;
-      background: #0f1322;
+      background: #ffffff;
       border: 1px solid transparent;
       border-top: none;
       border-radius: 0 0 12px 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.3s ease-out, padding 0.3s ease-out, border-color 0.3s;
@@ -936,7 +964,7 @@
       display: flex;
       justify-content: flex-end;
       gap: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid var(--border-color);
       padding-top: 20px;
     }
 
@@ -957,12 +985,12 @@
     }
 
     .leaderboard-table-container::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.1);
       border-radius: 3px;
     }
 
     .leaderboard-table-container::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.2);
     }
 
     .leaderboard-table {
@@ -976,23 +1004,27 @@
       color: var(--text-secondary);
       font-weight: 600;
       padding: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--border-color);
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       position: sticky;
       top: 0;
-      background: #0f1322;
+      background: #ffffff;
       z-index: 10;
     }
 
     .leaderboard-table td {
       padding: 10px 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .leaderboard-table tr:nth-child(even) td {
+      background: #f8fafc;
     }
 
     .leaderboard-table tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(0, 0, 0, 0.02);
     }
 
     .rank-col {
@@ -1049,8 +1081,8 @@
     }
 
     .inst-card {
-      background: rgba(255, 255, 255, 0.01);
-      border: 1px solid rgba(255, 255, 255, 0.03);
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
       border-radius: 10px;
       padding: 10px;
       display: flex;
@@ -1095,13 +1127,13 @@
       position: fixed;
       bottom: 30px;
       right: 30px;
-      background: #0f172a;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #ffffff;
+      border: 1px solid var(--border-color);
       border-left: 4px solid var(--accent);
       border-radius: 10px;
       padding: 16px 24px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-      color: white;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 12px;
@@ -1133,7 +1165,7 @@
       <!-- Sidebar Panel -->
       <aside class="sidebar">
         <!-- Logo Section -->
-        <div class="logo-section" style="padding-bottom: 16px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px;">
+        <div class="logo-section" style="padding-bottom: 16px; border-bottom: 2px solid #378ad8; margin-bottom: 4px;">
           <div class="logo-icon">
             <i class="fa-solid fa-plane-departure"></i>
           </div>
@@ -1144,9 +1176,9 @@
         </div>
 
         <!-- Controls & Timer Panel (on the left under the logo) -->
-        <div class="sidebar-section" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; background: rgba(16, 22, 38, 0.4);">
+        <div class="sidebar-section" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px;">
           <!-- Timer container -->
-          <div class="timer-container" style="display: flex; align-items: center; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; width: 100%; justify-content: center;">
+          <div class="timer-container" style="display: flex; align-items: center; gap: 15px; background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px; padding: 6px 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; width: 100%; justify-content: center;">
             <div class="timer-circle-wrap">
               <svg class="timer-circle" width="46" height="46">
                 <circle class="timer-circle-bg" cx="23" cy="23" r="19.5"/>
@@ -1158,7 +1190,7 @@
           </div>
           
           <!-- Score banner (revealed next to the timer after submission) -->
-          <div id="scoreBanner" class="score-banner" style="display: none; align-items: center; flex-direction: row; gap: 15px; background: rgba(16, 22, 38, 0.6); border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); height: 60px; width: 100%; justify-content: center;">
+          <div id="scoreBanner" class="score-banner" style="display: none; align-items: center; flex-direction: row; gap: 15px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: 60px; width: 100%; justify-content: center;">
             <span class="score-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0;">Score</span>
             <span id="scoreValue" class="score-value" style="font-size: 24px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono);">10,000</span>
           </div>
@@ -1190,7 +1222,7 @@
             <li><i class="fa-solid fa-check"></i> Allow 14 hours between Landing and takeoff</li>
           </ul>
           
-          <div style="margin-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 16px; display: flex; flex-direction: column; gap: 10px;">
             <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Flight Leg Examples:</div>
             
             <!-- Live Leg Example -->
@@ -1201,8 +1233,8 @@
                 <span>Arrival</span>
               </div>
               <div class="leg-times">
-                <span>DEP: Local departure time</span>
-                <span>ARR: Local arrival time</span>
+                <span>DEP: Local Time</span>
+                <span>ARR: Local Time</span>
               </div>
               <div class="leg-meta">
                 <span>PAX Flight</span>
@@ -1218,8 +1250,8 @@
                 <span>Arrival</span>
               </div>
               <div class="leg-times">
-                <span>DEP: Local departure time</span>
-                <span>ARR: Local arrival time</span>
+                <span>DEP: Local Time</span>
+                <span>ARR: Local Time</span>
               </div>
               <div class="leg-meta">
                 <span>REPO Flight</span>
@@ -1274,28 +1306,28 @@
           <div class="inst-card">
             <i class="fa-solid fa-arrows-up-down" style="color: var(--color-live);"></i>
             <div>
-              <h4 style="color: white; font-size:13px; margin-bottom:2px;">Line Swapping</h4>
+              <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Line Swapping</h4>
               <p style="font-size:11px;">Drag any  live leg (Green Block) up or down to swap between aircraft. Dragging also swaps every day after</p>
             </div>
           </div>
           <div class="inst-card">
             <i class="fa-solid fa-circle-exclamation" style="color: var(--color-conflict);"></i>
             <div>
-              <h4 style="color: white; font-size:13px; margin-bottom:2px;">Schedule Conflicts</h4>
+              <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Schedule Conflicts</h4>
               <p style="font-size:11px;">Aircraft cannot depart less than 14 hours before landing the day prior. Conflicts cost <strong>-2,000 points</strong>.</p>
             </div>
           </div>
           <div class="inst-card">
             <i class="fa-solid fa-route" style="color: var(--color-repo);"></i>
             <div>
-              <h4 style="color: white; font-size:13px; margin-bottom:2px;">Auto-Repo Flights</h4>
+              <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Auto-Repo Flights</h4>
               <p style="font-size:11px;">Planes landing at a different airport from their next origin trigger a blue Repo. Flight time costs points.</p>
             </div>
           </div>
           <div class="inst-card">
             <i class="fa-solid fa-stopwatch" style="color: var(--accent);"></i>
             <div>
-              <h4 style="color: white; font-size:13px; margin-bottom:2px;">Speed Bonus</h4>
+              <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Speed Bonus</h4>
               <p style="font-size:11px;">Submitting rewards <strong>+10 points</strong> per remaining second on the clock.</p>
             </div>
           </div>
@@ -1304,7 +1336,7 @@
         <p><strong>Goal:</strong> Drag and arrange the flights so that all aircraft schedules are conflict-free, and total repositioning flight time is kept as low as possible.</p>
         
         <div id="nameInputContainer" class="form-group" style="margin-top: 15px; padding: 8px 12px; margin-bottom: 8px;">
-          <label class="form-label" for="rulesNameInput" style="font-weight:700; color: white;">Name:</label>
+          <label class="form-label" for="rulesNameInput" style="font-weight:700; color: #000000;">Name:</label>
           <input type="text" id="rulesNameInput" class="form-input" placeholder="Enter your name here" required autocomplete="off">
         </div>
       </div>
@@ -1351,20 +1383,20 @@
       </div>
       <div class="modal-body">
         <!-- User result container (shown only after submission) -->
-        <div id="userResultContainer" style="display: none; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
+        <div id="userResultContainer" style="display: none; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
           <h3 style="color: var(--accent); font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-square-check"></i> Your Submission Result</h3>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
-            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
               <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Efficiency Score</div>
               <div id="userResultScore" style="font-size: 22px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono); margin-top: 2px;">0</div>
             </div>
-            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
               <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Total Repo Time</div>
-              <div id="userResultRepoTime" style="font-size: 18px; font-weight: 700; color: white; font-family: var(--font-mono); margin-top: 4px;">0h 0m</div>
+              <div id="userResultRepoTime" style="font-size: 18px; font-weight: 700; color: #000000; font-family: var(--font-mono); margin-top: 4px;">0h 0m</div>
             </div>
-            <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
               <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Time Left</div>
-              <div id="userResultTimeLeft" style="font-size: 18px; font-weight: 700; color: white; font-family: var(--font-mono); margin-top: 4px;">00:00</div>
+              <div id="userResultTimeLeft" style="font-size: 18px; font-weight: 700; color: #000000; font-family: var(--font-mono); margin-top: 4px;">00:00</div>
             </div>
           </div>
         </div>
@@ -1390,7 +1422,7 @@
         <!-- Puzzle Selector for Leaderboard -->
         <div class="form-group" style="margin: 0; display: flex; align-items: center; gap: 8px;">
           <label class="form-label" for="leaderboardPuzzleFilter" style="margin: 0; font-size: 11px; white-space: nowrap; color: var(--text-secondary);">Puzzle:</label>
-          <select id="leaderboardPuzzleFilter" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white; padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid var(--border-color); width: auto; min-width: 180px;">
+          <select id="leaderboardPuzzleFilter" class="form-input" style="background: #ffffff; color: var(--text-main); padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid var(--border-color); width: auto; min-width: 180px;">
             <option value="Introduction Puzzle">Introduction Puzzle</option>
           </select>
         </div>
@@ -1419,7 +1451,7 @@
             </p>
             <div class="form-group" style="margin-top: 8px;">
               <label class="form-label" for="adminPuzzleName">Puzzle Name</label>
-              <select id="adminPuzzleName" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
+              <select id="adminPuzzleName" class="form-input" style="background: #ffffff; color: var(--text-main);">
                 <option value="Introduction Puzzle">Introduction Puzzle</option>
               </select>
             </div>
@@ -1438,7 +1470,7 @@
             </p>
             <div class="form-group" style="margin-top: 8px; margin-bottom: 12px;">
               <label class="form-label" for="adminResetPuzzleName">Select Puzzle</label>
-              <select id="adminResetPuzzleName" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
+              <select id="adminResetPuzzleName" class="form-input" style="background: #ffffff; color: var(--text-main);">
                 <option value="Introduction Puzzle">Introduction Puzzle</option>
               </select>
             </div>
@@ -1460,11 +1492,11 @@
             </p>
             <div class="form-group" style="margin-top: 8px; margin-bottom: 12px;">
               <label class="form-label" for="adminDelScorePuzzle">Select Puzzle</label>
-              <select id="adminDelScorePuzzle" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
+              <select id="adminDelScorePuzzle" class="form-input" style="background: #ffffff; color: var(--text-main);">
                 <option value="Introduction Puzzle">Introduction Puzzle</option>
               </select>
             </div>
-            <div id="adminDelScoresContainer" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 4px; display: flex; flex-direction: column; gap: 4px;">
+            <div id="adminDelScoresContainer" style="max-height: 200px; overflow-y: auto; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 4px; display: flex; flex-direction: column; gap: 4px;">
               <p style="font-size: 11px; color: var(--text-muted); font-style: italic; margin: 0; text-align: center; padding: 12px;">-- Select a puzzle to view scores --</p>
             </div>
           </div>
@@ -1482,8 +1514,8 @@
             </p>
             <div class="form-group">
               <label class="form-label" for="adminOldName">Old Name</label>
-              <select id="adminOldName" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
-                <option value="" style="background: #0f1322; color: white;">-- Select a Player --</option>
+              <select id="adminOldName" class="form-input" style="background: #ffffff; color: var(--text-main);">
+                <option value="" style="background: #ffffff; color: var(--text-main);">-- Select a Player --</option>
               </select>
             </div>
             <div class="form-group">
@@ -1508,8 +1540,8 @@
             </p>
             <div class="form-group" style="margin-bottom: 12px;">
               <label class="form-label" for="adminIpTrackPlayer">Select Player</label>
-              <select id="adminIpTrackPlayer" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
-                <option value="" style="background: #0f1322; color: white;">-- Select a Player --</option>
+              <select id="adminIpTrackPlayer" class="form-input" style="background: #ffffff; color: var(--text-main);">
+                <option value="" style="background: #ffffff; color: var(--text-main);">-- Select a Player --</option>
               </select>
             </div>
           </div>
@@ -1527,8 +1559,8 @@
             </p>
             <div class="form-group">
               <label class="form-label" for="adminDeletePlayer">Select Player</label>
-              <select id="adminDeletePlayer" class="form-input" style="background: rgba(255, 255, 255, 0.04); color: white;">
-                <option value="" style="background: #0f1322; color: white;">-- Select a Player --</option>
+              <select id="adminDeletePlayer" class="form-input" style="background: #ffffff; color: var(--text-main);">
+                <option value="" style="background: #ffffff; color: var(--text-main);">-- Select a Player --</option>
               </select>
             </div>
             <button id="adminDeletePlayerBtn" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 13px; padding: 10px 16px;">
@@ -1561,12 +1593,12 @@
   </div>
 
   <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="modal-overlay" style="z-index: 200; background: rgba(7, 10, 19, 0.85);">
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; background: rgba(16, 22, 38, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); width: 350px;">
+  <div id="loadingOverlay" class="modal-overlay" style="z-index: 200; background: rgba(255, 255, 255, 0.85);">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; background: #ffffff; border: 1px solid var(--border-color); border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); backdrop-filter: blur(10px); width: 350px;">
       <div style="font-size: 55px; color: var(--accent); animation: flipHourglass 1.8s infinite ease-in-out; margin-bottom: 5px;">
         <i class="fa-solid fa-hourglass-half"></i>
       </div>
-      <h3 id="loadingOverlayTitle" style="font-size: 18px; font-weight: 700; color: white;">Loading...</h3>
+      <h3 id="loadingOverlayTitle" style="font-size: 18px; font-weight: 700; color: var(--text-main);">Loading...</h3>
       <p id="loadingOverlaySub" style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">Please wait...</p>
     </div>
   </div>
@@ -1593,7 +1625,7 @@
           <input type="password" id="adminAuthPassword" class="form-input" placeholder="Enter password">
         </div>
       </div>
-      <div style="display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 16px;">
+      <div style="display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 16px;">
         <button id="adminAuthCancelBtn" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Cancel</button>
         <button id="adminAuthSubmitBtn" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">Authenticate</button>
       </div>
@@ -1606,7 +1638,7 @@
       <div id="confirmIconContainer" style="font-size: 40px; color: #ef4444; margin-bottom: 8px; text-align: center;">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      <h3 id="confirmTitle" style="font-size: 18px; font-weight: 700; color: white; margin: 0; text-align: center; width: 100%;">Are you sure?</h3>
+      <h3 id="confirmTitle" style="font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0; text-align: center; width: 100%;">Are you sure?</h3>
       <p id="confirmMessage" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; text-align: center; width: 100%;"></p>
       <div style="display: flex; gap: 12px; justify-content: center; margin-top: 8px; width: 100%;">
         <button id="confirmCancelBtn" class="btn btn-secondary" style="padding: 10px 20px; font-size: 13px;">Cancel</button>
@@ -1627,7 +1659,7 @@
           <p style="font-size: 12px; color: var(--text-muted); font-style: italic; margin: 0;">-- No IP Address Recorded --</p>
         </div>
       </div>
-      <div style="display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 16px; width: 100%;">
+      <div style="display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 16px; width: 100%;">
         <button class="btn btn-secondary modal-close-btn" style="padding: 8px 16px; font-size: 13px;">Close</button>
       </div>
     </div>
@@ -2434,8 +2466,8 @@
                 tzFrom: AIRPORTS[destA].tzName,
                 tzTo: AIRPORTS[origB].tzName,
                 hasConflict: hasConflict,
-                // Assign display cell: if back-to-back, assign to legA.day (after legA), else assign to legA.day + 1 (blank day)
-                displayDay: (legB.day === legA.day + 1) ? legA.day : (legA.day + 1)
+                // Assign display cell: repo flight should display on the day before the next live leg
+                displayDay: (legB.day > legA.day) ? (legB.day - 1) : legA.day
               };
 
               events.push(repoEvent);
@@ -2523,6 +2555,29 @@
       const arrDay = Math.floor(arrAbs / 1440);
       const diff = arrDay - depDay;
       return diff > 0 ? ` (+${diff}d)` : "";
+    }
+
+    // Helper: Returns concise text warning split into 2 lines for conflict badges
+    function getShortConflictReasonLines(reason) {
+      if (!reason) return ["Schedule", "Conflict"];
+      if (reason.includes("Only ")) {
+        const match = reason.match(/Only\s+([0-9a-zA-Z\s]+)\s+between/);
+        if (match) {
+          let durationStr = match[1].trim();
+          durationStr = durationStr.replace("h", "hr").replace("m", " min");
+          return [durationStr, "between legs"];
+        }
+      }
+      if (reason.includes("Overlapping flight timing")) {
+        return ["Overlapping", "flights"];
+      }
+      if (reason.includes("next flight departs early")) {
+        return ["Timing", "overlap"];
+      }
+      if (reason.includes("Plane starts at")) {
+        return ["Start location", "conflict"];
+      }
+      return ["Schedule", "Conflict"];
     }
 
     // ----------------------------------------------------
@@ -2626,7 +2681,7 @@
                   </div>
                   <div class="leg-times">
                     <span>DEP: ${formatMinutesToTimeString(leg.depLocalMins)} ${leg.tzFrom}</span>
-                    <span>ARR: ${formatMinutesToTimeString(leg.arrLocalMins)}${getDayOffsetText(leg.depLocalMins, leg.arrLocalMins)} ${leg.tzTo}</span>
+                    <span>ARR: ${formatMinutesToTimeString(leg.arrLocalMins)} ${leg.tzTo}</span>
                   </div>
                   <div class="leg-meta">
                     <span>${lockMarkup}PAX Flight</span>
@@ -2640,8 +2695,16 @@
                   const badge = document.createElement("div");
                   badge.className = "conflict-badge";
                   badge.title = leg.conflictReason;
-                  badge.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Conflict`;
-                  card.appendChild(badge);
+                  
+                  const lines = getShortConflictReasonLines(leg.conflictReason);
+                  badge.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 3px; justify-content: center;">
+                      <i class="fa-solid fa-circle-exclamation"></i>
+                      <span>${lines[0]}</span>
+                    </div>
+                    <div style="margin-top: 1px;">${lines[1]}</div>
+                  `;
+                  cell.appendChild(badge);
                 }
 
                 cell.appendChild(card);
@@ -2662,7 +2725,7 @@
                   </div>
                   <div class="leg-times">
                     <span>DEP: ${formatMinutesToTimeString(ev.depLocalMins)} ${ev.tzFrom}</span>
-                    <span>ARR: ${formatMinutesToTimeString(ev.arrLocalMins)}${getDayOffsetText(ev.depLocalMins, ev.arrLocalMins)} ${ev.tzTo}</span>
+                    <span>ARR: ${formatMinutesToTimeString(ev.arrLocalMins)} ${ev.tzTo}</span>
                   </div>
                   <div class="leg-meta">
                     <span>REPO Flight</span>
@@ -3436,9 +3499,9 @@
 
         tr.innerHTML = `
           <td class="rank-col">${rankDisplay}</td>
-          <td style="font-weight:600; color:white;">${entry.name}</td>
-          <td style="text-align: right; font-family: var(--font-mono);">${entry.repoTime || formatDuration(Math.round((entry.distance || 0) / CRUISE_SPEED * 60))}</td>
-          <td style="text-align: right; font-family: var(--font-mono);">${entry.timeLeft}</td>
+          <td style="font-weight:600; color:#000000;">${entry.name}</td>
+          <td style="text-align: right; font-family: var(--font-mono); color:#000000;">${entry.repoTime || formatDuration(Math.round((entry.distance || 0) / CRUISE_SPEED * 60))}</td>
+          <td style="text-align: right; font-family: var(--font-mono); color:#000000;">${entry.timeLeft}</td>
           <td style="text-align: right;" class="score-col">${entry.score.toLocaleString()}</td>
         `;
         tbody.appendChild(tr);
@@ -3597,13 +3660,13 @@
       
       [renameSelect, deleteSelect, ipTrackSelect].forEach(select => {
         if (!select) return;
-        select.innerHTML = '<option value="" style="background: #0f1322; color: white;">-- Select a Player --</option>';
+        select.innerHTML = '<option value="" style="background: #ffffff; color: var(--text-main);">-- Select a Player --</option>';
         sortedNames.forEach(name => {
           const opt = document.createElement("option");
           opt.value = name;
           opt.textContent = name;
-          opt.style.background = "#0f1322";
-          opt.style.color = "white";
+          opt.style.background = "#ffffff";
+          opt.style.color = "var(--text-main)";
           select.appendChild(opt);
         });
       });
@@ -3991,7 +4054,7 @@
       }
       
       detailsEl.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; background: rgba(16, 22, 38, 0.4); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 8px; font-size: 11px; color: var(--text-muted);">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; background: #f8fafc; border: 1px dashed var(--border-color); border-radius: 8px; font-size: 11px; color: var(--text-muted);">
           <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent);"></i> Geotargeting IP address...
         </div>
       `;
@@ -4004,61 +4067,63 @@
           }
           
           detailsEl.innerHTML = `
-            <div style="background: rgba(16, 22, 38, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 12px; font-size: 12px; color: var(--text-secondary); box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+            <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 12px; font-size: 12px; color: var(--text-secondary); box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
               
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
                   <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Country</span>
-                  <span style="color: white; font-weight: 500; display: flex; align-items: center; gap: 6px;">
-                    <img src="${data.flag ? data.flag.img : ''}" style="width: 16px; height: 11px; object-fit: cover; border-radius: 1px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none';" />
+                  <span style="color: var(--text-main); font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                    <img src="${data.flag ? data.flag.img : ''}" style="width: 16px; height: 11px; object-fit: cover; border-radius: 1px; border: 1px solid var(--border-color);" onerror="this.style.display='none';" />
                     ${data.country || 'Unknown'} (${data.country_code || 'N/A'})
                   </span>
                 </div>
                 <div>
                   <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">State / Region</span>
-                  <span style="color: white; font-weight: 500;"><i class="fa-solid fa-map-location-dot" style="color: var(--accent); margin-right: 4px;"></i> ${data.region || 'Unknown'}</span>
+                  <span style="color: var(--text-main); font-weight: 500;"><i class="fa-solid fa-map-location-dot" style="color: var(--accent); margin-right: 4px;"></i> ${data.region || 'Unknown'}</span>
                 </div>
               </div>
-
+ 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
                   <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">City</span>
-                  <span style="color: white; font-weight: 500;"><i class="fa-solid fa-city" style="color: var(--accent); margin-right: 4px;"></i> ${data.city || 'Unknown'}</span>
+                  <span style="color: var(--text-main); font-weight: 500;"><i class="fa-solid fa-city" style="color: var(--accent); margin-right: 4px;"></i> ${data.city || 'Unknown'}</span>
                 </div>
                 <div>
                   <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Postal Code</span>
-                  <span style="color: white; font-weight: 500;"><i class="fa-solid fa-envelope" style="color: var(--accent); margin-right: 4px;"></i> ${data.postal || 'Unknown'}</span>
+                  <span style="color: var(--text-main); font-weight: 500;"><i class="fa-solid fa-envelope" style="color: var(--accent); margin-right: 4px;"></i> ${data.postal || 'Unknown'}</span>
                 </div>
               </div>
-
+ 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
                   <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Latitude</span>
-                  <span style="color: white; font-family: monospace;">${data.latitude || 'N/A'}</span>
+                  <span style="color: var(--text-main); font-family: monospace;">${data.latitude || 'N/A'}</span>
                 </div>
                 <div>
                   <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Longitude</span>
-                  <span style="color: white; font-family: monospace;">${data.longitude || 'N/A'}</span>
+                  <span style="color: var(--text-main); font-family: monospace;">${data.longitude || 'N/A'}</span>
                 </div>
               </div>
-
-              <div style="border-top: 1px solid rgba(255,255,255,0.04); padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+ 
+              <div style="border-top: 1px solid var(--border-color); padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
                   <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">ISP</span>
-                  <span style="color: white; font-weight: 500; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${data.connection ? data.connection.isp : ''}">${data.connection ? data.connection.isp : 'Unknown'}</span>
+                  <span style="color: var(--text-main); font-weight: 500; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${data.connection ? data.connection.isp : ''}">${data.connection ? data.connection.isp : 'Unknown'}</span>
                 </div>
                 <div>
                   <span style="font-size: 9px; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Organization</span>
-                  <span style="color: white; font-weight: 500; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${data.connection ? data.connection.org : ''}">${data.connection ? data.connection.org : 'Unknown'}</span>
+                  <span style="color: var(--text-main); font-weight: 500; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${data.connection ? data.connection.org : ''}">${data.connection ? data.connection.org : 'Unknown'}</span>
                 </div>
               </div>
-
-              <div style="border-top: 1px solid rgba(255,255,255,0.04); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+ 
+              <div style="border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                 <span style="font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">TZ: ${data.timezone ? data.timezone.id : 'N/A'}</span>
                 <a href="https://iplocation.io/ip/${ip}" target="_blank" style="font-size: 11px; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 4px; font-weight: 600; flex-shrink: 0;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
                   <i class="fa-solid fa-map-pin"></i> View Map ↗
                 </a>
               </div>
+ 
+            </div>
 
             </div>
           `;
@@ -4125,10 +4190,10 @@
       filteredScores.forEach((item, idx) => {
         const rank = idx + 1;
         html += `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; font-size: 12px; color: white;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px; color: var(--text-main);">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 10px; color: var(--text-muted); font-weight: 700; width: 16px;">#${rank}</span>
-              <span style="font-family: monospace; color: white; font-weight: 500;">${item.name}</span>
+              <span style="font-family: monospace; color: var(--text-main); font-weight: 500;">${item.name}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
               <span style="color: var(--accent); font-weight: 600; font-family: monospace;">${item.score.toLocaleString()} pts</span>
