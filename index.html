@@ -2650,7 +2650,7 @@
           }
 
           if (!gameStarted) {
-            cell.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: rgba(255,255,255,0.15); font-size: 11px;"><i class="fa-solid fa-lock" style="margin-right: 4px;"></i> Locked</div>`;
+            cell.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); opacity: 0.6; font-size: 11px;"><i class="fa-solid fa-lock" style="margin-right: 4px;"></i> Locked</div>`;
             if (c > 0) cell.draggable = false;
             continue;
           }
@@ -2752,7 +2752,10 @@
               card.classList.add("leg-card-animating");
               card.style.animationDelay = `${(r * 5 + c) * 0.04}s`;
             }
-            card.innerHTML = `
+            card.innerHTML = (c === 0) ? `
+              <i class="fa-solid fa-lock" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
+              <div style="font-weight: 500; font-size: 11px;">Locked</div>
+            ` : `
               <i class="fa-solid fa-bed" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
               <div style="font-weight: 500; font-size: 11px;">Idle at ${idleLoc}</div>
             `;
