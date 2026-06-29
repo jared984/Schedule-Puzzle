@@ -529,7 +529,7 @@
       display: grid;
       grid-template-columns: 160px repeat(5, minmax(170px, 1fr));
       grid-template-rows: 40px repeat(6, 120px);
-      gap: 1px;
+      gap: 0;
       background: #cbd5e1;
       border: 1px solid #cbd5e1;
       border-radius: 12px;
@@ -547,7 +547,8 @@
       align-items: center;
       font-weight: 700;
       background: #ffffff;
-      border: none;
+      border-bottom: 1px solid #cbd5e1;
+      border-right: 1px solid #cbd5e1;
       border-radius: 0;
       font-size: 18px;
       text-transform: uppercase;
@@ -564,7 +565,8 @@
     /* Row Header Cells (Aircraft labels) */
     .grid-row-header {
       background: #ffffff;
-      border: none;
+      border-bottom: 1px solid #cbd5e1;
+      border-right: 1px solid #cbd5e1;
       border-radius: 0;
       padding: 8px;
       display: flex;
@@ -603,10 +605,10 @@
       align-self: flex-start;
     }
 
-    /* Interactive Grid Cells */
     .grid-cell {
       background: var(--bg-card);
-      border: none;
+      border-bottom: 1px solid #cbd5e1;
+      border-right: 1px solid #cbd5e1;
       border-radius: 0;
       height: 120px;
       padding: 2px;
@@ -636,7 +638,6 @@
 
     .grid-cell.grid-cell-locked {
       background: #fffae0;
-      border: none;
       cursor: not-allowed;
     }
 
@@ -652,7 +653,6 @@
     /* Drag & Drop Highlight States */
     .grid-cell.drag-source-highlight {
       background: #cbd5e1;
-      border: none !important;
       opacity: 0.5;
     }
 
