@@ -5250,7 +5250,13 @@
       
       setTimeout(async () => {
         try {
-          const generatedLegs = generateSolvablePuzzle(name, { rule1: r1, rule2: r2, rule3: r3, rule4: r4 });
+          let generatedLegs = null;
+          let generatorTries = 0;
+          while ((!generatedLegs || generatedLegs.length === 0) && generatorTries < 10) {
+            generatorTries++;
+            generatedLegs = generateSolvablePuzzle(name, { rule1: r1, rule2: r2, rule3: r3, rule4: r4 });
+          }
+          
           if (!generatedLegs || generatedLegs.length === 0) {
             closeModal("loadingOverlay");
             showToast("Failed to generate a solvable schedule. Try again.", "error");
