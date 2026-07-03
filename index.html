@@ -2045,6 +2045,7 @@
     let startingLocations = Array(6).fill("LAX");
     let timeRemaining = TOTAL_TIME;
     let timerInterval = null;
+    let timerTargetEndTime = null;
     let currentScore = BASE_SCORE;
     let connectionBonus = 0;
     let totalRepoDistance = 0;
@@ -4261,11 +4262,11 @@
     }
 
     function startTimer() {
-      // Set initial clock state
+      timerTargetEndTime = Date.now() + timeRemaining * 1000;
       updateTimerDisplay(timeRemaining);
       
       timerInterval = setInterval(() => {
-        timeRemaining--;
+        timeRemaining = Math.max(0, Math.round((timerTargetEndTime - Date.now()) / 1000));
         updateTimerDisplay(timeRemaining);
 
         if (timeRemaining <= 0) {
@@ -6229,6 +6230,18 @@
       tooltipEl.style.opacity = "0";
       tooltipEl.style.transform = "scale(0.95)";
       tooltipEl.style.display = "none";
+    });
+
+    // Ensure timer continues to count down wall-clock time correctly when tab is in background / inactive
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && gameStarted && !testCompleted && timerTargetEndTime) {
+        timeRemaining = Math.max(0, Math.round((timerTargetEndTime - Date.now()) / 1000));
+        updateTimerDisplay(timeRemaining);
+        if (timeRemaining <= 0 && timerInterval) {
+          clearInterval(timerInterval);
+          handleTimesUp();
+        }
+      }
     });
 
     // Initialize Web App on Load
