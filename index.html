@@ -2263,7 +2263,8 @@
       const dayDiff = prevLeg ? (leg.day - prevLeg.day) : leg.day;
       
       if (dayDiff > 1) {
-        const targetArr = leg.depLocalMins - 840;
+        // Target 14 hours before live flight departure, capped at 23:59 of the day before the live flight
+        const targetArr = Math.min(leg.depLocalMins - 840, (leg.day * 1440) - 1);
         const targetDep = targetArr - durationMins - tzDiff * 60;
         const minDepAllowed = prevLeg ? (prevLeg.arrLocalMins + 60) : 0;
         
