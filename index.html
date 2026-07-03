@@ -2251,6 +2251,38 @@
       return R * c;
     }
 
+    function getRepoFlightTimes(tempLoc, leg, prevLeg) {
+      const dist = Math.round(calculateDistance(AIRPORTS[tempLoc].lat, AIRPORTS[tempLoc].lon, AIRPORTS[leg.from].lat, AIRPORTS[leg.from].lon));
+      const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
+      const tzDiff = AIRPORTS[leg.from].tz - AIRPORTS[tempLoc].tz;
+      
+      let depRepo = prevLeg ? prevLeg.arrLocalMins + 60 : 0;
+      let arrRepo = depRepo + durationMins + tzDiff * 60;
+      let displayDay = prevLeg ? ((leg.day > prevLeg.day) ? (leg.day - 1) : prevLeg.day) : 0;
+      
+      const dayDiff = prevLeg ? (leg.day - prevLeg.day) : leg.day;
+      
+      if (dayDiff > 1) {
+        const targetArr = leg.depLocalMins - 840;
+        const targetDep = targetArr - durationMins - tzDiff * 60;
+        const minDepAllowed = prevLeg ? (prevLeg.arrLocalMins + 60) : 0;
+        
+        if (targetDep >= minDepAllowed) {
+          depRepo = targetDep;
+          arrRepo = targetArr;
+        }
+        displayDay = Math.floor(arrRepo / 1440);
+      }
+      
+      return {
+        depLocalMins: depRepo,
+        arrLocalMins: arrRepo,
+        durationMins: durationMins,
+        distance: dist,
+        displayDay: displayDay
+      };
+    }
+
     // Initialize all live legs with pre-computed coordinates, distances, flight duration, and timezone absolute minutes.
     function precalculateLiveLegs() {
       currentPuzzle.legs.forEach(leg => {
@@ -2656,11 +2688,11 @@
                       break;
                     }
                   }
-                  const depRepo = prevLeg ? prevLeg.arrLocalMins + 60 : 0;
-                  const repoD = Math.round(calculateDistance(AIRPORTS[tempLoc].lat, AIRPORTS[tempLoc].lon, AIRPORTS[leg.from].lat, AIRPORTS[leg.from].lon));
-                  const repoDur = Math.round((repoD / CRUISE_SPEED) * 60);
-                  const tzDiffVal = AIRPORTS[leg.from].tz - AIRPORTS[tempLoc].tz;
-                  const arrRepo = depRepo + repoDur + tzDiffVal * 60;
+                  const repoData = getRepoFlightTimes(tempLoc, leg, prevLeg);
+                  const depRepo = repoData.depLocalMins;
+                  const arrRepo = repoData.arrLocalMins;
+                  const repoDur = repoData.durationMins;
+                  const displayDay = repoData.displayDay;
                   
                   if (arrRepo > leg.depLocalMins) {
                     rowConflict = true;
@@ -2674,7 +2706,7 @@
                     depLocalMins: depRepo,
                     arrLocalMins: arrRepo,
                     durationMins: repoDur,
-                    displayDay: prevLeg ? ((leg.day > prevLeg.day) ? (leg.day - 1) : prevLeg.day) : 0
+                    displayDay: displayDay
                   };
                   
                   simulatedEvents.push(repoEv);
@@ -2842,11 +2874,11 @@
                     break;
                   }
                 }
-                const depRepo = prevLeg ? prevLeg.arrLocalMins + 60 : 0;
-                const repoD = Math.round(calculateDistance(AIRPORTS[tempLoc].lat, AIRPORTS[tempLoc].lon, AIRPORTS[leg.from].lat, AIRPORTS[leg.from].lon));
-                const repoDur = Math.round((repoD / CRUISE_SPEED) * 60);
-                const tzDiffVal = AIRPORTS[leg.from].tz - AIRPORTS[tempLoc].tz;
-                const arrRepo = depRepo + repoDur + tzDiffVal * 60;
+                const repoData = getRepoFlightTimes(tempLoc, leg, prevLeg);
+                const depRepo = repoData.depLocalMins;
+                const arrRepo = repoData.arrLocalMins;
+                const repoDur = repoData.durationMins;
+                const displayDay = repoData.displayDay;
                 
                 const repoEv = {
                   type: "repo",
@@ -2855,7 +2887,7 @@
                   depLocalMins: depRepo,
                   arrLocalMins: arrRepo,
                   durationMins: repoDur,
-                  displayDay: prevLeg ? ((leg.day > prevLeg.day) ? (leg.day - 1) : prevLeg.day) : 0
+                  displayDay: displayDay
                 };
                 
                 simulatedEvents.push(repoEv);
@@ -3433,11 +3465,12 @@
           
           // Check if starting repo is needed
           if (startLoc !== firstLeg.from) {
-            const depRepo = 0; // Starts at Day 1 00:00 local time
-            const dist = Math.round(calculateDistance(AIRPORTS[startLoc].lat, AIRPORTS[startLoc].lon, AIRPORTS[firstLeg.from].lat, AIRPORTS[firstLeg.from].lon));
-            const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
-            const tzDiff = AIRPORTS[firstLeg.from].tz - AIRPORTS[startLoc].tz;
-            const arrRepo = depRepo + durationMins + tzDiff * 60;
+            const repoData = getRepoFlightTimes(startLoc, firstLeg, null);
+            const depRepo = repoData.depLocalMins;
+            const arrRepo = repoData.arrLocalMins;
+            const dist = repoData.distance;
+            const durationMins = repoData.durationMins;
+            const displayDay = repoData.displayDay;
             
             const hasConflict = arrRepo > firstLeg.depLocalMins;
             
@@ -3452,7 +3485,7 @@
               tzFrom: AIRPORTS[startLoc].tzName,
               tzTo: AIRPORTS[firstLeg.from].tzName,
               hasConflict: hasConflict,
-              displayDay: 0 // Display on Day 1
+              displayDay: displayDay
             });
             
             totalRepoDistance += dist;
@@ -3483,12 +3516,12 @@
 
             if (destA !== origB) {
               // Need Repo Flight
-              const depRepo = legA.arrLocalMins + 60; // 1 hour after arrival of leg A
-              const dist = Math.round(calculateDistance(AIRPORTS[destA].lat, AIRPORTS[destA].lon, AIRPORTS[origB].lat, AIRPORTS[origB].lon));
-              const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
-              
-              const tzDiff = AIRPORTS[origB].tz - AIRPORTS[destA].tz;
-              const arrRepo = depRepo + durationMins + tzDiff * 60;
+              const repoData = getRepoFlightTimes(destA, legB, legA);
+              const depRepo = repoData.depLocalMins;
+              const arrRepo = repoData.arrLocalMins;
+              const dist = repoData.distance;
+              const durationMins = repoData.durationMins;
+              const displayDay = repoData.displayDay;
 
               // Check if repo arrival overlaps with leg B departure (physical conflict)
               let hasConflict = arrRepo > legB.depLocalMins;
@@ -3518,8 +3551,7 @@
                 tzFrom: AIRPORTS[destA].tzName,
                 tzTo: AIRPORTS[origB].tzName,
                 hasConflict: hasConflict,
-                // Assign display cell: repo flight should display on the day before the next live leg
-                displayDay: (legB.day > legA.day) ? (legB.day - 1) : legA.day
+                displayDay: displayDay
               };
 
               events.push(repoEvent);
