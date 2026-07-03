@@ -662,6 +662,33 @@
       box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
     }
 
+    /* Hoverable Airport Styling */
+    body:not(.puzzle-introduction) .airport-hoverable {
+      cursor: help;
+      text-decoration: underline dotted var(--accent);
+      text-underline-offset: 2px;
+    }
+    
+    #airportTooltip {
+      position: absolute;
+      background: rgba(17, 12, 28, 0.95);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 6px;
+      color: #ffffff;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      pointer-events: none;
+      z-index: 10000;
+      display: none;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 10px rgba(168, 85, 247, 0.2);
+      white-space: nowrap;
+      backdrop-filter: blur(8px);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
     /* Card Items (Live, Repo, Idle) */
     .leg-card {
       font-family: 'Avenir', 'Avenir Next', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -1155,6 +1182,12 @@
     .toast-error {
       border-left-color: var(--color-conflict);
     }
+
+    #puzzleDropdown:hover {
+      background: rgba(255, 255, 255, 0.85) !important;
+      border-color: rgba(0, 0, 0, 0.18) !important;
+      color: #0f172a !important;
+    }
   </style>
 </head>
 <body>
@@ -1169,9 +1202,14 @@
           <div class="logo-icon">
             <i class="fa-solid fa-plane-departure"></i>
           </div>
-          <div class="logo-text">
+          <div class="logo-text" style="display: flex; flex-direction: column; align-items: flex-start;">
             <h1>AeroScheduler</h1>
-            <span id="puzzleSubtitle">Operations Test</span>
+            <div style="position: relative; display: block; width: 100%; box-sizing: border-box; margin-top: 3px;">
+              <select id="puzzleDropdown" style="background: rgba(255, 255, 255, 0.45); color: #1e293b; border: 1px solid rgba(0, 0, 0, 0.08); font-size: 12px; font-weight: 700; cursor: pointer; outline: none; padding: 3px 22px 3px 8px; border-radius: 6px; -webkit-appearance: none; -moz-appearance: none; appearance: none; text-overflow: ellipsis; width: 100%; box-sizing: border-box; transition: background 0.2s, border-color 0.2s, color 0.2s;">
+                <option value="Introduction Puzzle" style="background: #ffffff; color: var(--text-main);">Introduction Puzzle</option>
+              </select>
+              <i class="fa-solid fa-chevron-down" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 9px; color: #1e293b; pointer-events: none; opacity: 0.6;"></i>
+            </div>
           </div>
         </div>
 
@@ -1190,9 +1228,14 @@
           </div>
           
           <!-- Score banner (revealed next to the timer after submission) -->
-          <div id="scoreBanner" class="score-banner" style="display: none; align-items: center; flex-direction: row; gap: 15px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: 60px; width: 100%; justify-content: center;">
-            <span class="score-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0;">Score</span>
-            <span id="scoreValue" class="score-value" style="font-size: 24px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono);">10,000</span>
+          <div id="scoreBanner" class="score-banner" style="display: none; align-items: center; flex-direction: column; gap: 4px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 14px; padding: 6px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); min-height: 60px; width: 100%; justify-content: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="score-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 0;">Score</span>
+              <span id="scoreValue" class="score-value" style="font-size: 24px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono);">10,000</span>
+            </div>
+            <div id="crewRestBonusBadge" style="display: none; align-items: center; gap: 4px; background: rgba(16, 185, 129, 0.12); color: var(--color-live); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">
+              <i class="fa-solid fa-gift"></i> +500 Crew Rest Bonus
+            </div>
           </div>
 
           <!-- Submit button wrapper for rotating border -->
@@ -1216,7 +1259,7 @@
         <!-- Puzzle Context -->
         <div class="sidebar-section">
           <h3><i class="fa-solid fa-circle-question"></i> Puzzle Objectives</h3>
-          <ul style="display:flex; flex-direction:column; gap:6px;">
+          <ul id="sidebarObjectives" style="display:flex; flex-direction:column; gap:6px;">
             <li><i class="fa-solid fa-check"></i> Minimize Repositioning flight times</li>
             <li><i class="fa-solid fa-check"></i> Complete within 10 min time limit</li>
             <li><i class="fa-solid fa-check"></i> Allow 14 hours between Landing and takeoff</li>
@@ -1333,6 +1376,11 @@
           </div>
         </div>
         
+        <div id="rulesModalActiveRulesContainer" style="margin-top: 15px; margin-bottom: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+          <h4 style="color: #000000; font-size: 13px; margin-bottom: 8px;"><i class="fa-solid fa-list-check" style="color: var(--accent); margin-right: 6px;"></i> Active Rules for this Puzzle:</h4>
+          <div id="rulesModalActiveRulesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
         <p><strong>Goal:</strong> Drag and arrange the flights so that all aircraft schedules are conflict-free, and total repositioning flight time is kept as low as possible.</p>
         
         <div id="nameInputContainer" class="form-group" style="margin-top: 15px; padding: 8px 12px; margin-bottom: 8px;">
@@ -1346,8 +1394,11 @@
           <i class="fa-solid fa-trophy"></i> Leaderboard
         </a>
         
-        <!-- Start Test button on the lower right -->
-        <button id="startTestBtn" class="btn btn-primary">Start Test</button>
+        <!-- Action buttons on the lower right -->
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button id="rulesCancelBtn" class="btn btn-secondary" style="display: none;">Cancel</button>
+          <button id="startTestBtn" class="btn btn-primary">Start Test</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1440,6 +1491,74 @@
       </div>
       <div class="modal-body" style="gap: 12px; overflow: visible; padding-right: 0; position: relative;">
         
+        <!-- Accordion Section: Puzzle Management -->
+        <div class="accordion-item">
+          <div class="accordion-header">
+            <span><i class="fa-solid fa-folder-plus" style="color: var(--accent); margin-right: 8px;"></i> Puzzle Management</span>
+            <i class="fa-solid fa-chevron-down chevron"></i>
+          </div>
+          <div class="accordion-content">
+            <!-- Submenu Selection (Create / Delete) -->
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+              <button type="button" id="adminPuzzleTabCreate" class="btn btn-primary" style="flex: 1; font-size: 11px; padding: 6px 8px;">Create Puzzle</button>
+              <button type="button" id="adminPuzzleTabDelete" class="btn btn-secondary" style="flex: 1; font-size: 11px; padding: 6px 8px;">Delete Puzzle</button>
+            </div>
+
+            <!-- Panel 1: Create New Puzzle -->
+            <div id="adminPuzzleCreatePanel" style="display: flex; flex-direction: column; gap: 8px;">
+              <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+                Define rules and generate a solvable custom puzzle with random flight legs.
+              </p>
+              
+              <div style="display: flex; flex-direction: column; gap: 6px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-main); font-weight: 600; cursor: pointer;">
+                  <input type="checkbox" id="adminRule1" checked>
+                  Rule 1: Enforce 14-Hours between Arrivals and next day's departure
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-main); font-weight: 600; cursor: pointer;">
+                  <input type="checkbox" id="adminRule2">
+                  Rule 2: Allow Stacked Trips (Coming Soon)
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-main); font-weight: 600; cursor: pointer;">
+                  <input type="checkbox" id="adminRule3">
+                  Rule 3: Enforce 10/24, Rest & Duty Day
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-main); font-weight: 600; cursor: pointer;">
+                  <input type="checkbox" id="adminRule4">
+                  Rule 4: Make It Fit (Coming Soon)
+                </label>
+              </div>
+
+              <div class="form-group" style="margin-top: 4px;">
+                <label class="form-label" for="adminNewPuzzleName" style="font-size: 11px; margin-bottom: 2px;">Puzzle Name</label>
+                <input type="text" id="adminNewPuzzleName" class="form-input" placeholder="e.g. Dynamic Level 1" required autocomplete="off" style="font-size: 12px; padding: 6px 10px;">
+              </div>
+
+              <button id="adminCreatePuzzleBtn" class="btn btn-primary" style="font-size: 12px; padding: 8px 12px; margin-top: 4px;">
+                <i class="fa-solid fa-circle-plus"></i> Create & Save Puzzle
+              </button>
+            </div>
+
+            <!-- Panel 2: Delete Existing Puzzle -->
+            <div id="adminPuzzleDeletePanel" style="display: none; flex-direction: column; gap: 8px;">
+              <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+                Permanently delete a custom puzzle and clear all associated leaderboard scores.
+              </p>
+              
+              <div class="form-group" style="margin-top: 4px;">
+                <label class="form-label" for="adminDeletePuzzleSelect" style="font-size: 11px; margin-bottom: 2px;">Select Custom Puzzle</label>
+                <select id="adminDeletePuzzleSelect" class="form-input" style="background: #ffffff; color: var(--text-main); font-size: 12px; padding: 6px 10px;">
+                  <option value="">-- Select a Puzzle --</option>
+                </select>
+              </div>
+
+              <button id="adminDeletePuzzleBtn" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 12px; padding: 8px 12px; margin-top: 4px;">
+                <i class="fa-solid fa-trash-can"></i> Delete Selected Puzzle
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="accordion-item">
           <div class="accordion-header">
             <span><i class="fa-solid fa-puzzle-piece" style="color: var(--accent); margin-right: 8px;"></i> Puzzle to Load</span>
@@ -1447,7 +1566,7 @@
           </div>
           <div class="accordion-content">
             <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
-              The currently active puzzle for all candidates.
+              The default landing puzzle loaded automatically when a new candidate enters the site.
             </p>
             <div class="form-group" style="margin-top: 8px;">
               <label class="form-label" for="adminPuzzleName">Puzzle Name</label>
@@ -1684,11 +1803,12 @@
 
     // Airport Reference Database
     const AIRPORTS = {
+      // Existing 32 airports (preserved)
       VNY:  { name: "Van Nuys, CA", lat: 34.2098, lon: -118.4890, tz: -8, tzName: "PST" },
       LAX:  { name: "Los Angeles, CA", lat: 33.9416, lon: -118.4085, tz: -8, tzName: "PST" },
-      CYYZ: { name: "Toronto, Canada", lat: 43.6777, lon: -79.6248, tz: -5, tzName: "EST" },
-      MYNN: { name: "Nassau, Bahamas", lat: 25.0390, lon: -77.4662, tz: -5, tzName: "EST" },
-      TNCM: { name: "St. Maarten", lat: 18.0410, lon: -63.1090, tz: -4, tzName: "AST" },
+      CYYZ:  { name: "Toronto, Canada", lat: 43.6777, lon: -79.6248, tz: -5, tzName: "EST" },
+      MYNN:  { name: "Nassau, Bahamas", lat: 25.0390, lon: -77.4662, tz: -5, tzName: "EST" },
+      TNCM:  { name: "Sint Maarten, Caribbean", lat: 18.0410, lon: -63.1090, tz: -4, tzName: "AST" },
       SJU:  { name: "San Juan, PR", lat: 18.4394, lon: -66.0018, tz: -4, tzName: "AST" },
       DEN:  { name: "Denver, CO", lat: 39.8561, lon: -104.6737, tz: -7, tzName: "MST" },
       ORD:  { name: "Chicago, IL", lat: 41.9742, lon: -87.9073, tz: -6, tzName: "CST" },
@@ -1709,13 +1829,153 @@
       SFO:  { name: "San Francisco, CA", lat: 37.6213, lon: -122.3790, tz: -8, tzName: "PST" },
       CLE:  { name: "Cleveland, OH", lat: 41.4109, lon: -81.8498, tz: -5, tzName: "EST" },
       COS:  { name: "Colorado Springs, CO", lat: 38.8058, lon: -104.7008, tz: -7, tzName: "MST" },
-      NUQ:  { name: "Moffett Field, CA", lat: 37.4167, lon: -122.0489, tz: -8, tzName: "PST" },
+      NUQ:  { name: "Mountain View, CA", lat: 37.4167, lon: -122.0489, tz: -8, tzName: "PST" },
       OAK:  { name: "Oakland, CA", lat: 37.7214, lon: -122.2208, tz: -8, tzName: "PST" },
       BED:  { name: "Bedford, MA", lat: 42.4700, lon: -71.2890, tz: -5, tzName: "EST" },
       SAT:  { name: "San Antonio, TX", lat: 29.5337, lon: -98.4698, tz: -6, tzName: "CST" },
       MCO:  { name: "Orlando, FL", lat: 28.4294, lon: -81.3090, tz: -5, tzName: "EST" },
-      OPF:  { name: "Miami Opa-locka, FL", lat: 25.9070, lon: -80.2784, tz: -5, tzName: "EST" },
-      SDF:  { name: "Louisville, KY", lat: 38.1744, lon: -85.7360, tz: -5, tzName: "EST" }
+      OPF:  { name: "Miami, FL", lat: 25.9070, lon: -80.2784, tz: -5, tzName: "EST" },
+      SDF:  { name: "Louisville, KY", lat: 38.1744, lon: -85.7360, tz: -5, tzName: "EST" },
+
+      // ~150 Expanded Canada/US/Caribbean Airports (Runways >= 8000ft, no Hawaii)
+      // United States (US)
+      JFK:  { name: "New York, NY", lat: 40.6413, lon: -73.7781, tz: -5, tzName: "EST" },
+      EWR:  { name: "Newark, NJ", lat: 40.6895, lon: -74.1745, tz: -5, tzName: "EST" },
+      BOS:  { name: "Boston, MA", lat: 42.3656, lon: -71.0096, tz: -5, tzName: "EST" },
+      IAD:  { name: "Washington, VA", lat: 38.9531, lon: -77.4565, tz: -5, tzName: "EST" },
+      BWI:  { name: "Baltimore/Washington, MD", lat: 39.1754, lon: -76.6683, tz: -5, tzName: "EST" },
+      BDL:  { name: "Hartford, CT", lat: 41.9389, lon: -72.6832, tz: -5, tzName: "EST" },
+      MHT:  { name: "Manchester, NH", lat: 42.9297, lon: -71.4357, tz: -5, tzName: "EST" },
+      BUF:  { name: "Buffalo, NY", lat: 42.9405, lon: -78.7322, tz: -5, tzName: "EST" },
+      ROC:  { name: "Rochester, NY", lat: 43.1189, lon: -77.6724, tz: -5, tzName: "EST" },
+      SYR:  { name: "Syracuse, NY", lat: 43.1111, lon: -76.1063, tz: -5, tzName: "EST" },
+      ALB:  { name: "Albany, NY", lat: 42.7482, lon: -73.8017, tz: -5, tzName: "EST" },
+      PIT:  { name: "Pittsburgh, PA", lat: 40.4914, lon: -80.2329, tz: -5, tzName: "EST" },
+      CMH:  { name: "Columbus, OH", lat: 40.0000, lon: -82.8919, tz: -5, tzName: "EST" },
+      DTW:  { name: "Detroit, MI", lat: 42.2124, lon: -83.3533, tz: -5, tzName: "EST" },
+      GRR:  { name: "Grand Rapids, MI", lat: 42.8808, lon: -85.5228, tz: -5, tzName: "EST" },
+      LAN:  { name: "Lansing, MI", lat: 42.7785, lon: -84.5873, tz: -5, tzName: "EST" },
+      IND:  { name: "Indianapolis, IN", lat: 39.7173, lon: -86.2947, tz: -5, tzName: "EST" },
+      CVG:  { name: "Cincinnati, KY", lat: 39.0461, lon: -84.6622, tz: -5, tzName: "EST" },
+      DAY:  { name: "Dayton, OH", lat: 39.9024, lon: -84.2194, tz: -5, tzName: "EST" },
+      RIC:  { name: "Richmond, VA", lat: 37.5052, lon: -77.3197, tz: -5, tzName: "EST" },
+      ORF:  { name: "Norfolk, VA", lat: 36.8946, lon: -76.2012, tz: -5, tzName: "EST" },
+      GSO:  { name: "Greensboro, NC", lat: 36.0978, lon: -79.9373, tz: -5, tzName: "EST" },
+      ILM:  { name: "Wilmington, NC", lat: 34.2706, lon: -77.9025, tz: -5, tzName: "EST" },
+      CHS:  { name: "Charleston, SC", lat: 32.8986, lon: -80.0405, tz: -5, tzName: "EST" },
+      MYR:  { name: "Myrtle Beach, SC", lat: 33.6797, lon: -78.9283, tz: -5, tzName: "EST" },
+      CAE:  { name: "Columbia, SC", lat: 33.9388, lon: -81.1195, tz: -5, tzName: "EST" },
+      GSP:  { name: "Greenville-Spartanburg, SC", lat: 34.8956, lon: -82.2189, tz: -5, tzName: "EST" },
+      SAV:  { name: "Savannah/Hilton, GA", lat: 32.1275, lon: -81.2021, tz: -5, tzName: "EST" },
+      AGS:  { name: "Augusta, GA", lat: 33.3699, lon: -81.9645, tz: -5, tzName: "EST" },
+      JAX:  { name: "Jacksonville, FL", lat: 30.4941, lon: -81.6878, tz: -5, tzName: "EST" },
+      DAB:  { name: "Daytona Beach, FL", lat: 29.1799, lon: -81.0581, tz: -5, tzName: "EST" },
+      SFB:  { name: "Sanford, FL", lat: 28.7778, lon: -81.2375, tz: -5, tzName: "EST" },
+      PIE:  { name: "St. Pete-Clearwater, FL", lat: 27.9102, lon: -82.6874, tz: -5, tzName: "EST" },
+      RSW:  { name: "Fort Myers, FL", lat: 26.5362, lon: -81.7552, tz: -5, tzName: "EST" },
+      TYS:  { name: "Knoxville, TN", lat: 35.8110, lon: -83.9940, tz: -5, tzName: "EST" },
+      TRI:  { name: "Tri-Cities, TN", lat: 36.4752, lon: -82.4074, tz: -5, tzName: "EST" },
+      MDT:  { name: "Harrisburg, PA", lat: 40.1935, lon: -76.7634, tz: -5, tzName: "EST" },
+      SWF:  { name: "Newburgh, NY", lat: 41.5041, lon: -74.1048, tz: -5, tzName: "EST" },
+      SRQ:  { name: "Sarasota, FL", lat: 27.3954, lon: -82.5543, tz: -5, tzName: "EST" },
+      CAK:  { name: "Akron-Canton, OH", lat: 40.9161, lon: -81.4422, tz: -5, tzName: "EST" },
+      BNA:  { name: "Nashville, TN", lat: 36.1245, lon: -86.6782, tz: -6, tzName: "CST" },
+      MEM:  { name: "Memphis, TN", lat: 35.0424, lon: -89.9767, tz: -6, tzName: "CST" },
+      HSV:  { name: "Huntsville, AL", lat: 34.6372, lon: -86.7751, tz: -6, tzName: "CST" },
+      BHM:  { name: "Birmingham, AL", lat: 33.5629, lon: -86.7535, tz: -6, tzName: "CST" },
+      MOB:  { name: "Mobile, AL", lat: 30.6912, lon: -88.2428, tz: -6, tzName: "CST" },
+      MSY:  { name: "New Orleans, LA", lat: 29.9911, lon: -90.2580, tz: -6, tzName: "CST" },
+      GPT:  { name: "Gulfport-Biloxi, MS", lat: 30.4073, lon: -89.0701, tz: -6, tzName: "CST" },
+      JAN:  { name: "Jackson, MS", lat: 32.3112, lon: -90.0759, tz: -6, tzName: "CST" },
+      LIT:  { name: "Little Rock, AR", lat: 34.7294, lon: -92.2242, tz: -6, tzName: "CST" },
+      XNA:  { name: "Northwest Arkansas, AR", lat: 36.2819, lon: -94.3068, tz: -6, tzName: "CST" },
+      FSM:  { name: "Fort Smith, AR", lat: 35.3366, lon: -94.3674, tz: -6, tzName: "CST" },
+      PIA:  { name: "Peoria, IL", lat: 40.6642, lon: -89.6933, tz: -6, tzName: "CST" },
+      SPI:  { name: "Springfield, IL", lat: 39.8441, lon: -89.6779, tz: -6, tzName: "CST" },
+      MKE:  { name: "Milwaukee, WI", lat: 42.9472, lon: -87.8966, tz: -6, tzName: "CST" },
+      MSN:  { name: "Madison, WI", lat: 43.1399, lon: -89.3375, tz: -6, tzName: "CST" },
+      DLH:  { name: "Duluth, MN", lat: 46.8421, lon: -92.1936, tz: -6, tzName: "CST" },
+      RST:  { name: "Rochester, MN", lat: 43.9082, lon: -92.4975, tz: -6, tzName: "CST" },
+      DSM:  { name: "Des Moines, IA", lat: 41.5340, lon: -93.6631, tz: -6, tzName: "CST" },
+      CID:  { name: "Cedar Rapids, IA", lat: 41.8847, lon: -91.7108, tz: -6, tzName: "CST" },
+      OMA:  { name: "Omaha, NE", lat: 41.3025, lon: -95.8941, tz: -6, tzName: "CST" },
+      LNK:  { name: "Lincoln, NE", lat: 40.8510, lon: -96.7592, tz: -6, tzName: "CST" },
+      SUX:  { name: "Sioux City, IA", lat: 42.4026, lon: -96.3844, tz: -6, tzName: "CST" },
+      STL:  { name: "St. Louis, MO", lat: 38.7476, lon: -90.3597, tz: -6, tzName: "CST" },
+      SGF:  { name: "Springfield, MO", lat: 37.2457, lon: -93.3887, tz: -6, tzName: "CST" },
+      MCI:  { name: "Kansas City, MO", lat: 39.2976, lon: -94.7139, tz: -6, tzName: "CST" },
+      ICT:  { name: "Wichita, KS", lat: 37.6499, lon: -97.4331, tz: -6, tzName: "CST" },
+      FOE:  { name: "Topeka, KS", lat: 38.9505, lon: -95.6636, tz: -6, tzName: "CST" },
+      DAL:  { name: "Dallas, TX", lat: 32.8471, lon: -96.8518, tz: -6, tzName: "CST" },
+      IAH:  { name: "Houston, TX", lat: 29.9804, lon: -95.3397, tz: -6, tzName: "CST" },
+      EFD:  { name: "Houston, TX", lat: 29.6073, lon: -95.1588, tz: -6, tzName: "CST" },
+      AUS:  { name: "Austin, TX", lat: 30.1945, lon: -97.6699, tz: -6, tzName: "CST" },
+      LRD:  { name: "Laredo, TX", lat: 27.5438, lon: -99.4616, tz: -6, tzName: "CST" },
+      AMA:  { name: "Amarillo, TX", lat: 35.2194, lon: -101.7060, tz: -6, tzName: "CST" },
+      LBB:  { name: "Lubbock, TX", lat: 33.6636, lon: -101.8230, tz: -6, tzName: "CST" },
+      MAF:  { name: "Midland, TX", lat: 31.9425, lon: -102.2020, tz: -6, tzName: "CST" },
+      ELP:  { name: "El Paso, TX", lat: 31.8073, lon: -106.3780, tz: -6, tzName: "CST" },
+      OKC:  { name: "Oklahoma City, OK", lat: 35.3931, lon: -97.6007, tz: -6, tzName: "CST" },
+      TUL:  { name: "Tulsa, OK", lat: 36.1984, lon: -95.8881, tz: -6, tzName: "CST" },
+      TIK:  { name: "Tinker, OK", lat: 35.4148, lon: -97.3865, tz: -6, tzName: "CST" },
+      FWA:  { name: "Fort Wayne, IN", lat: 40.9781, lon: -85.1951, tz: -5, tzName: "EST" },
+      TOL:  { name: "Toledo, OH", lat: 41.5868, lon: -83.8078, tz: -5, tzName: "EST" },
+      ABQ:  { name: "Albuquerque, NM", lat: 35.0402, lon: -106.6090, tz: -7, tzName: "MST" },
+      APA:  { name: "Denver, CO", lat: 39.5701, lon: -104.8490, tz: -7, tzName: "MST" },
+      PUB:  { name: "Pueblo, CO", lat: 38.2891, lon: -104.4970, tz: -7, tzName: "MST" },
+      BIL:  { name: "Billings, MT", lat: 45.8077, lon: -108.5430, tz: -7, tzName: "MST" },
+      HLN:  { name: "Helena, MT", lat: 46.6068, lon: -111.9830, tz: -7, tzName: "MST" },
+      GTF:  { name: "Great Falls, MT", lat: 47.4820, lon: -111.3710, tz: -7, tzName: "MST" },
+      MSO:  { name: "Missoula, MT", lat: 46.9163, lon: -114.0910, tz: -7, tzName: "MST" },
+      BOI:  { name: "Boise, ID", lat: 43.5644, lon: -116.2230, tz: -7, tzName: "MST" },
+      PIH:  { name: "Pocatello, ID", lat: 42.9113, lon: -112.5960, tz: -7, tzName: "MST" },
+      IDA:  { name: "Idaho Falls, ID", lat: 43.5146, lon: -112.0700, tz: -7, tzName: "MST" },
+      HIF:  { name: "Hill, UT", lat: 41.1239, lon: -111.9730, tz: -7, tzName: "MST" },
+      IWA:  { name: "Phoenix, AZ", lat: 33.3078, lon: -111.6550, tz: -7, tzName: "MST" },
+      TUS:  { name: "Tucson, AZ", lat: 32.1161, lon: -110.9410, tz: -7, tzName: "MST" },
+      FHU:  { name: "Sierra Vista, AZ", lat: 31.5901, lon: -110.3440, tz: -7, tzName: "MST" },
+      LSV:  { name: "Nellis, NV", lat: 36.2362, lon: -115.0340, tz: -8, tzName: "PST" },
+      RNO:  { name: "Reno/Tahoe, NV", lat: 39.4985, lon: -119.7680, tz: -8, tzName: "PST" },
+      SEA:  { name: "Seattle-Tacoma, WA", lat: 47.4502, lon: -122.3090, tz: -8, tzName: "PST" },
+      PAE:  { name: "Paine, WA", lat: 47.9070, lon: -122.2820, tz: -8, tzName: "PST" },
+      GEG:  { name: "Spokane, WA", lat: 47.6199, lon: -117.5340, tz: -8, tzName: "PST" },
+      PDX:  { name: "Portland, OR", lat: 45.5898, lon: -122.5970, tz: -8, tzName: "PST" },
+      EUG:  { name: "Eugene, OR", lat: 44.1246, lon: -123.2120, tz: -8, tzName: "PST" },
+      MFR:  { name: "Medford, OR", lat: 42.3742, lon: -122.8740, tz: -8, tzName: "PST" },
+      LMT:  { name: "Klamath Falls, OR", lat: 42.1561, lon: -121.7330, tz: -8, tzName: "PST" },
+      SMF:  { name: "Sacramento, CA", lat: 38.6954, lon: -121.5910, tz: -8, tzName: "PST" },
+      FAT:  { name: "Fresno, CA", lat: 36.7762, lon: -119.7180, tz: -8, tzName: "PST" },
+      BFL:  { name: "Bakersfield, CA", lat: 35.4336, lon: -119.0580, tz: -8, tzName: "PST" },
+      ONT:  { name: "Ontario, CA", lat: 34.0560, lon: -117.6010, tz: -8, tzName: "PST" },
+      SAN:  { name: "San Diego, CA", lat: 32.7336, lon: -117.1900, tz: -8, tzName: "PST" },
+      PSP:  { name: "Palm Springs, CA", lat: 33.8297, lon: -116.5070, tz: -8, tzName: "PST" },
+      ANC:  { name: "Anchorage, AK", lat: 61.1744, lon: -150.0160, tz: -9, tzName: "AKST" },
+      FAI:  { name: "Fairbanks, AK", lat: 64.8151, lon: -147.8560, tz: -9, tzName: "AKST" },
+      JNU:  { name: "Juneau, AK", lat: 58.3549, lon: -134.5760, tz: -9, tzName: "AKST" },
+
+      // Canada (CY)
+      CYYC:  { name: "Calgary, AB", lat: 51.1139, lon: -114.0200, tz: -7, tzName: "MST" },
+      CYEG:  { name: "Edmonton, AB", lat: 53.3097, lon: -113.5800, tz: -7, tzName: "MST" },
+      CYWG:  { name: "Winnipeg, MB", lat: 49.9100, lon: -97.2399, tz: -6, tzName: "CST" },
+      CYOW:  { name: "Ottawa, ON", lat: 45.3225, lon: -75.6672, tz: -5, tzName: "EST" },
+      CYUL:  { name: "Montreal, QC", lat: 45.4706, lon: -73.7408, tz: -5, tzName: "EST" },
+      CYQB:  { name: "Quebec City, QC", lat: 46.7911, lon: -71.3933, tz: -5, tzName: "EST" },
+      CYHZ:  { name: "Halifax, NS", lat: 44.8808, lon: -63.5086, tz: -4, tzName: "AST" },
+      CYQX:  { name: "Gander, NL", lat: 48.9369, lon: -54.5681, tz: -4, tzName: "AST" },
+      CYYT:  { name: "St. John's, NL", lat: 47.6186, lon: -52.7519, tz: -3.5, tzName: "NST" },
+      CYXU:  { name: "London, ON", lat: 43.0356, lon: -81.1539, tz: -5, tzName: "EST" },
+      CYHM:  { name: "Hamilton, ON", lat: 43.1736, lon: -79.9350, tz: -5, tzName: "EST" },
+
+      // Caribbean
+      MKJS:  { name: "Montego Bay, Jamaica", lat: 18.5037, lon: -77.9133, tz: -5, tzName: "EST" },
+      MKJP:  { name: "Kingston, Jamaica", lat: 17.9357, lon: -76.7873, tz: -5, tzName: "EST" },
+      MDPC:  { name: "Punta Cana, DR", lat: 18.5674, lon: -68.3634, tz: -4, tzName: "AST" },
+      MDSD:  { name: "Santo Domingo, DR", lat: 18.4297, lon: -69.6689, tz: -4, tzName: "AST" },
+      TFFF:  { name: "Fort-de-France, Martinique", lat: 14.5910, lon: -61.0030, tz: -4, tzName: "AST" },
+      TBPB:  { name: "Bridgetown, Barbados", lat: 13.0747, lon: -59.4925, tz: -4, tzName: "AST" },
+      TGPY:  { name: "St. George's, Grenada", lat: 12.0042, lon: -61.7861, tz: -4, tzName: "AST" },
+      MTPP:  { name: "Port-au-Prince, Haiti", lat: 18.5800, lon: -72.2925, tz: -5, tzName: "EST" },
+      TXKF:  { name: "Hamilton, Bermuda", lat: 32.3640, lon: -64.6787, tz: -4, tzName: "AST" }
     };
 
     // Airplane Metadata
@@ -1772,10 +2032,21 @@
     let schedulerName = "";
     let schedulerAttemptCount = 0;
     let currentPuzzleName = "Introduction Puzzle";
+
+    // Fallback Introduction Puzzle definition
+    const INTRODUCTION_PUZZLE = {
+      name: "Introduction Puzzle",
+      legs: FIXED_LIVE_LEGS,
+      rules: { rule1: true, rule2: false, rule3: false, rule4: false }
+    };
+
+    let puzzlesDatabase = [ INTRODUCTION_PUZZLE ];
+    let currentPuzzle = INTRODUCTION_PUZZLE;
     let startingLocations = Array(6).fill("LAX");
     let timeRemaining = TOTAL_TIME;
     let timerInterval = null;
     let currentScore = BASE_SCORE;
+    let connectionBonus = 0;
     let totalRepoDistance = 0;
     let totalRepoDurationMins = 0;
     let repoFlightsCount = 0;
@@ -1933,7 +2204,8 @@
               deletedUsers: data.deletedUsers || [],
               resetVersion: data.resetVersion || 0,
               puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
-              userIps: userIps
+              userIps: userIps,
+              customPuzzles: data.customPuzzles || []
             })
           }).then(writeRes => {
             if (!writeRes.ok) throw new Error("Write failed");
@@ -1980,7 +2252,7 @@
 
     // Initialize all live legs with pre-computed coordinates, distances, flight duration, and timezone absolute minutes.
     function precalculateLiveLegs() {
-      FIXED_LIVE_LEGS.forEach(leg => {
+      currentPuzzle.legs.forEach(leg => {
         const fromA = AIRPORTS[leg.from];
         const toA = AIRPORTS[leg.to];
         
@@ -2141,7 +2413,8 @@
                 deletedUsers: updatedDeletedUsers,
                 resetVersion: dbResetVersion,
                 puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
-                userIps: data.userIps || {}
+                userIps: data.userIps || {},
+                customPuzzles: data.customPuzzles || []
               })
             }).catch(e => console.error("Failed to clean deletedUsers array:", e));
 
@@ -2163,6 +2436,539 @@
           }
           return rawName;
         });
+    }
+
+    function generateSolvablePuzzle(name, rules) {
+      function countSameAirportConnections(legsList) {
+        let count = 0;
+        const planeLocations = Array(6).fill("");
+        const airportsKeys = Object.keys(AIRPORTS);
+        
+        for (let r2 = 0; r2 < 6; r2++) {
+          const rowLegs = legsList.filter(l => l.row === r2).map(l => l.leg).sort((a,b)=>a.day - b.day);
+          if (rowLegs.length > 0) {
+            planeLocations[r2] = rowLegs[0].from;
+          } else {
+            planeLocations[r2] = "LAX";
+          }
+        }
+        
+        for (let r2 = 0; r2 < 6; r2++) {
+          const rowLegs = legsList.filter(l => l.row === r2).map(l => l.leg).sort((a,b)=>a.day - b.day);
+          if (rowLegs.length <= 1) continue;
+          
+          let tempLoc = rowLegs[0].to;
+          for (let i = 1; i < rowLegs.length; i++) {
+            const leg = rowLegs[i];
+            if (tempLoc === leg.from) {
+              count++;
+            }
+            tempLoc = leg.to;
+          }
+        }
+        return count;
+      }
+
+      const targetLegCount = Math.floor(Math.random() * 5) + 26; // 26 to 30 legs
+      const dayLegCounts = [5, 5, 5, 5, 5];
+      let remaining = targetLegCount - 25;
+      while (remaining > 0) {
+        const randDay = Math.floor(Math.random() * 5);
+        if (dayLegCounts[randDay] < 6) {
+          dayLegCounts[randDay]++;
+          remaining--;
+        }
+      }
+      
+      const airportsKeys = Object.keys(AIRPORTS);
+      let attempts = 0;
+      let generatedLegs = null;
+      
+      while (attempts < 100) {
+        attempts++;
+        const legs = [];
+        let hasAllowedConflict = false;
+        const planeLocations = Array(6).fill("LAX");
+        
+        // Setup initial plane bases
+        planeLocations[0] = "LAX";
+        for (let r = 1; r < 6; r++) {
+          planeLocations[r] = airportsKeys[Math.floor(Math.random() * airportsKeys.length)];
+        }
+        
+        let success = true;
+        let legCounter = 1;
+        
+        for (let d = 0; d < 5; d++) {
+          const activeRows = [0, 1, 2, 3, 4, 5];
+          shuffleArray(activeRows);
+          const rowsToSchedule = activeRows.slice(0, dayLegCounts[d]);
+          
+          for (const r of rowsToSchedule) {
+            let placed = false;
+            let retryLeg = 0;
+            
+            while (retryLeg < 50 && !placed) {
+              retryLeg++;
+              const startAp = planeLocations[r];
+              let depAp = startAp;
+              let hasRepo = false;
+              let repoDist = 0;
+              let repoDuration = 0;
+              
+              const currentSameAirportCount = countSameAirportConnections(legs);
+              const forceRepo = currentSameAirportCount >= 4;
+              
+              if ((Math.random() < 0.75 || forceRepo) && d > 0) {
+                const nearAPs = airportsKeys.filter(k => {
+                  if (k === startAp) return false;
+                  const dist = calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
+                  return dist > 50 && dist < 300;
+                });
+                
+                if (nearAPs.length > 0) {
+                  depAp = nearAPs[Math.floor(Math.random() * nearAPs.length)];
+                  hasRepo = true;
+                  repoDist = Math.round(calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[depAp].lat, AIRPORTS[depAp].lon));
+                  repoDuration = Math.round((repoDist / CRUISE_SPEED) * 60);
+                } else if (forceRepo) {
+                  const otherAPs = airportsKeys.filter(k => k !== startAp);
+                  depAp = otherAPs[Math.floor(Math.random() * otherAPs.length)];
+                  hasRepo = true;
+                  repoDist = Math.round(calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[depAp].lat, AIRPORTS[depAp].lon));
+                  repoDuration = Math.round((repoDist / CRUISE_SPEED) * 60);
+                }
+              }
+              
+              let minHour = 7;
+              if (d > 0 && rules.rule3) {
+                const rowLegs = legs.filter(l => l.row === r).map(l => l.leg);
+                const tempRowGrid = Array(5).fill(null);
+                rowLegs.forEach(l => tempRowGrid[l.day] = l);
+                
+                let prevLeg = null;
+                for (let p = d - 1; p >= 0; p--) {
+                  if (tempRowGrid[p]) {
+                    prevLeg = tempRowGrid[p];
+                    break;
+                  }
+                }
+                
+                if (prevLeg) {
+                  let prevArrMins = prevLeg.arrLocalMins;
+                  if (hasRepo) {
+                    const tzDiffVal = AIRPORTS[depAp].tz - AIRPORTS[prevLeg.to].tz;
+                    prevArrMins = (prevLeg.arrLocalMins + 60) + repoDuration + tzDiffVal * 60;
+                  }
+                  const earliestLocalMins = prevArrMins + 690;
+                  const earliestLocalMinsOfDay = earliestLocalMins - d * 1440;
+                  if (earliestLocalMinsOfDay > 0) {
+                    minHour = Math.ceil(earliestLocalMinsOfDay / 60);
+                  }
+                }
+              }
+              
+              let startHour = 7;
+              if (minHour <= 14) {
+                startHour = Math.max(7, minHour) + Math.floor(Math.random() * (15 - Math.max(7, minHour)));
+              } else {
+                startHour = minHour + Math.floor(Math.random() * 3);
+              }
+              
+              const startMin = 5 * Math.floor(Math.random() * 12); // 0 to 55 snapped to 5 min
+              const depTimeStr = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
+              
+              const destCandidates = [];
+              airportsKeys.forEach(k => {
+                if (k === depAp) return;
+                const dist = calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
+                if (dist >= 1350 && dist <= 1650) {
+                  destCandidates.push({ code: k, dist: dist });
+                }
+              });
+              
+              if (destCandidates.length === 0) {
+                // Fallback to a wider range if no candidates are found
+                airportsKeys.forEach(k => {
+                  if (k === depAp) return;
+                  const dist = calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
+                  if (dist >= 1000 && dist <= 1650) {
+                    destCandidates.push({ code: k, dist: dist });
+                  }
+                });
+              }
+              
+              if (destCandidates.length === 0) continue;
+              
+              // Sort by distance descending to prioritize longer flights
+              destCandidates.sort((a, b) => b.dist - a.dist);
+              
+              // Select from the top half of longest candidates
+              const halfCount = Math.ceil(destCandidates.length / 2);
+              const selected = destCandidates.slice(0, halfCount)[Math.floor(Math.random() * halfCount)];
+              const destAp = selected.code;
+              
+              const dist = Math.round(calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[destAp].lat, AIRPORTS[destAp].lon));
+              const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
+              
+              const candidateLeg = {
+                id: `leg-${name.replace(/\s+/g, '-')}-${legCounter}`,
+                from: depAp,
+                to: destAp,
+                day: d,
+                depTimeStr: depTimeStr,
+                distance: dist,
+                durationMins: durationMins,
+              };
+              
+              const fromA = AIRPORTS[depAp];
+              const toA = AIRPORTS[destAp];
+              const [h, m] = depTimeStr.split(":").map(Number);
+              
+              candidateLeg.depLocalMins = d * 1440 + h * 60 + m;
+              const tzDiff = toA.tz - fromA.tz;
+              candidateLeg.arrLocalMins = candidateLeg.depLocalMins + durationMins + tzDiff * 60;
+              
+              const rowLegs = legs.filter(l => l.row === r).map(l => l.leg);
+              const tempRowGrid = Array(5).fill(null);
+              rowLegs.forEach(l => tempRowGrid[l.day] = l);
+              tempRowGrid[d] = candidateLeg;
+              
+              const simulatedEvents = [];
+              let firstLeg = null;
+              for (let p = 0; p < 5; p++) {
+                if (tempRowGrid[p]) {
+                  firstLeg = tempRowGrid[p];
+                  break;
+                }
+              }
+              const simulatedStartLoc = r === 0 ? "LAX" : (firstLeg ? firstLeg.from : "LAX");
+              
+              let tempLoc = simulatedStartLoc;
+              let rowConflict = false;
+              let segments = [];
+              let dailyEvents = {};
+              
+              for (let d2 = 0; d2 <= d; d2++) {
+                const leg = tempRowGrid[d2];
+                if (!leg) continue;
+                
+                if (tempLoc !== leg.from) {
+                  let prevLeg = null;
+                  for (let p = d2 - 1; p >= 0; p--) {
+                    if (tempRowGrid[p]) {
+                      prevLeg = tempRowGrid[p];
+                      break;
+                    }
+                  }
+                  const depRepo = prevLeg ? prevLeg.arrLocalMins + 60 : 0;
+                  const repoD = Math.round(calculateDistance(AIRPORTS[tempLoc].lat, AIRPORTS[tempLoc].lon, AIRPORTS[leg.from].lat, AIRPORTS[leg.from].lon));
+                  const repoDur = Math.round((repoD / CRUISE_SPEED) * 60);
+                  const tzDiffVal = AIRPORTS[leg.from].tz - AIRPORTS[tempLoc].tz;
+                  const arrRepo = depRepo + repoDur + tzDiffVal * 60;
+                  
+                  if (arrRepo > leg.depLocalMins) {
+                    rowConflict = true;
+                    break;
+                  }
+                  
+                  const repoEv = {
+                    type: "repo",
+                    from: tempLoc,
+                    to: leg.from,
+                    depLocalMins: depRepo,
+                    arrLocalMins: arrRepo,
+                    durationMins: repoDur,
+                    displayDay: prevLeg ? ((leg.day > prevLeg.day) ? (leg.day - 1) : prevLeg.day) : 0
+                  };
+                  
+                  simulatedEvents.push(repoEv);
+                  const depZ = depRepo - AIRPORTS[tempLoc].tz * 60;
+                  const arrZ = arrRepo - AIRPORTS[leg.from].tz * 60;
+                  segments.push({ start: depZ, end: arrZ });
+                  
+                  const dispD = Math.floor(repoEv.depLocalMins / 1440);
+                  if (!dailyEvents[dispD]) dailyEvents[dispD] = [];
+                  dailyEvents[dispD].push(repoEv);
+                }
+                
+                simulatedEvents.push({
+                  type: "live",
+                  legRef: leg,
+                  displayDay: leg.day
+                });
+                
+                const depZ = leg.depLocalMins - AIRPORTS[leg.from].tz * 60;
+                const arrZ = leg.arrLocalMins - AIRPORTS[leg.to].tz * 60;
+                segments.push({ start: depZ, end: arrZ, legRef: leg });
+                
+                if (!dailyEvents[leg.day]) dailyEvents[leg.day] = [];
+                dailyEvents[leg.day].push({ type: "live", depLocalMins: leg.depLocalMins, arrLocalMins: leg.arrLocalMins, from: leg.from, to: leg.to });
+                
+                if (d2 > 0) {
+                  let prevLeg = null;
+                  for (let p = d2 - 1; p >= 0; p--) {
+                    if (tempRowGrid[p]) {
+                      prevLeg = tempRowGrid[p];
+                      break;
+                    }
+                  }
+                  if (prevLeg && rules.rule1) {
+                    const connectingRepo = simulatedEvents.find(ev => ev.type === "repo" && ev.to === leg.from);
+                    const lastLanding = connectingRepo ? connectingRepo.arrLocalMins : prevLeg.arrLocalMins;
+                    if (leg.depLocalMins - lastLanding < 840) {
+                      rowConflict = true;
+                      break;
+                    }
+                  }
+                }
+                
+                tempLoc = leg.to;
+              }
+              
+              if (rowConflict) continue;
+              
+              if (rules.rule3) {
+                let hasRule3Conflict = false;
+                const activeDList = Object.keys(dailyEvents).map(Number).sort((a,b)=>a-b);
+                const dailyDuty = {};
+                
+                for (const actD of activeDList) {
+                  const dayEvs = dailyEvents[actD];
+                  dayEvs.sort((a,b) => a.depLocalMins - b.depLocalMins);
+                  const fEv = dayEvs[0];
+                  const lEv = dayEvs[dayEvs.length - 1];
+                  const fTakeoff = fEv.depLocalMins;
+                  const lLanding = lEv.legRef ? lEv.legRef.arrLocalMins : lEv.arrLocalMins;
+                  
+                  const dStart = fTakeoff - 60;
+                  const dEnd = lLanding + 30;
+                  const dDuration = dEnd - dStart;
+                  
+                  if (dDuration > 840) {
+                    hasRule3Conflict = true;
+                    break;
+                  }
+                  
+                  const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
+                  const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
+                  const zStart = dStart - AIRPORTS[fFrom].tz * 60;
+                  const zEnd = dEnd - AIRPORTS[lTo].tz * 60;
+                  dailyDuty[actD] = { start: zStart, end: zEnd };
+                }
+                
+                if (!hasRule3Conflict) {
+                  for (let i = 0; i < activeDList.length - 1; i++) {
+                    const d1 = activeDList[i];
+                    const d2 = activeDList[i+1];
+                    if (dailyDuty[d2].start - dailyDuty[d1].end < 600) {
+                      hasRule3Conflict = true;
+                      break;
+                    }
+                  }
+                }
+                
+                if (!hasRule3Conflict) {
+                  for (const seg of segments) {
+                    if (getFlightTimeInWindow(seg.end, segments) > 600) {
+                      hasRule3Conflict = true;
+                      break;
+                    }
+                    if (getFlightTimeInWindow(seg.start + 1440, segments) > 600) {
+                      hasRule3Conflict = true;
+                      break;
+                    }
+                  }
+                }
+                
+                if (hasRule3Conflict) {
+                  let hasSameAirportConn = false;
+                  const rowLegsInOrder = [];
+                  for (let d2 = 0; d2 <= d; d2++) {
+                    if (tempRowGrid[d2]) rowLegsInOrder.push(tempRowGrid[d2]);
+                  }
+                  if (rowLegsInOrder.length > 1) {
+                    let checkLoc = rowLegsInOrder[0].to;
+                    for (let i = 1; i < rowLegsInOrder.length; i++) {
+                      if (checkLoc === rowLegsInOrder[i].from) {
+                        hasSameAirportConn = true;
+                        break;
+                      }
+                      checkLoc = rowLegsInOrder[i].to;
+                    }
+                  }
+                  
+                  if (hasSameAirportConn && !hasAllowedConflict) {
+                    hasAllowedConflict = true;
+                  } else {
+                    rowConflict = true;
+                  }
+                }
+              }
+              
+              legs.push({ row: r, leg: candidateLeg });
+              planeLocations[r] = destAp;
+              placed = true;
+              legCounter++;
+            }
+            
+            if (!placed) {
+              success = false;
+              break;
+            }
+          }
+          if (!success) break;
+        }
+        
+        if (success && legs.length >= targetLegCount) {
+          let totalSameAirportClean = 0;
+          let totalSameAirportWithConflict = 0;
+          let totalRule3Conflicts = 0;
+          
+          for (let r = 0; r < 6; r++) {
+            const rowLegs = legs.filter(l => l.row === r).map(l => l.leg).sort((a,b)=>a.day - b.day);
+            const simulatedEvents = [];
+            const simulatedStartLoc = r === 0 ? "LAX" : rowLegs.length > 0 ? rowLegs[0].from : "LAX";
+            
+            let tempLoc = simulatedStartLoc;
+            let segments = [];
+            let dailyEvents = {};
+            
+            for (let d2 = 0; d2 < 5; d2++) {
+              const leg = rowLegs.find(l => l.day === d2);
+              if (!leg) continue;
+              
+              if (tempLoc !== leg.from) {
+                let prevLeg = null;
+                for (let p = d2 - 1; p >= 0; p--) {
+                  const checkLeg = rowLegs.find(l => l.day === p);
+                  if (checkLeg) {
+                    prevLeg = checkLeg;
+                    break;
+                  }
+                }
+                const depRepo = prevLeg ? prevLeg.arrLocalMins + 60 : 0;
+                const repoD = Math.round(calculateDistance(AIRPORTS[tempLoc].lat, AIRPORTS[tempLoc].lon, AIRPORTS[leg.from].lat, AIRPORTS[leg.from].lon));
+                const repoDur = Math.round((repoD / CRUISE_SPEED) * 60);
+                const tzDiffVal = AIRPORTS[leg.from].tz - AIRPORTS[tempLoc].tz;
+                const arrRepo = depRepo + repoDur + tzDiffVal * 60;
+                
+                const repoEv = {
+                  type: "repo",
+                  from: tempLoc,
+                  to: leg.from,
+                  depLocalMins: depRepo,
+                  arrLocalMins: arrRepo,
+                  durationMins: repoDur,
+                  displayDay: prevLeg ? ((leg.day > prevLeg.day) ? (leg.day - 1) : prevLeg.day) : 0
+                };
+                
+                simulatedEvents.push(repoEv);
+                const depZ = depRepo - AIRPORTS[tempLoc].tz * 60;
+                const arrZ = arrRepo - AIRPORTS[leg.from].tz * 60;
+                segments.push({ start: depZ, end: arrZ });
+                
+                const dispD = Math.floor(repoEv.depLocalMins / 1440);
+                if (!dailyEvents[dispD]) dailyEvents[dispD] = [];
+                dailyEvents[dispD].push(repoEv);
+              }
+              
+              simulatedEvents.push({
+                type: "live",
+                legRef: leg,
+                displayDay: leg.day
+              });
+              
+              const depZ = leg.depLocalMins - AIRPORTS[leg.from].tz * 60;
+              const arrZ = leg.arrLocalMins - AIRPORTS[leg.to].tz * 60;
+              segments.push({ start: depZ, end: arrZ, legRef: leg });
+              
+              if (!dailyEvents[leg.day]) dailyEvents[leg.day] = [];
+              dailyEvents[leg.day].push({ type: "live", depLocalMins: leg.depLocalMins, arrLocalMins: leg.arrLocalMins, from: leg.from, to: leg.to });
+              
+              tempLoc = leg.to;
+            }
+            
+            // Check for Rule 3 conflicts
+            let rowHasRule3Conflict = false;
+            if (rules.rule3) {
+              const activeDList = Object.keys(dailyEvents).map(Number).sort((a,b)=>a-b);
+              const dailyDuty = {};
+              
+              for (const actD of activeDList) {
+                const dayEvs = dailyEvents[actD];
+                dayEvs.sort((a,b) => a.depLocalMins - b.depLocalMins);
+                const fEv = dayEvs[0];
+                const lEv = dayEvs[dayEvs.length - 1];
+                const fTakeoff = fEv.depLocalMins;
+                const lLanding = lEv.legRef ? lEv.legRef.arrLocalMins : lEv.arrLocalMins;
+                
+                const dStart = fTakeoff - 60;
+                const dEnd = lLanding + 30;
+                const dDuration = dEnd - dStart;
+                
+                if (dDuration > 840) rowHasRule3Conflict = true;
+                
+                const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
+                const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
+                const zStart = dStart - AIRPORTS[fFrom].tz * 60;
+                const zEnd = dEnd - AIRPORTS[lTo].tz * 60;
+                dailyDuty[actD] = { start: zStart, end: zEnd };
+              }
+              
+              for (let i = 0; i < activeDList.length - 1; i++) {
+                const d1 = activeDList[i];
+                const d2 = activeDList[i+1];
+                if (dailyDuty[d2].start - dailyDuty[d1].end < 600) rowHasRule3Conflict = true;
+              }
+              
+              for (const seg of segments) {
+                if (getFlightTimeInWindow(seg.end, segments) > 600) rowHasRule3Conflict = true;
+                if (getFlightTimeInWindow(seg.start + 1440, segments) > 600) rowHasRule3Conflict = true;
+              }
+            }
+            
+            // Count same-airport connections
+            if (rowLegs.length > 1) {
+              let tempLoc = rowLegs[0].to;
+              for (let d2 = 0; d2 < 5; d2++) {
+                const leg = rowLegs.find(l => l.day === d2);
+                if (!leg) continue;
+                if (leg.day === rowLegs[0].day) continue;
+                
+                if (tempLoc === leg.from) {
+                  if (rowHasRule3Conflict) {
+                    totalSameAirportWithConflict++;
+                  } else {
+                    totalSameAirportClean++;
+                  }
+                }
+                tempLoc = leg.to;
+              }
+            }
+            
+            if (rowHasRule3Conflict) {
+              totalRule3Conflicts++;
+            }
+          }
+          
+          const isValidSameAirportClean = totalSameAirportClean <= 4;
+          const isValidTrickConflictCount = rules.rule3 ? (totalSameAirportWithConflict <= 1 && totalRule3Conflicts === totalSameAirportWithConflict) : (totalRule3Conflicts === 0);
+          const avgDuration = legs.reduce((sum, l) => sum + l.leg.durationMins, 0) / legs.length;
+          const isValidAverageDuration = avgDuration >= 174; // 174 mins = 2.9 hours
+          
+          if (isValidSameAirportClean && isValidTrickConflictCount && isValidAverageDuration) {
+            console.log(`[Generator] SUCCESS! Generated puzzle in ${attempts} attempts.`);
+            generatedLegs = legs.map(l => l.leg);
+            break;
+          } else {
+            console.warn(`[Generator Attempt ${attempts}] Candidate rejected at final check. SameAirportClean: ${totalSameAirportClean} (<=4: ${isValidSameAirportClean}), SameAirportWithConflict: ${totalSameAirportWithConflict}, Rule3Conflicts: ${totalRule3Conflicts} (valid: ${isValidTrickConflictCount}), AvgDuration: ${(avgDuration / 60).toFixed(2)}h (>=2.9h: ${isValidAverageDuration})`);
+            success = false;
+          }
+        }
+      }
+      
+      return generatedLegs;
     }
 
     function initGame(isReplay = false) {
@@ -2200,16 +3006,29 @@
             schedulerAttemptCount = 0;
           }
           
-          // Sync puzzleToLoad
-          let puzzleToLoad = data.puzzleToLoad || "Introduction Puzzle";
+          // Parse custom puzzles from database
+          const customPuzzles = data.customPuzzles || [];
+          puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...customPuzzles ];
+          
+          let puzzleToLoad = localStorage.getItem("aero_last_played_puzzle") || data.puzzleToLoad || "Introduction Puzzle";
           if (puzzleToLoad === 1 || puzzleToLoad === "1") {
             puzzleToLoad = "Introduction Puzzle";
           }
-          currentPuzzleName = puzzleToLoad;
-          const subtitle = document.getElementById("puzzleSubtitle");
-          if (subtitle) {
-            subtitle.innerText = puzzleToLoad;
+          const found = puzzlesDatabase.find(p => p.name === puzzleToLoad);
+          if (found) {
+            currentPuzzle = found;
+            currentPuzzleName = found.name;
+          } else {
+            currentPuzzle = INTRODUCTION_PUZZLE;
+            currentPuzzleName = "Introduction Puzzle";
           }
+
+          updatePuzzleDropdownOptions();
+          const dropdown = document.getElementById("puzzleDropdown");
+          if (dropdown) {
+            dropdown.value = currentPuzzleName;
+          }
+          updateSidebarObjectivesUI();
           
           if (savedName) {
             let current = savedName.trim();
@@ -2279,10 +3098,14 @@
           closeModal("loadingOverlay");
           console.error("Failed to fetch database on initGame, using defaults:", err);
           currentPuzzleName = "Introduction Puzzle";
-          const subtitle = document.getElementById("puzzleSubtitle");
-          if (subtitle) {
-            subtitle.innerText = "Introduction Puzzle";
+          currentPuzzle = INTRODUCTION_PUZZLE;
+          puzzlesDatabase = [ INTRODUCTION_PUZZLE ];
+          updatePuzzleDropdownOptions();
+          const dropdown = document.getElementById("puzzleDropdown");
+          if (dropdown) {
+            dropdown.value = "Introduction Puzzle";
           }
+          updateSidebarObjectivesUI();
           if (savedName) {
             schedulerName = savedName;
             try {
@@ -2296,12 +3119,211 @@
         });
     }
 
+    function updatePuzzleDropdownOptions() {
+      const selects = [
+        document.getElementById("puzzleDropdown"),
+        document.getElementById("leaderboardPuzzleFilter"),
+        document.getElementById("adminPuzzleName"),
+        document.getElementById("adminResetPuzzleName"),
+        document.getElementById("adminDelScorePuzzle")
+      ];
+      
+      selects.forEach(select => {
+        if (!select) return;
+        const currentVal = select.value || "";
+        select.innerHTML = "";
+        puzzlesDatabase.forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = p.name;
+          opt.textContent = p.name;
+          opt.style.background = "#ffffff";
+          opt.style.color = "var(--text-main)";
+          select.appendChild(opt);
+        });
+        const hasVal = Array.from(select.options).some(o => o.value === currentVal);
+        if (hasVal) {
+          select.value = currentVal;
+        } else {
+          select.value = puzzlesDatabase[0].name;
+        }
+      });
+      
+      const deleteSelect = document.getElementById("adminDeletePuzzleSelect");
+      if (deleteSelect) {
+        const currentVal = deleteSelect.value || "";
+        deleteSelect.innerHTML = '<option value="">-- Select a Puzzle --</option>';
+        puzzlesDatabase.forEach(p => {
+          if (p.name !== "Introduction Puzzle") {
+            const opt = document.createElement("option");
+            opt.value = p.name;
+            opt.textContent = p.name;
+            opt.style.background = "#ffffff";
+            opt.style.color = "var(--text-main)";
+            deleteSelect.appendChild(opt);
+          }
+        });
+        const hasVal = Array.from(deleteSelect.options).some(o => o.value === currentVal);
+        if (hasVal) {
+          deleteSelect.value = currentVal;
+        } else {
+          deleteSelect.value = "";
+        }
+      }
+    }
+
+    function updateSidebarObjectivesUI() {
+      const sidebarObj = document.getElementById("sidebarObjectives");
+      if (sidebarObj) {
+        sidebarObj.innerHTML = `
+          <li><i class="fa-solid fa-check"></i> Minimize Repositioning flight times</li>
+          <li><i class="fa-solid fa-check"></i> Complete within 10 min time limit</li>
+        `;
+        
+        const rules = currentPuzzle.rules || {};
+        if (rules.rule1) {
+          sidebarObj.innerHTML += `<li><i class="fa-solid fa-check"></i> Enforce 14-Hours between Arrivals and next day's departure</li>`;
+        }
+        if (rules.rule2) {
+          sidebarObj.innerHTML += `<li><i class="fa-solid fa-check"></i> Allow stacked trips (Coming Soon)</li>`;
+        }
+        if (rules.rule3) {
+          sidebarObj.innerHTML += `
+            <li><i class="fa-solid fa-check"></i> Max 10.0 <strong>Flight Hours</strong> in rolling 24h</li>
+            <li><i class="fa-solid fa-check"></i> Max 14.0h <strong>Duty Day</strong></li>
+            <li><i class="fa-solid fa-check"></i> Min 10.0h <strong>Rest</strong> between Duty Days</li>
+          `;
+        }
+        if (rules.rule4) {
+          sidebarObj.innerHTML += `<li><i class="fa-solid fa-check"></i> Make it fit (Coming Soon)</li>`;
+        }
+      }
+      
+      const splashList = document.getElementById("rulesModalActiveRulesList");
+      if (splashList) {
+        splashList.innerHTML = "";
+        const rules = currentPuzzle.rules || {};
+        
+        if (rules.rule1) {
+          splashList.innerHTML += `
+            <div style="background: rgba(55, 138, 216, 0.08); border-left: 4px solid var(--accent); padding: 8px 10px; border-radius: 4px;">
+              <strong style="color: var(--text-main); font-size: 12px;">Enforce 14-Hours between Arrivals and next day's departure</strong>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
+                All aircraft must remain on the ground for at least 14 hours between landing and the next takeoff. This is a guarantee you dont have 10/24 or rest issues
+              </p>
+            </div>
+          `;
+        }
+        if (rules.rule2) {
+          splashList.innerHTML += `
+            <div style="background: rgba(147, 51, 234, 0.08); border-left: 4px solid #a855f7; padding: 8px 10px; border-radius: 4px;">
+              <strong style="color: var(--text-main); font-size: 12px;">Allow Stacked Trips (Coming Soon)</strong>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
+                Allows multiple scheduled trips per aircraft per day.
+              </p>
+            </div>
+          `;
+        }
+        if (rules.rule3) {
+          splashList.innerHTML += `
+            <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid var(--color-live); padding: 8px 10px; border-radius: 4px;">
+              <strong style="color: var(--text-main); font-size: 12px;">Enforce 10/24, Rest & Duty Day</strong>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
+                • <strong>Flight Hours</strong>: Max 10.0 flight hours in any rolling 24-hour window.<br>
+                • <strong>Duty Day</strong>: Max 14.0 hours duration. Duty starts 1 hour before first takeoff and ends 30 minutes after last landing on any day.<br>
+                • <strong>Rest</strong>: Min 10.0 hours rest between duty days.
+              </p>
+            </div>
+          `;
+        }
+        if (rules.rule4) {
+          splashList.innerHTML += `
+            <div style="background: rgba(245, 158, 11, 0.08); border-left: 4px solid #f59e0b; padding: 8px 10px; border-radius: 4px;">
+              <strong style="color: var(--text-main); font-size: 12px;">Make It Fit (Coming Soon)</strong>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
+                Enforces matching configurations and custom capacity algorithms.
+              </p>
+            </div>
+          `;
+        }
+        
+        if (Object.keys(rules).length === 0 || (!rules.rule1 && !rules.rule2 && !rules.rule3 && !rules.rule4)) {
+          splashList.innerHTML = `<div style="font-size: 11px; color: var(--text-secondary);">No additional constraints enabled. Standard swapping only.</div>`;
+        }
+      }
+    }
+
+    function selectPuzzle(name) {
+      const found = puzzlesDatabase.find(p => p.name === name);
+      if (!found) return;
+      currentPuzzle = found;
+      currentPuzzleName = found.name;
+      localStorage.setItem("aero_last_played_puzzle", currentPuzzleName);
+      
+      if (currentPuzzleName === "Introduction Puzzle") {
+        document.body.classList.add("puzzle-introduction");
+      } else {
+        document.body.classList.remove("puzzle-introduction");
+      }
+      
+      updateSidebarObjectivesUI();
+      resetGame(false);
+      
+      showLoading("Loading Level...", "Retrieving level configuration");
+      
+      fetch(GLOBAL_DB_READ_URL)
+        .then(r => {
+          if (!r.ok) throw new Error("Database fetch failed");
+          return r.json();
+        })
+        .then(res => {
+          closeModal("loadingOverlay");
+          const data = res.record || res;
+          const scores = data.scores || [];
+          if (schedulerName) {
+            schedulerAttemptCount = getSubmissionCount(scores, schedulerName, currentPuzzleName);
+          } else {
+            schedulerAttemptCount = 0;
+          }
+          
+          if (schedulerName) {
+            document.getElementById("rulesNameInput").value = schedulerName;
+            document.getElementById("nameInputContainer").style.display = "none";
+          } else {
+            document.getElementById("nameInputContainer").style.display = "flex";
+          }
+          updateRulesModalFooter();
+          updateSubmitButtonState();
+          openModal("rulesModal");
+        })
+        .catch(err => {
+          console.warn("Failed syncing attempt count on puzzle select:", err);
+          closeModal("loadingOverlay");
+          schedulerAttemptCount = 0;
+          
+          if (schedulerName) {
+            document.getElementById("rulesNameInput").value = schedulerName;
+            document.getElementById("nameInputContainer").style.display = "none";
+          } else {
+            document.getElementById("nameInputContainer").style.display = "flex";
+          }
+          updateRulesModalFooter();
+          updateSubmitButtonState();
+          openModal("rulesModal");
+        });
+    }
+
     function setupGameInitialUI() {
+      if (currentPuzzleName === "Introduction Puzzle") {
+        document.body.classList.add("puzzle-introduction");
+      } else {
+        document.body.classList.remove("puzzle-introduction");
+      }
+      updateSidebarObjectivesUI();
       precalculateLiveLegs();
       
       // Randomly allocate fixed legs to different rows (aircraft) on their scheduled day.
       for (let day = 0; day < 5; day++) {
-        const dayLegs = FIXED_LIVE_LEGS.filter(l => l.day === day);
+        const dayLegs = currentPuzzle.legs.filter(l => l.day === day);
         const aircraftIndices = [0, 1, 2, 3, 4, 5];
         shuffleArray(aircraftIndices);
         for (let i = 0; i < dayLegs.length; i++) {
@@ -2336,7 +3358,9 @@
         document.getElementById("nameInputContainer").style.display = "flex";
       }
       updateRulesNameState();
-      openModal("rulesModal");
+      if (!schedulerName) {
+        openModal("rulesModal");
+      }
     }
 
     function shuffleArray(arr) {
@@ -2358,7 +3382,7 @@
       conflictsCount = 0;
 
       // Reset conflict flags on all fixed live legs
-      FIXED_LIVE_LEGS.forEach(leg => {
+      currentPuzzle.legs.forEach(leg => {
         leg.hasConflict = false;
         leg.conflictReason = "";
       });
@@ -2444,14 +3468,16 @@
               let hasConflict = arrRepo > legB.depLocalMins;
               let conflictReason = "";
               
+              const isRule1Enabled = currentPuzzle.rules?.rule1 ?? true;
+              
               if (hasConflict) {
                 conflictReason = `Reposition flight lands at ${formatMinutesToTimeString(arrRepo)} ${AIRPORTS[origB].tzName}, but next flight departs early at ${legB.depTimeStr}.`;
-              } else {
+              } else if (isRule1Enabled) {
                 // Check for 14-hour ground time (840 minutes) gap after repo flight landing
                 const gapMins = legB.depLocalMins - arrRepo;
                 if (gapMins < 840) {
                   hasConflict = true;
-                  conflictReason = `Insufficient ground time! Only ${formatDuration(gapMins)} between reposition landing and next takeoff (must allow at least 14 hours).`;
+                  conflictReason = `Insufficient ground time!\n${formatDuration(gapMins)} between legs`;
                 }
               }
               
@@ -2485,13 +3511,15 @@
               let hasConflict = legA.arrLocalMins > legB.depLocalMins;
               let conflictReason = "";
               
+              const isRule1Enabled = currentPuzzle.rules?.rule1 ?? true;
+              
               if (hasConflict) {
                 conflictReason = `Overlapping flight timing! Previous flight lands at ${formatMinutesToTimeString(legA.arrLocalMins)} ${AIRPORTS[destA].tzName}, but next flight departs at ${legB.depTimeStr}.`;
-              } else {
+              } else if (isRule1Enabled) {
                 const gapMins = legB.depLocalMins - legA.arrLocalMins;
                 if (gapMins < 840) {
                   hasConflict = true;
-                  conflictReason = `Insufficient ground time! Only ${formatDuration(gapMins)} between landing at ${AIRPORTS[destA].tzName} and next departure (must allow at least 14 hours).`;
+                  conflictReason = `Insufficient ground time!\n${formatDuration(gapMins)} between legs`;
                 }
               }
               
@@ -2512,12 +3540,123 @@
 
         // Store computed events to render
         computedSchedules[r] = events;
+
+        // --- RULE 3 VALIDATIONS (10/24, Rest & Duty Day Limits) ---
+        if (currentPuzzle.rules?.rule3) {
+          // 1. Group events by actual operational day
+          const dailyEvents = {};
+          events.forEach(e => {
+            const d = e.type === "repo" ? Math.floor(e.depLocalMins / 1440) : e.displayDay;
+            if (dailyEvents[d] === undefined) dailyEvents[d] = [];
+            dailyEvents[d].push(e);
+          });
+
+          // 2. Validate Duty Day Limits
+          const activeDays = Object.keys(dailyEvents).map(Number).sort((a, b) => a - b);
+          const dailyDuty = {}; // Store zulu start and end for rest check
+          
+          activeDays.forEach(d => {
+            const dayEvs = dailyEvents[d];
+            dayEvs.sort((a, b) => a.depLocalMins - b.depLocalMins);
+            
+            const firstEv = dayEvs[0];
+            const lastEv = dayEvs[dayEvs.length - 1];
+            
+            const firstTakeoffLocal = firstEv.depLocalMins;
+            const lastLandingLocal = lastEv.type === "live" ? lastEv.legRef.arrLocalMins : lastEv.arrLocalMins;
+            
+            const dutyStartLocal = firstTakeoffLocal - 60;
+            const dutyEndLocal = lastLandingLocal + 30;
+            const dutyDuration = dutyEndLocal - dutyStartLocal; // in minutes
+            
+            const firstFromAp = firstEv.type === "live" ? firstEv.legRef.from : firstEv.from;
+            const lastToAp = lastEv.type === "live" ? lastEv.legRef.to : lastEv.to;
+            
+            const zuluDutyStart = dutyStartLocal - AIRPORTS[firstFromAp].tz * 60;
+            const zuluDutyEnd = dutyEndLocal - AIRPORTS[lastToAp].tz * 60;
+            
+            dailyDuty[d] = { start: zuluDutyStart, end: zuluDutyEnd, duration: dutyDuration };
+
+            if (dutyDuration > 840) { // 14.0 hours
+              dayEvs.forEach(e => {
+                if (e.type === "live") {
+                  e.legRef.hasConflict = true;
+                  e.legRef.conflictReason = `Duty day duration exceeds 14 hours (${(dutyDuration / 60).toFixed(1)} hrs).`;
+                  conflictsCount++;
+                }
+              });
+            }
+          });
+
+          // 3. Validate Rest Between Duty Days (Min 10.0 hours zulu rest)
+          for (let i = 0; i < activeDays.length - 1; i++) {
+            const d1 = activeDays[i];
+            const d2 = activeDays[i+1];
+            const restMins = dailyDuty[d2].start - dailyDuty[d1].end;
+            if (restMins < 600) {
+              const d2LiveLegs = dailyEvents[d2].filter(e => e.type === "live");
+              if (d2LiveLegs.length > 0) {
+                const leg = d2LiveLegs[0].legRef;
+                leg.hasConflict = true;
+                leg.conflictReason = `Insufficient rest between duty days! Rest is ${(restMins / 60).toFixed(1)} hrs (must allow at least 10 hours).`;
+                conflictsCount++;
+              }
+            }
+          }
+
+          // 4. Validate Rolling 24-Hour Flight Time Limits (Max 10.0 hours zulu flight time)
+          const segments = [];
+          events.forEach(e => {
+            if (e.type === "live") {
+              const l = e.legRef;
+              const depZ = l.depLocalMins - AIRPORTS[l.from].tz * 60;
+              const arrZ = l.arrLocalMins - AIRPORTS[l.to].tz * 60;
+              segments.push({ start: depZ, end: arrZ, legRef: l });
+            } else if (e.type === "repo") {
+              const depZ = e.depLocalMins - AIRPORTS[e.from].tz * 60;
+              const arrZ = e.arrLocalMins - AIRPORTS[e.to].tz * 60;
+              segments.push({ start: depZ, end: arrZ, eventRef: e });
+            }
+          });
+
+          segments.forEach(seg => {
+            const endWindowFlightMins = getFlightTimeInWindow(seg.end, segments);
+            if (endWindowFlightMins > 600) {
+              segments.forEach(s => {
+                const overlapStart = Math.max(s.start, seg.end - 1440);
+                const overlapEnd = Math.min(s.end, seg.end);
+                if (overlapStart < overlapEnd && s.legRef) {
+                  s.legRef.hasConflict = true;
+                  s.legRef.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(endWindowFlightMins / 60).toFixed(1)} hrs).`;
+                  conflictsCount++;
+                }
+              });
+            }
+            
+            const startWindowFlightMins = getFlightTimeInWindow(seg.start + 1440, segments);
+            if (startWindowFlightMins > 600) {
+              segments.forEach(s => {
+                const overlapStart = Math.max(s.start, seg.start);
+                const overlapEnd = Math.min(s.end, seg.start + 1440);
+                if (overlapStart < overlapEnd && s.legRef) {
+                  s.legRef.hasConflict = true;
+                  s.legRef.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(startWindowFlightMins / 60).toFixed(1)} hrs).`;
+                  conflictsCount++;
+                }
+              });
+            }
+          });
+        }
       }
 
       // Compute score
       const repoPenalty = totalRepoDurationMins * REPO_PENALTY_PER_MINUTE;
       const conflictPenalty = conflictsCount * CONFLICT_PENALTY;
-      let score = BASE_SCORE - repoPenalty - conflictPenalty;
+      
+      // Calculate connection metric optimization bonus if Rule 3 is enabled
+      connectionBonus = calculateConnectionBonus(computedSchedules);
+      
+      let score = BASE_SCORE - repoPenalty - conflictPenalty + connectionBonus;
       if (testCompleted) {
         score += timeRemaining * 10;
       }
@@ -2526,6 +3665,10 @@
       // Update Dashboard UI Elements
       document.getElementById("scoreValue").innerText = currentScore.toLocaleString();
       document.getElementById("scoreValue").className = conflictsCount > 0 ? "score-value has-conflict" : "score-value";
+      const bonusBadge = document.getElementById("crewRestBonusBadge");
+      if (bonusBadge) {
+        bonusBadge.style.display = (connectionBonus > 0) ? "flex" : "none";
+      }
 
       saveActiveSession();
 
@@ -2560,11 +3703,12 @@
     // Helper: Returns concise text warning split into 2 lines for conflict badges
     function getShortConflictReasonLines(reason) {
       if (!reason) return ["Schedule", "Conflict"];
-      if (reason.includes("Only ")) {
-        const match = reason.match(/Only\s+([0-9a-zA-Z\s]+)\s+between/);
+      if (reason.includes("between legs")) {
+        const match = reason.match(/([0-9a-zA-Z\s]+)\s+between\s+legs/);
         if (match) {
           let durationStr = match[1].trim();
-          durationStr = durationStr.replace("h", "hr").replace("m", " min");
+          durationStr = durationStr.replace(/^Only\s+/, "");
+          durationStr = durationStr.replace(/\bh\b/g, "hr").replace(/\bm\b/g, "min");
           return [durationStr, "between legs"];
         }
       }
@@ -2577,7 +3721,138 @@
       if (reason.includes("Plane starts at")) {
         return ["Start location", "conflict"];
       }
+      if (reason.includes("exceeds 14 hours")) {
+        return ["Duty Limit Exceeded", ">14.0h Duty Day"];
+      }
+      if (reason.includes("exceeds 10 hours")) {
+        return ["Flight Limit Exceeded", ">10.0 Flight Hours"];
+      }
+      if (reason.includes("Insufficient rest")) {
+        const match = reason.match(/rest is ([0-9a-zA-Z\s]+)/i);
+        if (match) {
+          let rStr = match[1].trim().replace(/\bh\b/g, "hr").replace(/\bm\b/g, "min");
+          return [rStr + " rest", "between duty days"];
+        }
+        return ["Insufficient Rest", "<10.0h Rest Gap"];
+      }
       return ["Schedule", "Conflict"];
+    }
+
+    // Helper: Sums flight duration within any rolling 24-hour window [t - 1440, t] in Zulu
+    function getFlightTimeInWindow(t, segments) {
+      let total = 0;
+      segments.forEach(s => {
+        const overlapStart = Math.max(s.start, t - 1440);
+        const overlapEnd = Math.min(s.end, t);
+        if (overlapStart < overlapEnd) {
+          total += (overlapEnd - overlapStart);
+        }
+      });
+      return total;
+    }
+
+    // Helper: Calculates connection metric optimization bonus points (+500 pts)
+    function calculateConnectionBonus(computedSchedules) {
+      if (!currentPuzzle.rules?.rule3) return 0;
+      
+      let eligibleForBonus = false;
+      
+      for (let r = 0; r < 6; r++) {
+        const events = computedSchedules[r];
+        const liveEvents = events.filter(e => e.type === "live");
+        
+        for (let i = 0; i < liveEvents.length - 1; i++) {
+          const evA = liveEvents[i];
+          const evB = liveEvents[i+1];
+          const legA = evA.legRef;
+          const legB = evB.legRef;
+          
+          // Find alternative legs in the puzzle pool that also end at legA.to
+          const alternatives = currentPuzzle.legs.filter(l => l.id !== legA.id && l.to === legA.to && l.day < legB.day);
+          
+          if (alternatives.length > 0) {
+            const fromA = AIRPORTS[legA.to];
+            const toB = AIRPORTS[legB.from];
+            
+            const zuluEndA = legA.arrLocalMins + 30 - fromA.tz * 60;
+            const zuluStartB = legB.depLocalMins - 60 - toB.tz * 60;
+            const userRestHours = (zuluStartB - zuluEndA) / 60;
+            
+            const rowSegments = [];
+            events.forEach(e => {
+              if (e.type === "live") {
+                const l = e.legRef;
+                const depZ = l.depLocalMins - AIRPORTS[l.from].tz * 60;
+                const arrZ = l.arrLocalMins - AIRPORTS[l.to].tz * 60;
+                rowSegments.push({ start: depZ, end: arrZ });
+              } else if (e.type === "repo") {
+                const depZ = e.depLocalMins - AIRPORTS[e.from].tz * 60;
+                const arrZ = e.arrLocalMins - AIRPORTS[e.to].tz * 60;
+                rowSegments.push({ start: depZ, end: arrZ });
+              }
+            });
+            
+            let userPeakFlightMins = 0;
+            rowSegments.forEach(seg => {
+              userPeakFlightMins = Math.max(userPeakFlightMins, getFlightTimeInWindow(seg.end, rowSegments));
+              userPeakFlightMins = Math.max(userPeakFlightMins, getFlightTimeInWindow(seg.start, rowSegments));
+            });
+            const userPeakFlightHours = userPeakFlightMins / 60;
+            const userMetric = userRestHours - userPeakFlightHours;
+            
+            let isUserHighest = true;
+            for (const altLeg of alternatives) {
+              let altRow = -1;
+              for (let r2 = 0; r2 < 6; r2++) {
+                if (grid[r2][altLeg.day]?.id === altLeg.id) {
+                  altRow = r2;
+                  break;
+                }
+              }
+              
+              const zuluEndAlt = altLeg.arrLocalMins + 30 - AIRPORTS[altLeg.to].tz * 60;
+              const altRestHours = (zuluStartB - zuluEndAlt) / 60;
+              
+              let altPeakFlightHours = 0;
+              if (altRow !== -1) {
+                const altEvents = computedSchedules[altRow] || [];
+                const altSegments = [];
+                altEvents.forEach(e => {
+                  if (e.type === "live") {
+                    const l = e.legRef;
+                    const depZ = l.depLocalMins - AIRPORTS[l.from].tz * 60;
+                    const arrZ = l.arrLocalMins - AIRPORTS[l.to].tz * 60;
+                    altSegments.push({ start: depZ, end: arrZ });
+                  } else if (e.type === "repo") {
+                    const depZ = e.depLocalMins - AIRPORTS[e.from].tz * 60;
+                    const arrZ = e.arrLocalMins - AIRPORTS[e.to].tz * 60;
+                    altSegments.push({ start: depZ, end: arrZ });
+                  }
+                });
+                let altPeakMins = 0;
+                altSegments.forEach(seg => {
+                  altPeakMins = Math.max(altPeakMins, getFlightTimeInWindow(seg.end, altSegments));
+                  altPeakMins = Math.max(altPeakMins, getFlightTimeInWindow(seg.start, altSegments));
+                });
+                altPeakFlightHours = altPeakMins / 60;
+              }
+              
+              const altMetric = altRestHours - altPeakFlightHours;
+              
+              if (altMetric >= userMetric) {
+                isUserHighest = false;
+                break;
+              }
+            }
+            
+            if (isUserHighest) {
+              eligibleForBonus = true;
+            }
+          }
+        }
+      }
+      
+      return eligibleForBonus ? 500 : 0;
     }
 
     // ----------------------------------------------------
@@ -2603,7 +3878,7 @@
             <span>Airplane #${r+1}</span>
           </div>
           <div style="font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 4px;">
-            Starts at: <strong style="color: var(--accent);">${startingLocations[r]}</strong>
+            Starts at: <strong style="color: var(--accent);" class="airport-hoverable">${startingLocations[r]}</strong>
           </div>
         `;
         gridContainer.appendChild(rowHeader);
@@ -2675,9 +3950,9 @@
                 // Details of live leg
                 card.innerHTML = `
                   <div class="leg-route">
-                    <span>${leg.from}</span>
+                    <span class="airport-hoverable">${leg.from}</span>
                     <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
-                    <span>${leg.to}</span>
+                    <span class="airport-hoverable">${leg.to}</span>
                   </div>
                   <div class="leg-times">
                     <span>DEP: ${formatMinutesToTimeString(leg.depLocalMins)} ${leg.tzFrom}</span>
@@ -2719,9 +3994,9 @@
                 
                 card.innerHTML = `
                   <div class="leg-route">
-                    <span>${ev.from}</span>
+                    <span class="airport-hoverable">${ev.from}</span>
                     <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
-                    <span>${ev.to}</span>
+                    <span class="airport-hoverable">${ev.to}</span>
                   </div>
                   <div class="leg-times">
                     <span>DEP: ${formatMinutesToTimeString(ev.depLocalMins)} ${ev.tzFrom}</span>
@@ -2757,7 +4032,7 @@
               <div style="font-weight: 500; font-size: 11px;">Locked</div>
             ` : `
               <i class="fa-solid fa-bed" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
-              <div style="font-weight: 500; font-size: 11px;">Idle at ${idleLoc}</div>
+              <div style="font-weight: 500; font-size: 11px;">Idle at <span class="airport-hoverable">${idleLoc}</span></div>
             `;
             cell.appendChild(card);
           }
@@ -3027,16 +4302,32 @@
       const exitLink = document.getElementById("rulesExitLink");
       const leaderboardLink = document.getElementById("rulesLeaderboardLink");
       const startBtn = document.getElementById("startTestBtn");
+      const cancelBtn = document.getElementById("rulesCancelBtn");
       
-      if (gameStarted) {
+      const alreadyDone = (schedulerAttemptCount > 0) || testCompleted;
+      
+      if (gameStarted && !testCompleted) {
         if (exitLink) exitLink.style.display = "none";
         if (leaderboardLink) leaderboardLink.style.display = "none";
         if (startBtn) startBtn.innerText = "Resume";
+        if (cancelBtn) cancelBtn.style.display = "none";
       } else {
         if (exitLink) exitLink.style.display = "flex";
         if (leaderboardLink) leaderboardLink.style.display = "flex";
         if (startBtn) {
-          startBtn.innerText = (schedulerAttemptCount > 0) ? "Retry" : "Start Test";
+          startBtn.innerText = alreadyDone ? "Try Again" : "Start Test";
+        }
+        
+        if (cancelBtn) {
+          cancelBtn.style.display = "inline-block";
+          cancelBtn.onclick = () => {
+            closeModal("rulesModal");
+            
+            // Reset state to a fresh locked view
+            resetGame(false);
+            updateSubmitButtonState();
+            updateRulesModalFooter();
+          };
         }
       }
     }
@@ -3182,11 +4473,27 @@
     document.getElementById("rulesLeaderboardLink").addEventListener("click", (e) => {
       e.preventDefault();
       closeModal("rulesModal");
+      const filterSelect = document.getElementById("leaderboardPuzzleFilter");
+      if (filterSelect) {
+        let activePuzzle = currentPuzzleName || "Introduction Puzzle";
+        if (activePuzzle === 1 || activePuzzle === "1") {
+          activePuzzle = "Introduction Puzzle";
+        }
+        filterSelect.value = activePuzzle;
+      }
       renderLeaderboardTable();
       openModal("leaderboardModal");
     });
     
     document.getElementById("leaderboardBtn").addEventListener("click", () => {
+      const filterSelect = document.getElementById("leaderboardPuzzleFilter");
+      if (filterSelect) {
+        let activePuzzle = currentPuzzleName || "Introduction Puzzle";
+        if (activePuzzle === 1 || activePuzzle === "1") {
+          activePuzzle = "Introduction Puzzle";
+        }
+        filterSelect.value = activePuzzle;
+      }
       renderLeaderboardTable();
       openModal("leaderboardModal");
     });
@@ -3197,40 +4504,21 @@
     
     document.getElementById("submitBtn").addEventListener("click", () => {
       if (!gameStarted) {
-        const cookieName = getCookie("aero_scheduler_name");
-        const inputElement = document.getElementById("rulesNameInput");
-        const inputName = inputElement ? inputElement.value.trim() : "";
-        const nameToUse = schedulerName || cookieName || inputName;
-        
-        if (nameToUse) {
-          showLoading("Resolving Player Name...", "Verifying database registration");
-          resolvePlayerName(nameToUse).then(finalName => {
-            closeModal("loadingOverlay");
-            schedulerName = finalName;
-            setCookie("aero_scheduler_name", schedulerName, 365);
-            
-            const nameInput = document.getElementById("rulesNameInput");
-            if (nameInput) {
-              nameInput.value = schedulerName;
-            }
-            
-            const proceedWithStart = () => {
-              startGameFlow();
-            };
-
-            if (schedulerAttemptCount > 0) {
-              showConfirm(
-                "Retest Penalty",
-                "Each subsequent schedule attempt receives a 30 second penalty",
-                proceedWithStart,
-                null,
-                "OK",
-                "blue"
-              );
-            } else {
-              proceedWithStart();
-            }
-          });
+        if (schedulerName) {
+          if (schedulerAttemptCount > 0) {
+            showConfirm(
+              "Retest Penalty",
+              "Each subsequent schedule attempt receives a 30 second penalty",
+              () => {
+                resetGame(true);
+              },
+              null,
+              "OK",
+              "blue"
+            );
+          } else {
+            resetGame(true);
+          }
         } else {
           updateRulesModalFooter();
           updateRulesNameState();
@@ -3241,7 +4529,7 @@
           "Retest Penalty",
           "Each subsequent schedule attempt receives a 30 second penalty",
           () => {
-            resetGame();
+            resetGame(true);
           },
           null,
           "OK",
@@ -3300,7 +4588,7 @@
       return count;
     }
 
-    function resetGame() {
+    function resetGame(startTest = false) {
       clearInterval(timerInterval);
       testCompleted = false;
       localStorage.removeItem("aero_active_session");
@@ -3311,7 +4599,7 @@
       // Re-shuffle and initialize
       grid = Array(6).fill(null).map(() => Array(5).fill(null));
       for (let day = 0; day < 5; day++) {
-        const dayLegs = FIXED_LIVE_LEGS.filter(l => l.day === day);
+        const dayLegs = currentPuzzle.legs.filter(l => l.day === day);
         const aircraftIndices = [0, 1, 2, 3, 4, 5];
         shuffleArray(aircraftIndices);
         for (let i = 0; i < dayLegs.length; i++) {
@@ -3330,12 +4618,17 @@
 
       setupGridDOM();
       
-      // Fetch latest attempt count from server before starting game flow
-      showLoading("Refreshing Attempt Count...", "Checking player records");
-      resolvePlayerName(schedulerName).then(() => {
-        closeModal("loadingOverlay");
-        startGameFlow();
-      });
+      if (startTest) {
+        // Fetch latest attempt count from server before starting game flow
+        showLoading("Refreshing Attempt Count...", "Checking player records");
+        resolvePlayerName(schedulerName).then(() => {
+          closeModal("loadingOverlay");
+          startGameFlow();
+        });
+      } else {
+        gameStarted = false;
+        updateSchedules();
+      }
     }
 
     document.getElementById("saveScoreBtn").addEventListener("click", () => {
@@ -3353,7 +4646,7 @@
       const repoPenalty = totalRepoDurationMins * REPO_PENALTY_PER_MINUTE;
       const conflictPenalty = conflictsCount * CONFLICT_PENALTY;
       const timeBonus = timeRemaining * 10;
-      const finalScore = Math.max(0, BASE_SCORE - repoPenalty - conflictPenalty + timeBonus);
+      const finalScore = Math.max(0, BASE_SCORE - repoPenalty - conflictPenalty + timeBonus + connectionBonus);
 
       const formatTimeLeft = () => {
         const m = Math.floor(timeRemaining / 60);
@@ -3470,7 +4763,8 @@
               deletedUsers: data.deletedUsers || [],
               resetVersion: data.resetVersion || 0,
               puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
-              userIps: userIps
+              userIps: userIps,
+              customPuzzles: data.customPuzzles || []
             })
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
@@ -3687,6 +4981,9 @@
           closeModal("loadingOverlay");
           let data = res.record || res;
           let scores = Array.isArray(data) ? data : (data.scores || []);
+          const customPuzzles = data.customPuzzles || [];
+          puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...customPuzzles ];
+          updatePuzzleDropdownOptions();
           populateAdminDropdowns(scores);
           
           // Sync puzzleToLoad dropdown
@@ -3704,10 +5001,6 @@
           }
           const delScorePuzzleSelect = document.getElementById("adminDelScorePuzzle");
           if (delScorePuzzleSelect) {
-            delScorePuzzleSelect.innerHTML = "";
-            if (puzzleSelect) {
-              delScorePuzzleSelect.innerHTML = puzzleSelect.innerHTML;
-            }
             delScorePuzzleSelect.value = puzzleVal;
           }
           renderAdminDeleteScoresList(scores);
@@ -3855,7 +5148,8 @@
               deletedUsers: deletedUsers,
               resetVersion: resetVersion,
               puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
-              userIps: userIps
+              userIps: userIps,
+              customPuzzles: data.customPuzzles || []
             })
           }).then(response => {
             if (!response.ok) throw new Error("Database update failed");
@@ -3876,6 +5170,203 @@
           closeModal("loadingOverlay");
           showToast("Failed to rename player. Please try again.", "error");
         });
+    });
+
+    // Puzzle Selection and Management Event Listeners
+    document.getElementById("puzzleDropdown").addEventListener("change", (e) => {
+      selectPuzzle(e.target.value);
+    });
+
+    document.getElementById("adminPuzzleTabCreate").addEventListener("click", () => {
+      document.getElementById("adminPuzzleCreatePanel").style.display = "flex";
+      document.getElementById("adminPuzzleDeletePanel").style.display = "none";
+      document.getElementById("adminPuzzleTabCreate").className = "btn btn-primary";
+      document.getElementById("adminPuzzleTabDelete").className = "btn btn-secondary";
+    });
+    
+    document.getElementById("adminPuzzleTabDelete").addEventListener("click", () => {
+      document.getElementById("adminPuzzleCreatePanel").style.display = "none";
+      document.getElementById("adminPuzzleDeletePanel").style.display = "flex";
+      document.getElementById("adminPuzzleTabCreate").className = "btn btn-secondary";
+      document.getElementById("adminPuzzleTabDelete").className = "btn btn-primary";
+    });
+
+    // Checkbox mutual exclusion for Rule 1 and Rule 3
+    document.getElementById("adminRule1").addEventListener("change", (e) => {
+      if (e.target.checked) {
+        document.getElementById("adminRule3").checked = false;
+      }
+    });
+
+    document.getElementById("adminRule3").addEventListener("change", (e) => {
+      if (e.target.checked) {
+        document.getElementById("adminRule1").checked = false;
+      }
+    });
+
+    document.getElementById("adminCreatePuzzleBtn").addEventListener("click", async () => {
+      const nameInput = document.getElementById("adminNewPuzzleName");
+      const name = nameInput.value.trim();
+      if (!name) {
+        showToast("Please enter a name for the puzzle.", "error");
+        return;
+      }
+      if (name === "Introduction Puzzle") {
+        showToast("The name 'Introduction Puzzle' is reserved.", "error");
+        return;
+      }
+      
+      const r1 = document.getElementById("adminRule1").checked;
+      const r2 = document.getElementById("adminRule2").checked;
+      const r3 = document.getElementById("adminRule3").checked;
+      const r4 = document.getElementById("adminRule4").checked;
+      
+      showLoading("Generating Solvable Puzzle...", "Running backtracking scheduler...");
+      
+      setTimeout(async () => {
+        try {
+          const generatedLegs = generateSolvablePuzzle(name, { rule1: r1, rule2: r2, rule3: r3, rule4: r4 });
+          if (!generatedLegs || generatedLegs.length === 0) {
+            closeModal("loadingOverlay");
+            showToast("Failed to generate a solvable schedule. Try again.", "error");
+            return;
+          }
+          
+          const newPuzzle = {
+            name: name,
+            legs: generatedLegs,
+            rules: { rule1: r1, rule2: r2, rule3: r3, rule4: r4 }
+          };
+          
+          closeModal("loadingOverlay");
+          showLoading("Saving Puzzle...", "Uploading custom puzzle definition...");
+          
+          const response = await fetch(GLOBAL_DB_READ_URL);
+          if (!response.ok) throw new Error("Failed to fetch database");
+          const resObj = await response.json();
+          let record = resObj.record || resObj;
+          
+          if (!record.customPuzzles) record.customPuzzles = [];
+          record.customPuzzles = record.customPuzzles.filter(p => p.name !== name);
+          record.customPuzzles.push(newPuzzle);
+          
+          const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Master-Key": GLOBAL_DB_MASTER_KEY
+            },
+            body: JSON.stringify({
+              scores: record.scores || [],
+              nameMappings: record.nameMappings || {},
+              deletedUsers: record.deletedUsers || [],
+              resetVersion: record.resetVersion || 0,
+              puzzleToLoad: record.puzzleToLoad || "Introduction Puzzle",
+              userIps: record.userIps || {},
+              customPuzzles: record.customPuzzles
+            })
+          });
+          
+          if (!writeResponse.ok) throw new Error("Failed to save to database");
+          
+          puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...record.customPuzzles ];
+          updatePuzzleDropdownOptions();
+          
+          nameInput.value = "";
+          
+          // Collapse all accordions
+          document.querySelectorAll(".accordion-item").forEach(item => {
+            item.classList.remove("active");
+          });
+          
+          closeModal("loadingOverlay");
+          showToast(`Puzzle '${name}' created and saved successfully!`);
+        } catch (err) {
+          closeModal("loadingOverlay");
+          console.error(err);
+          showToast("Error saving puzzle: " + err.message, "error");
+        }
+      }, 100);
+    });
+
+    document.getElementById("adminDeletePuzzleBtn").addEventListener("click", () => {
+      const select = document.getElementById("adminDeletePuzzleSelect");
+      const name = select.value;
+      if (!name) {
+        showToast("Please select a puzzle to delete.", "error");
+        return;
+      }
+      
+      showConfirm(
+        "Delete Puzzle",
+        `Are you sure you want to delete the puzzle '${name}'? This will also delete all submitted scores for this puzzle.`,
+        async () => {
+          showLoading("Deleting Puzzle...", "Updating database...");
+          try {
+            const response = await fetch(GLOBAL_DB_READ_URL);
+            if (!response.ok) throw new Error("Failed to fetch database");
+            const resObj = await response.json();
+            let record = resObj.record || resObj;
+            
+            if (record.customPuzzles) {
+              record.customPuzzles = record.customPuzzles.filter(p => p.name !== name);
+            }
+            if (record.scores) {
+              record.scores = record.scores.filter(s => s.puzzle !== name);
+            }
+            
+            const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": GLOBAL_DB_MASTER_KEY
+              },
+              body: JSON.stringify({
+                scores: record.scores,
+                nameMappings: record.nameMappings || {},
+                deletedUsers: record.deletedUsers || [],
+                resetVersion: record.resetVersion || 0,
+                puzzleToLoad: record.puzzleToLoad === name ? "Introduction Puzzle" : record.puzzleToLoad,
+                userIps: record.userIps || {},
+                customPuzzles: record.customPuzzles || []
+              })
+            });
+            
+            if (!writeResponse.ok) throw new Error("Failed to update database");
+            
+            puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...(record.customPuzzles || []) ];
+            
+            if (currentPuzzleName === name) {
+              currentPuzzleName = "Introduction Puzzle";
+              currentPuzzle = INTRODUCTION_PUZZLE;
+              const dropdown = document.getElementById("puzzleDropdown");
+              if (dropdown) dropdown.value = "Introduction Puzzle";
+              
+              updateSidebarObjectivesUI();
+              resetGame(false);
+            }
+            
+            updatePuzzleDropdownOptions();
+            populateAdminDropdowns(record.scores);
+            renderAdminDeleteScoresList(record.scores);
+            
+            // Collapse all accordions
+            document.querySelectorAll(".accordion-item").forEach(item => {
+              item.classList.remove("active");
+            });
+            
+            closeModal("loadingOverlay");
+            showToast(`Puzzle '${name}' deleted successfully.`);
+          } catch (err) {
+            closeModal("loadingOverlay");
+            console.error(err);
+            showToast("Error deleting puzzle: " + err.message, "error");
+          }
+        },
+        null,
+        "Delete",
+        "red"
+      );
     });
 
     document.getElementById("adminDeletePlayerBtn").addEventListener("click", () => {
@@ -3946,7 +5437,8 @@
                   deletedUsers: deletedUsers,
                   resetVersion: resetVersion,
                   puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
-                  userIps: userIps
+                  userIps: userIps,
+                  customPuzzles: data.customPuzzles || []
                 })
               }).then(writeRes => {
                 if (!writeRes.ok) throw new Error("Database delete failed");
@@ -4318,7 +5810,8 @@
                   deletedUsers: deletedUsers,
                   resetVersion: data.resetVersion || 0,
                   puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
-                  userIps: userIps
+                  userIps: userIps,
+                  customPuzzles: data.customPuzzles || []
                 })
               }).then(writeRes => {
                 if (!writeRes.ok) throw new Error("Write failed");
@@ -4378,7 +5871,8 @@
               deletedUsers: deletedUsers,
               resetVersion: resetVersion,
               puzzleToLoad: selectedPuzzle,
-              userIps: data.userIps || {}
+              userIps: data.userIps || {},
+              customPuzzles: data.customPuzzles || []
             })
           }).then(writeRes => {
             if (!writeRes.ok) throw new Error("Database update failed");
@@ -4481,7 +5975,8 @@
                   deletedUsers: deletedUsers,
                   resetVersion: resetVersion,
                   puzzleToLoad: data.puzzleToLoad || "Introduction Puzzle",
-                  userIps: data.userIps || {}
+                  userIps: data.userIps || {},
+                  customPuzzles: data.customPuzzles || []
                 })
               }).then(writeRes => {
                 if (!writeRes.ok) throw new Error("Database reset failed");
@@ -4552,7 +6047,8 @@
                   deletedUsers: [],
                   resetVersion: nextResetVersion,
                   puzzleToLoad: "Introduction Puzzle",
-                  userIps: {}
+                  userIps: {},
+                  customPuzzles: data.customPuzzles || []
                 })
               });
             })
@@ -4633,6 +6129,76 @@
       console.log("Payload:", JSON.stringify(mockPayload, null, 2));
       console.log("---------------------------------------------------------------");
     }
+
+    // ----------------------------------------------------
+    // AIRPORT TOOLTIP HOVER HOOKS
+    // ----------------------------------------------------
+    let hoverTimeout = null;
+    const tooltipEl = document.getElementById("airportTooltip") || (() => {
+      const el = document.createElement("div");
+      el.id = "airportTooltip";
+      document.body.appendChild(el);
+      return el;
+    })();
+
+    document.body.addEventListener("mouseover", (e) => {
+      if (currentPuzzleName === "Introduction Puzzle") return;
+      
+      const hoverable = e.target.closest(".airport-hoverable");
+      if (!hoverable) return;
+      
+      const code = hoverable.textContent.trim().toUpperCase();
+      const airport = AIRPORTS[code];
+      if (!airport) return;
+      
+      clearTimeout(hoverTimeout);
+      hoverTimeout = setTimeout(() => {
+        const rect = hoverable.getBoundingClientRect();
+        
+        // Populate tooltip content
+        tooltipEl.textContent = airport.name;
+        
+        // Show tooltip
+        tooltipEl.style.display = "block";
+        
+        // Position tooltip centered above the element
+        const tooltipRect = tooltipEl.getBoundingClientRect();
+        const top = window.scrollY + rect.top - tooltipRect.height - 8;
+        const left = window.scrollX + rect.left + (rect.width - tooltipRect.width) / 2;
+        
+        tooltipEl.style.top = `${top}px`;
+        tooltipEl.style.left = `${left}px`;
+        
+        // Fade in
+        requestAnimationFrame(() => {
+          tooltipEl.style.opacity = "1";
+          tooltipEl.style.transform = "scale(1)";
+        });
+      }, 700);
+    });
+
+    document.body.addEventListener("mouseout", (e) => {
+      const hoverable = e.target.closest(".airport-hoverable");
+      if (!hoverable) return;
+      
+      clearTimeout(hoverTimeout);
+      
+      // Hide tooltip
+      tooltipEl.style.opacity = "0";
+      tooltipEl.style.transform = "scale(0.95)";
+      setTimeout(() => {
+        if (tooltipEl.style.opacity === "0") {
+          tooltipEl.style.display = "none";
+        }
+      }, 150);
+    });
+
+    document.addEventListener("dragstart", () => {
+      clearTimeout(hoverTimeout);
+      tooltipEl.style.opacity = "0";
+      tooltipEl.style.transform = "scale(0.95)";
+      tooltipEl.style.display = "none";
+    });
 
     // Initialize Web App on Load
     window.onload = () => initGame(false);
