@@ -2520,20 +2520,14 @@
               const forceRepo = currentSameAirportCount >= 4;
               
               if ((Math.random() < 0.75 || forceRepo) && d > 0) {
-                const nearAPs = airportsKeys.filter(k => {
+                const repoCandidates = airportsKeys.filter(k => {
                   if (k === startAp) return false;
                   const dist = calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
-                  return dist > 50 && dist < 300;
+                  return dist >= 50 && dist <= 650;
                 });
                 
-                if (nearAPs.length > 0) {
-                  depAp = nearAPs[Math.floor(Math.random() * nearAPs.length)];
-                  hasRepo = true;
-                  repoDist = Math.round(calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[depAp].lat, AIRPORTS[depAp].lon));
-                  repoDuration = Math.round((repoDist / CRUISE_SPEED) * 60);
-                } else if (forceRepo) {
-                  const otherAPs = airportsKeys.filter(k => k !== startAp);
-                  depAp = otherAPs[Math.floor(Math.random() * otherAPs.length)];
+                if (repoCandidates.length > 0) {
+                  depAp = repoCandidates[Math.floor(Math.random() * repoCandidates.length)];
                   hasRepo = true;
                   repoDist = Math.round(calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[depAp].lat, AIRPORTS[depAp].lon));
                   repoDuration = Math.round((repoDist / CRUISE_SPEED) * 60);
@@ -2952,17 +2946,36 @@
             }
           }
           
+          let allRepoDurations = [];
+          for (let r = 0; r < 6; r++) {
+            const rowLegs = legs.filter(l => l.row === r).map(l => l.leg).sort((a,b)=>a.day - b.day);
+            if (rowLegs.length === 0) continue;
+            
+            let tempLoc = r === 0 ? "LAX" : rowLegs[0].from;
+            for (let i = 0; i < rowLegs.length; i++) {
+              const leg = rowLegs[i];
+              if (tempLoc !== leg.from) {
+                const repoD = calculateDistance(AIRPORTS[tempLoc].lat, AIRPORTS[tempLoc].lon, AIRPORTS[leg.from].lat, AIRPORTS[leg.from].lon);
+                const repoDur = Math.round((repoD / CRUISE_SPEED) * 60);
+                allRepoDurations.push(repoDur);
+              }
+              tempLoc = leg.to;
+            }
+          }
+          const avgRepoDuration = allRepoDurations.length > 0 ? (allRepoDurations.reduce((sum, d) => sum + d, 0) / allRepoDurations.length) : 0;
+          const isValidRepoDuration = allRepoDurations.length > 0 ? (avgRepoDuration <= 75) : true;
+
           const isValidSameAirportClean = totalSameAirportClean <= 4;
           const isValidTrickConflictCount = rules.rule3 ? (totalSameAirportWithConflict <= 1 && totalRule3Conflicts === totalSameAirportWithConflict) : (totalRule3Conflicts === 0);
           const avgDuration = legs.reduce((sum, l) => sum + l.leg.durationMins, 0) / legs.length;
           const isValidAverageDuration = avgDuration >= 174; // 174 mins = 2.9 hours
           
-          if (isValidSameAirportClean && isValidTrickConflictCount && isValidAverageDuration) {
-            console.log(`[Generator] SUCCESS! Generated puzzle in ${attempts} attempts.`);
+          if (isValidSameAirportClean && isValidTrickConflictCount && isValidAverageDuration && isValidRepoDuration) {
+            console.log(`[Generator] SUCCESS! Generated puzzle in ${attempts} attempts. Average Repo: ${avgRepoDuration.toFixed(1)} mins`);
             generatedLegs = legs.map(l => l.leg);
             break;
           } else {
-            console.warn(`[Generator Attempt ${attempts}] Candidate rejected at final check. SameAirportClean: ${totalSameAirportClean} (<=4: ${isValidSameAirportClean}), SameAirportWithConflict: ${totalSameAirportWithConflict}, Rule3Conflicts: ${totalRule3Conflicts} (valid: ${isValidTrickConflictCount}), AvgDuration: ${(avgDuration / 60).toFixed(2)}h (>=2.9h: ${isValidAverageDuration})`);
+            console.warn(`[Generator Attempt ${attempts}] Candidate rejected at final check. SameAirportClean: ${totalSameAirportClean} (<=4: ${isValidSameAirportClean}), SameAirportWithConflict: ${totalSameAirportWithConflict}, Rule3Conflicts: ${totalRule3Conflicts} (valid: ${isValidTrickConflictCount}), AvgDuration: ${(avgDuration / 60).toFixed(2)}h (>=2.9h: ${isValidAverageDuration}), AvgRepoDuration: ${avgRepoDuration.toFixed(1)} mins (<=75: ${isValidRepoDuration})`);
             success = false;
           }
         }
