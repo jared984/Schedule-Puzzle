@@ -2503,7 +2503,7 @@
         return count;
       }
 
-      const targetLegCount = Math.floor(Math.random() * 5) + 26; // 26 to 30 legs
+      const targetLegCount = Math.floor(Math.random() * 4) + 27; // 27 to 30 legs
       const dayLegCounts = [5, 5, 5, 5, 5];
       let remaining = targetLegCount - 25;
       while (remaining > 0) {
@@ -2522,13 +2522,11 @@
         attempts++;
         const legs = [];
         let hasAllowedConflict = false;
-        const planeLocations = Array(6).fill("LAX");
-        
-        // Setup initial plane bases
-        planeLocations[0] = "LAX";
-        for (let r = 1; r < 6; r++) {
+        const planeLocations = Array(6).fill(null);
+        for (let r = 0; r < 6; r++) {
           planeLocations[r] = airportsKeys[Math.floor(Math.random() * airportsKeys.length)];
         }
+        const initialPlaneLocations = [...planeLocations];
         
         let success = true;
         let legCounter = 1;
@@ -2551,13 +2549,13 @@
               let repoDuration = 0;
               
               const currentSameAirportCount = countSameAirportConnections(legs);
-              const forceRepo = currentSameAirportCount >= 4;
+              const forceRepo = currentSameAirportCount >= 2;
               
-              if ((Math.random() < 0.75 || forceRepo) && d > 0) {
+              if ((Math.random() < 0.85 || forceRepo) && d > 0) {
                 const repoCandidates = airportsKeys.filter(k => {
                   if (k === startAp) return false;
                   const dist = calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
-                  return dist >= 50 && dist <= 650;
+                  return dist >= 50 && dist <= 850;
                 });
                 
                 if (repoCandidates.length > 0) {
@@ -2610,30 +2608,14 @@
               airportsKeys.forEach(k => {
                 if (k === depAp) return;
                 const dist = calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
-                if (dist >= 1350 && dist <= 1650) {
+                if (dist >= 1000 && dist <= 2250) {
                   destCandidates.push({ code: k, dist: dist });
                 }
               });
               
-              if (destCandidates.length === 0) {
-                // Fallback to a wider range if no candidates are found
-                airportsKeys.forEach(k => {
-                  if (k === depAp) return;
-                  const dist = calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
-                  if (dist >= 1000 && dist <= 1650) {
-                    destCandidates.push({ code: k, dist: dist });
-                  }
-                });
-              }
-              
               if (destCandidates.length === 0) continue;
               
-              // Sort by distance descending to prioritize longer flights
-              destCandidates.sort((a, b) => b.dist - a.dist);
-              
-              // Select from the top half of longest candidates
-              const halfCount = Math.ceil(destCandidates.length / 2);
-              const selected = destCandidates.slice(0, halfCount)[Math.floor(Math.random() * halfCount)];
+              const selected = destCandidates[Math.floor(Math.random() * destCandidates.length)];
               const destAp = selected.code;
               
               const dist = Math.round(calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[destAp].lat, AIRPORTS[destAp].lon));
@@ -2985,7 +2967,7 @@
             const rowLegs = legs.filter(l => l.row === r).map(l => l.leg).sort((a,b)=>a.day - b.day);
             if (rowLegs.length === 0) continue;
             
-            let tempLoc = r === 0 ? "LAX" : rowLegs[0].from;
+            let tempLoc = initialPlaneLocations[r];
             for (let i = 0; i < rowLegs.length; i++) {
               const leg = rowLegs[i];
               if (tempLoc !== leg.from) {
@@ -2997,25 +2979,28 @@
             }
           }
           const avgRepoDuration = allRepoDurations.length > 0 ? (allRepoDurations.reduce((sum, d) => sum + d, 0) / allRepoDurations.length) : 0;
-          const isValidRepoDuration = allRepoDurations.length > 0 ? (avgRepoDuration <= 75) : true;
+          const isValidRepoDuration = allRepoDurations.length > 0 ? (avgRepoDuration >= 45 && avgRepoDuration <= 75) : true;
 
-          const isValidSameAirportClean = totalSameAirportClean <= 4;
+          const isValidSameAirportClean = totalSameAirportClean <= 3;
           const isValidTrickConflictCount = rules.rule3 ? (totalSameAirportWithConflict <= 1 && totalRule3Conflicts === totalSameAirportWithConflict) : (totalRule3Conflicts === 0);
           const avgDuration = legs.reduce((sum, l) => sum + l.leg.durationMins, 0) / legs.length;
-          const isValidAverageDuration = avgDuration >= 174; // 174 mins = 2.9 hours
+          const isValidAverageDuration = avgDuration >= 168 && avgDuration <= 204; // 2.8h to 3.4h (around 3.0h)
           
           if (isValidSameAirportClean && isValidTrickConflictCount && isValidAverageDuration && isValidRepoDuration) {
-            console.log(`[Generator] SUCCESS! Generated puzzle in ${attempts} attempts. Average Repo: ${avgRepoDuration.toFixed(1)} mins`);
+            console.log(`[Generator] SUCCESS! Generated puzzle in ${attempts} attempts. Average Live: ${(avgDuration / 60).toFixed(2)}h, Average Repo: ${avgRepoDuration.toFixed(1)} mins`);
             generatedLegs = legs.map(l => l.leg);
             break;
           } else {
-            console.warn(`[Generator Attempt ${attempts}] Candidate rejected at final check. SameAirportClean: ${totalSameAirportClean} (<=4: ${isValidSameAirportClean}), SameAirportWithConflict: ${totalSameAirportWithConflict}, Rule3Conflicts: ${totalRule3Conflicts} (valid: ${isValidTrickConflictCount}), AvgDuration: ${(avgDuration / 60).toFixed(2)}h (>=2.9h: ${isValidAverageDuration}), AvgRepoDuration: ${avgRepoDuration.toFixed(1)} mins (<=75: ${isValidRepoDuration})`);
+            console.warn(`[Generator Attempt ${attempts}] Candidate rejected at final check. SameAirportClean: ${totalSameAirportClean} (<=3: ${isValidSameAirportClean}), SameAirportWithConflict: ${totalSameAirportWithConflict}, Rule3Conflicts: ${totalRule3Conflicts} (valid: ${isValidTrickConflictCount}), AvgDuration: ${(avgDuration / 60).toFixed(2)}h (2.8-3.4h: ${isValidAverageDuration}), AvgRepoDuration: ${avgRepoDuration.toFixed(1)} mins (45-75: ${isValidRepoDuration})`);
             success = false;
           }
         }
       }
       
-      return generatedLegs;
+      return {
+        legs: generatedLegs,
+        startingLocations: initialPlaneLocations
+      };
     }
 
     function initGame(isReplay = false) {
@@ -3392,7 +3377,9 @@
       }
 
       for (let r = 0; r < 6; r++) {
-        if (grid[r][0]) {
+        if (currentPuzzle.startingLocations && currentPuzzle.startingLocations[r]) {
+          startingLocations[r] = currentPuzzle.startingLocations[r];
+        } else if (grid[r][0]) {
           startingLocations[r] = grid[r][0].from;
         } else {
           startingLocations[r] = "LAX";
@@ -4668,7 +4655,9 @@
       }
 
       for (let r = 0; r < 6; r++) {
-        if (grid[r][0]) {
+        if (currentPuzzle.startingLocations && currentPuzzle.startingLocations[r]) {
+          startingLocations[r] = currentPuzzle.startingLocations[r];
+        } else if (grid[r][0]) {
           startingLocations[r] = grid[r][0].from;
         } else {
           startingLocations[r] = "LAX";
@@ -5284,14 +5273,14 @@
       
       setTimeout(async () => {
         try {
-          let generatedLegs = null;
+          let generatorResult = null;
           let generatorTries = 0;
-          while ((!generatedLegs || generatedLegs.length === 0) && generatorTries < 10) {
+          while ((!generatorResult || !generatorResult.legs || generatorResult.legs.length === 0) && generatorTries < 10) {
             generatorTries++;
-            generatedLegs = generateSolvablePuzzle(name, { rule1: r1, rule2: r2, rule3: r3, rule4: r4 });
+            generatorResult = generateSolvablePuzzle(name, { rule1: r1, rule2: r2, rule3: r3, rule4: r4 });
           }
           
-          if (!generatedLegs || generatedLegs.length === 0) {
+          if (!generatorResult || !generatorResult.legs || generatorResult.legs.length === 0) {
             closeModal("loadingOverlay");
             showToast("Failed to generate a solvable schedule. Try again.", "error");
             return;
@@ -5299,8 +5288,9 @@
           
           const newPuzzle = {
             name: name,
-            legs: generatedLegs,
-            rules: { rule1: r1, rule2: r2, rule3: r3, rule4: r4 }
+            legs: generatorResult.legs,
+            rules: { rule1: r1, rule2: r2, rule3: r3, rule4: r4 },
+            startingLocations: generatorResult.startingLocations
           };
           
           closeModal("loadingOverlay");
