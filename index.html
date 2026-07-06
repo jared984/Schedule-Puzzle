@@ -1188,11 +1188,86 @@
       border-color: rgba(0, 0, 0, 0.18) !important;
       color: #0f172a !important;
     }
+    
+    /* Edit Mode CSS Overrides */
+    body.edit-mode .board-grid {
+      grid-template-rows: 40px repeat(6, 160px) !important;
+    }
+    body.edit-mode .grid-cell {
+      height: 160px !important;
+    }
+    body.edit-mode .leg-card {
+      height: 74px !important;
+    }
+    
+    .airport-edit-select {
+      background: #ffffff;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 4px;
+      padding: 2px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+      width: 62px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .airport-edit-select:focus {
+      border-color: var(--accent);
+    }
+    .dep-time-edit-input {
+      background: #ffffff;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 4px;
+      padding: 2px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+      width: 46px;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .dep-time-edit-input:focus {
+      border-color: var(--accent);
+    }
+    .edit-input-error {
+      border-color: #ef4444 !important;
+      background: #fef2f2 !important;
+      box-shadow: 0 0 4px rgba(239, 68, 68, 0.4) !important;
+    }
+    
+    @keyframes pulseDot {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+    .pulse-dot {
+      animation: pulseDot 2s infinite;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
 
   <div class="app-container">
+    <!-- Edit Mode Banner -->
+    <div id="editModeBanner" style="display: none; background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; padding: 10px 24px; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2); z-index: 100; border-radius: 8px; margin-bottom: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="pulse-dot" style="width: 8px; height: 8px; background: #34d399; display: inline-block;"></span>
+        <span>EDITING UNPUBLISHED PUZZLE: <span id="editModePuzzleName" style="text-decoration: underline; color: #f3e8ff;">Name</span></span>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="editModePublishBtn" class="btn" style="background: #34d399; color: #064e3b; border: none; padding: 6px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+          <i class="fa-solid fa-cloud-arrow-up"></i> PUBLISH PUZZLE
+        </button>
+        <button id="editModeCancelBtn" class="btn" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer;">
+          Exit Edit Mode
+        </button>
+      </div>
+    </div>
+
     <!-- Main Layout Container -->
     <div class="main-layout">
       <!-- Sidebar Panel -->
@@ -1498,10 +1573,11 @@
             <i class="fa-solid fa-chevron-down chevron"></i>
           </div>
           <div class="accordion-content">
-            <!-- Submenu Selection (Create / Delete) -->
+            <!-- Submenu Selection (Create / Edit / Delete) -->
             <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-              <button type="button" id="adminPuzzleTabCreate" class="btn btn-primary" style="flex: 1; font-size: 11px; padding: 6px 8px;">Create Puzzle</button>
-              <button type="button" id="adminPuzzleTabDelete" class="btn btn-secondary" style="flex: 1; font-size: 11px; padding: 6px 8px;">Delete Puzzle</button>
+              <button type="button" id="adminPuzzleTabCreate" class="btn btn-primary" style="flex: 1; font-size: 10px; padding: 6px 4px;">Create Puzzle</button>
+              <button type="button" id="adminPuzzleTabEdit" class="btn btn-secondary" style="flex: 1; font-size: 10px; padding: 6px 4px;">Edit Puzzle</button>
+              <button type="button" id="adminPuzzleTabDelete" class="btn btn-secondary" style="flex: 1; font-size: 10px; padding: 6px 4px;">Delete Puzzle</button>
             </div>
 
             <!-- Panel 1: Create New Puzzle -->
@@ -1536,6 +1612,24 @@
 
               <button id="adminCreatePuzzleBtn" class="btn btn-primary" style="font-size: 12px; padding: 8px 12px; margin-top: 4px;">
                 <i class="fa-solid fa-circle-plus"></i> Create & Save Puzzle
+              </button>
+            </div>
+
+            <!-- Panel 3: Edit Existing Puzzle -->
+            <div id="adminPuzzleEditPanel" style="display: none; flex-direction: column; gap: 8px;">
+              <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+                Load an unpublished puzzle to edit its airports, departure times, and resolve conflicts live on the board.
+              </p>
+              
+              <div class="form-group" style="margin-top: 4px;">
+                <label class="form-label" for="adminEditPuzzleSelect" style="font-size: 11px; margin-bottom: 2px;">Select Custom Puzzle</label>
+                <select id="adminEditPuzzleSelect" class="form-input" style="background: #ffffff; color: var(--text-main); font-size: 12px; padding: 6px 10px;">
+                  <option value="">-- Select a Puzzle to Edit --</option>
+                </select>
+              </div>
+
+              <button id="adminEditPuzzleBtn" class="btn btn-primary" style="font-size: 12px; padding: 8px 12px; margin-top: 4px;">
+                <i class="fa-solid fa-pen-to-square"></i> Edit Selected Puzzle
               </button>
             </div>
 
@@ -2133,6 +2227,8 @@
     let gameStarted = false;
     let playShuffleAnimation = false;
     let currentClientIp = "Unknown";
+    let isAdminAuthenticated = false;
+    let isAdminEditing = false;
 
     async function getUserIpAddress() {
       try {
@@ -3242,9 +3338,12 @@
         const currentVal = select.value || "";
         select.innerHTML = "";
         puzzlesDatabase.forEach(p => {
+          if (select.id === "puzzleDropdown" || select.id === "leaderboardPuzzleFilter") {
+            if (p.published === false && !isAdminAuthenticated) return;
+          }
           const opt = document.createElement("option");
           opt.value = p.name;
-          opt.textContent = p.name;
+          opt.textContent = p.name + (p.published === false ? " (Unpublished)" : "");
           opt.style.background = "#ffffff";
           opt.style.color = "var(--text-main)";
           select.appendChild(opt);
@@ -3253,7 +3352,7 @@
         if (hasVal) {
           select.value = currentVal;
         } else {
-          select.value = puzzlesDatabase[0].name;
+          select.value = select.options.length > 0 ? select.options[0].value : "";
         }
       });
       
@@ -3265,7 +3364,7 @@
           if (p.name !== "Introduction Puzzle") {
             const opt = document.createElement("option");
             opt.value = p.name;
-            opt.textContent = p.name;
+            opt.textContent = p.name + (p.published === false ? " (Unpublished)" : "");
             opt.style.background = "#ffffff";
             opt.style.color = "var(--text-main)";
             deleteSelect.appendChild(opt);
@@ -3276,6 +3375,28 @@
           deleteSelect.value = currentVal;
         } else {
           deleteSelect.value = "";
+        }
+      }
+      
+      const editSelect = document.getElementById("adminEditPuzzleSelect");
+      if (editSelect) {
+        const currentVal = editSelect.value || "";
+        editSelect.innerHTML = '<option value="">-- Select a Puzzle to Edit --</option>';
+        puzzlesDatabase.forEach(p => {
+          if (p.name !== "Introduction Puzzle" && p.published === false) {
+            const opt = document.createElement("option");
+            opt.value = p.name;
+            opt.textContent = p.name;
+            opt.style.background = "#ffffff";
+            opt.style.color = "var(--text-main)";
+            editSelect.appendChild(opt);
+          }
+        });
+        const hasVal = Array.from(editSelect.options).some(o => o.value === currentVal);
+        if (hasVal) {
+          editSelect.value = currentVal;
+        } else {
+          editSelect.value = "";
         }
       }
     }
@@ -3379,6 +3500,20 @@
       currentPuzzle = found;
       currentPuzzleName = found.name;
       localStorage.setItem("aero_last_played_puzzle", currentPuzzleName);
+      
+      if (found.published === false) {
+        isAdminEditing = true;
+        document.body.classList.add("edit-mode");
+        const banner = document.getElementById("editModeBanner");
+        const nameSpan = document.getElementById("editModePuzzleName");
+        if (banner) banner.style.display = "flex";
+        if (nameSpan) nameSpan.textContent = found.name;
+      } else {
+        isAdminEditing = false;
+        document.body.classList.remove("edit-mode");
+        const banner = document.getElementById("editModeBanner");
+        if (banner) banner.style.display = "none";
+      }
       
       if (currentPuzzleName === "Introduction Puzzle") {
         document.body.classList.add("puzzle-introduction");
@@ -3798,6 +3933,20 @@
       renderGridContents(computedSchedules);
     }
 
+    let cachedAirportsOptionsHTML = "";
+    function getAirportsOptionsHTML(selectedCode) {
+      if (!cachedAirportsOptionsHTML) {
+        cachedAirportsOptionsHTML = Object.keys(AIRPORTS).sort().map(code => {
+          const name = AIRPORTS[code].name;
+          return `<option value="${code}">${code} - ${name}</option>`;
+        }).join("");
+      }
+      return cachedAirportsOptionsHTML.replace(
+        `value="${selectedCode}"`,
+        `value="${selectedCode}" selected`
+      );
+    }
+
     // Helper: Formats absolute day-offset minutes into digital clock string
     function formatMinutesToTimeString(absMins) {
       const minutesInDay = ((absMins % 1440) + 1440) % 1440;
@@ -4071,24 +4220,47 @@
                 const lockMarkup = (c === 0) ? `<i class="fa-solid fa-lock" style="font-size:10px; margin-right:4px; opacity:0.7;"></i>` : ``;
                 
                 // Details of live leg
-                card.innerHTML = `
-                  <div class="leg-route">
-                    <span class="airport-hoverable">${leg.from}</span>
-                    <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
-                    <span class="airport-hoverable">${leg.to}</span>
-                  </div>
-                  <div class="leg-times">
-                    <span>DEP: ${formatMinutesToTimeString(leg.depLocalMins)} ${leg.tzFrom}</span>
-                    <span>ARR: ${formatMinutesToTimeString(leg.arrLocalMins)} ${leg.tzTo}</span>
-                  </div>
-                  <div class="leg-meta">
-                    <span>${lockMarkup}PAX Flight</span>
-                    <span class="leg-duration">${formatDuration(leg.durationMins)}</span>
-                  </div>
-                `;
+                if (isAdminEditing) {
+                  card.innerHTML = `
+                    <div class="leg-route" style="gap: 4px; align-items: center; justify-content: center; margin-bottom: 2px;">
+                      <select class="airport-edit-select from-select" data-leg-id="${leg.id}">
+                        ${getAirportsOptionsHTML(leg.from)}
+                      </select>
+                      <i class="fa-solid fa-arrow-right leg-arrow" style="font-size: 10px; margin: 0 1px;"></i>
+                      <select class="airport-edit-select to-select" data-leg-id="${leg.id}">
+                        ${getAirportsOptionsHTML(leg.to)}
+                      </select>
+                    </div>
+                    <div class="leg-times" style="gap: 2px; justify-content: center; align-items: center; font-size: 10px; margin-bottom: 2px;">
+                      <span>DEP:</span>
+                      <input type="text" class="dep-time-edit-input" data-leg-id="${leg.id}" value="${leg.depTimeStr}" placeholder="HH:MM">
+                      <span style="font-size: 9px; opacity: 0.8; margin-left: 2px;">${leg.tzFrom}</span>
+                    </div>
+                    <div class="leg-meta" style="justify-content: space-between; font-size: 10px;">
+                      <span>${lockMarkup}PAX</span>
+                      <span class="leg-duration" style="font-size: 9px;">${formatDuration(leg.durationMins)}</span>
+                    </div>
+                  `;
+                } else {
+                  card.innerHTML = `
+                    <div class="leg-route">
+                      <span class="airport-hoverable">${leg.from}</span>
+                      <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
+                      <span class="airport-hoverable">${leg.to}</span>
+                    </div>
+                    <div class="leg-times">
+                      <span>DEP: ${formatMinutesToTimeString(leg.depLocalMins)} ${leg.tzFrom}</span>
+                      <span>ARR: ${formatMinutesToTimeString(leg.arrLocalMins)} ${leg.tzTo}</span>
+                    </div>
+                    <div class="leg-meta">
+                      <span>${lockMarkup}PAX Flight</span>
+                      <span class="leg-duration">${formatDuration(leg.durationMins)}</span>
+                    </div>
+                  `;
+                }
 
                 // If conflict flag exists
-                if (leg.hasConflict && testCompleted) {
+                if (leg.hasConflict && (testCompleted || isAdminEditing)) {
                   cell.classList.add("has-conflict-border");
                   const badge = document.createElement("div");
                   badge.className = "conflict-badge";
@@ -5176,6 +5348,8 @@
       const password = document.getElementById("adminAuthPassword").value;
       const hash = await hashPassword(password);
       if (hash === ADMIN_PASSWORD_HASH) {
+        isAdminAuthenticated = true;
+        updatePuzzleDropdownOptions();
         closeModal("adminAuthModal");
         openAdminPanel();
       } else {
@@ -5307,15 +5481,28 @@
 
     document.getElementById("adminPuzzleTabCreate").addEventListener("click", () => {
       document.getElementById("adminPuzzleCreatePanel").style.display = "flex";
+      document.getElementById("adminPuzzleEditPanel").style.display = "none";
       document.getElementById("adminPuzzleDeletePanel").style.display = "none";
       document.getElementById("adminPuzzleTabCreate").className = "btn btn-primary";
+      document.getElementById("adminPuzzleTabEdit").className = "btn btn-secondary";
+      document.getElementById("adminPuzzleTabDelete").className = "btn btn-secondary";
+    });
+    
+    document.getElementById("adminPuzzleTabEdit").addEventListener("click", () => {
+      document.getElementById("adminPuzzleCreatePanel").style.display = "none";
+      document.getElementById("adminPuzzleEditPanel").style.display = "flex";
+      document.getElementById("adminPuzzleDeletePanel").style.display = "none";
+      document.getElementById("adminPuzzleTabCreate").className = "btn btn-secondary";
+      document.getElementById("adminPuzzleTabEdit").className = "btn btn-primary";
       document.getElementById("adminPuzzleTabDelete").className = "btn btn-secondary";
     });
     
     document.getElementById("adminPuzzleTabDelete").addEventListener("click", () => {
       document.getElementById("adminPuzzleCreatePanel").style.display = "none";
+      document.getElementById("adminPuzzleEditPanel").style.display = "none";
       document.getElementById("adminPuzzleDeletePanel").style.display = "flex";
       document.getElementById("adminPuzzleTabCreate").className = "btn btn-secondary";
+      document.getElementById("adminPuzzleTabEdit").className = "btn btn-secondary";
       document.getElementById("adminPuzzleTabDelete").className = "btn btn-primary";
     });
 
@@ -5330,6 +5517,16 @@
       if (e.target.checked) {
         document.getElementById("adminRule1").checked = false;
       }
+    });
+
+    document.getElementById("adminEditPuzzleBtn").addEventListener("click", () => {
+      const selectedPuzzleName = document.getElementById("adminEditPuzzleSelect").value;
+      if (!selectedPuzzleName) {
+        showToast("Please select a puzzle to edit.", "error");
+        return;
+      }
+      closeModal("adminModal");
+      selectPuzzle(selectedPuzzleName);
     });
 
     document.getElementById("adminCreatePuzzleBtn").addEventListener("click", async () => {
@@ -5370,7 +5567,8 @@
             name: name,
             legs: generatorResult.legs,
             rules: { rule1: r1, rule2: r2, rule3: r3, rule4: r4 },
-            startingLocations: generatorResult.startingLocations
+            startingLocations: generatorResult.startingLocations,
+            published: false
           };
           
           closeModal("loadingOverlay");
@@ -5414,8 +5612,11 @@
             item.classList.remove("active");
           });
           
+          closeModal("adminModal");
           closeModal("loadingOverlay");
-          showToast(`Puzzle '${name}' created and saved successfully!`);
+          
+          selectPuzzle(name);
+          showToast(`Puzzle '${name}' created and loaded for editing!`);
         } catch (err) {
           closeModal("loadingOverlay");
           console.error(err);
@@ -5472,13 +5673,9 @@
             puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...(record.customPuzzles || []) ];
             
             if (currentPuzzleName === name) {
-              currentPuzzleName = "Introduction Puzzle";
-              currentPuzzle = INTRODUCTION_PUZZLE;
+              selectPuzzle("Introduction Puzzle");
               const dropdown = document.getElementById("puzzleDropdown");
               if (dropdown) dropdown.value = "Introduction Puzzle";
-              
-              updateSidebarObjectivesUI();
-              resetGame(false);
             }
             
             updatePuzzleDropdownOptions();
@@ -6346,6 +6543,191 @@
         }
       }
     });
+
+    // ----------------------------------------------------
+    // ADMIN PUZZLE EDITING EVENT DELEGATION & HELPERS
+    // ----------------------------------------------------
+    let autoSaveTimeout = null;
+    function saveUpdatedPuzzleToDatabase() {
+      if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+      
+      autoSaveTimeout = setTimeout(async () => {
+        try {
+          const response = await fetch(GLOBAL_DB_READ_URL);
+          if (!response.ok) throw new Error("Failed to read database for auto-save");
+          const resObj = await response.json();
+          let record = resObj.record || resObj;
+          
+          if (!record.customPuzzles) record.customPuzzles = [];
+          record.customPuzzles = record.customPuzzles.map(p => {
+            if (p.name === currentPuzzle.name) {
+              return currentPuzzle;
+            }
+            return p;
+          });
+          
+          const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Master-Key": GLOBAL_DB_MASTER_KEY
+            },
+            body: JSON.stringify({
+              scores: record.scores || [],
+              nameMappings: record.nameMappings || {},
+              deletedUsers: record.deletedUsers || [],
+              resetVersion: record.resetVersion || 0,
+              puzzleToLoad: record.puzzleToLoad || "Introduction Puzzle",
+              userIps: record.userIps || {},
+              customPuzzles: record.customPuzzles
+            })
+          });
+          if (!writeResponse.ok) throw new Error("Failed to update database for auto-save");
+          console.log("Real-time auto-save completed successfully for puzzle:", currentPuzzle.name);
+        } catch (err) {
+          console.error("Auto-save failed:", err);
+          showToast("Warning: Real-time save failed. Check your internet connection.", "error");
+        }
+      }, 1000);
+    }
+
+    function onLegEdited() {
+      precalculateLiveLegs();
+      for (let r = 0; r < 6; r++) {
+        if (grid[r][0]) {
+          startingLocations[r] = grid[r][0].from;
+        }
+      }
+      updateSchedules();
+      saveUpdatedPuzzleToDatabase();
+      renderGrid();
+    }
+
+    const boardGrid = document.getElementById("boardGrid");
+    if (boardGrid) {
+      boardGrid.addEventListener("change", (e) => {
+        const target = e.target;
+        if (target.classList.contains("airport-edit-select")) {
+          const legId = target.getAttribute("data-leg-id");
+          const isFrom = target.classList.contains("from-select");
+          const val = target.value;
+          const leg = currentPuzzle.legs.find(l => l.id === legId);
+          if (leg) {
+            if (isFrom) {
+              if (leg.to === val) {
+                showToast("Origin and destination airports must be different!", "error");
+                target.value = leg.from;
+                return;
+              }
+              leg.from = val;
+            } else {
+              if (leg.from === val) {
+                showToast("Origin and destination airports must be different!", "error");
+                target.value = leg.to;
+                return;
+              }
+              leg.to = val;
+            }
+            onLegEdited();
+          }
+        } else if (target.classList.contains("dep-time-edit-input")) {
+          const legId = target.getAttribute("data-leg-id");
+          const val = target.value.trim();
+          const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+          const leg = currentPuzzle.legs.find(l => l.id === legId);
+          if (leg) {
+            if (!timeRegex.test(val)) {
+              target.classList.add("edit-input-error");
+              showToast("Invalid departure time! Use HH:MM format (00:00 - 23:59)", "error");
+              return;
+            }
+            target.classList.remove("edit-input-error");
+            leg.depTimeStr = val;
+            onLegEdited();
+          }
+        }
+      });
+
+      boardGrid.addEventListener("keydown", (e) => {
+        const target = e.target;
+        if (target.classList.contains("dep-time-edit-input")) {
+          if (e.key === "Enter") {
+            target.blur();
+          }
+        }
+      });
+    }
+
+    const publishBtn = document.getElementById("editModePublishBtn");
+    if (publishBtn) {
+      publishBtn.addEventListener("click", async () => {
+        showLoading("Publishing Puzzle...", "Updating database records...");
+        try {
+          const response = await fetch(GLOBAL_DB_READ_URL);
+          if (!response.ok) throw new Error("Failed to read database");
+          const resObj = await response.json();
+          let record = resObj.record || resObj;
+          
+          if (!record.customPuzzles) record.customPuzzles = [];
+          record.customPuzzles = record.customPuzzles.map(p => {
+            if (p.name === currentPuzzle.name) {
+              p.published = true;
+              currentPuzzle.published = true;
+            }
+            return p;
+          });
+          
+          const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Master-Key": GLOBAL_DB_MASTER_KEY
+            },
+            body: JSON.stringify({
+              scores: record.scores || [],
+              nameMappings: record.nameMappings || {},
+              deletedUsers: record.deletedUsers || [],
+              resetVersion: record.resetVersion || 0,
+              puzzleToLoad: record.puzzleToLoad || "Introduction Puzzle",
+              userIps: record.userIps || {},
+              customPuzzles: record.customPuzzles
+            })
+          });
+          if (!writeResponse.ok) throw new Error("Failed to save published puzzle to database");
+          
+          isAdminEditing = false;
+          document.body.classList.remove("edit-mode");
+          const banner = document.getElementById("editModeBanner");
+          if (banner) banner.style.display = "none";
+          
+          puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...record.customPuzzles ];
+          updatePuzzleDropdownOptions();
+          
+          // Select it again as published to load normal play mode
+          selectPuzzle(currentPuzzle.name);
+          
+          closeModal("loadingOverlay");
+          showToast(`Puzzle '${currentPuzzle.name}' is now live and published!`);
+        } catch (err) {
+          closeModal("loadingOverlay");
+          console.error("Publishing failed:", err);
+          showToast("Failed to publish puzzle: " + err.message, "error");
+        }
+      });
+    }
+
+    const cancelEditBtn = document.getElementById("editModeCancelBtn");
+    if (cancelEditBtn) {
+      cancelEditBtn.addEventListener("click", () => {
+        isAdminEditing = false;
+        document.body.classList.remove("edit-mode");
+        const banner = document.getElementById("editModeBanner");
+        if (banner) banner.style.display = "none";
+        selectPuzzle("Introduction Puzzle");
+        const dropdown = document.getElementById("puzzleDropdown");
+        if (dropdown) dropdown.value = "Introduction Puzzle";
+      });
+    }
 
     // Initialize Web App on Load
     window.onload = () => initGame(false);
