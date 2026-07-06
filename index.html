@@ -2593,6 +2593,7 @@
       const airportsKeys = Object.keys(AIRPORTS);
       let attempts = 0;
       let generatedLegs = null;
+      let initialPlaneLocations = null;
       
       while (attempts < 100) {
         attempts++;
@@ -2602,7 +2603,7 @@
         for (let r = 0; r < 6; r++) {
           planeLocations[r] = airportsKeys[Math.floor(Math.random() * airportsKeys.length)];
         }
-        const initialPlaneLocations = [...planeLocations];
+        initialPlaneLocations = [...planeLocations];
         
         let success = true;
         let legCounter = 1;
