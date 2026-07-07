@@ -1199,6 +1199,15 @@
     body.edit-mode .leg-card {
       height: 74px !important;
     }
+    body.edit-mode .timer-container {
+      display: none !important;
+    }
+    body.edit-mode .submit-btn-wrapper {
+      display: none !important;
+    }
+    body.edit-mode #scoreBanner {
+      display: none !important;
+    }
     
     .airport-edit-select {
       background: #ffffff;
@@ -3935,8 +3944,7 @@
     function getAirportsOptionsHTML(selectedCode) {
       if (!cachedAirportsOptionsHTML) {
         cachedAirportsOptionsHTML = Object.keys(AIRPORTS).sort().map(code => {
-          const name = AIRPORTS[code].name;
-          return `<option value="${code}">${code} - ${name}</option>`;
+          return `<option value="${code}">${code}</option>`;
         }).join("");
       }
       return cachedAirportsOptionsHTML.replace(
@@ -4229,14 +4237,20 @@
                         ${getAirportsOptionsHTML(leg.to)}
                       </select>
                     </div>
-                    <div class="leg-times" style="gap: 2px; justify-content: center; align-items: center; font-size: 10px; margin-bottom: 2px;">
-                      <span>DEP:</span>
-                      <input type="text" class="dep-time-edit-input" data-leg-id="${leg.id}" value="${leg.depTimeStr}" placeholder="HH:MM">
-                      <span style="font-size: 9px; opacity: 0.8; margin-left: 2px;">${leg.tzFrom}</span>
+                    <div class="leg-times" style="display: flex; gap: 3px; justify-content: center; align-items: center; font-size: 9px; margin-bottom: 2px; flex-wrap: wrap;">
+                      <div style="display: flex; align-items: center; gap: 1px;">
+                        <span>DEP:</span>
+                        <input type="text" class="dep-time-edit-input" data-leg-id="${leg.id}" value="${leg.depTimeStr}" placeholder="HH:MM">
+                        <span style="font-size: 8px; opacity: 0.8;">${leg.tzFrom}</span>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 1px;">
+                        <span>ARR:</span>
+                        <span style="font-weight: 700; font-size: 9px;">${formatMinutesToTimeString(leg.arrLocalMins)} ${leg.tzTo}</span>
+                      </div>
                     </div>
-                    <div class="leg-meta" style="justify-content: space-between; font-size: 10px;">
+                    <div class="leg-meta" style="justify-content: space-between; font-size: 9px; padding: 0 4px;">
                       <span>${lockMarkup}PAX</span>
-                      <span class="leg-duration" style="font-size: 9px;">${formatDuration(leg.durationMins)}</span>
+                      <span class="leg-duration" style="font-size: 8px;">${formatDuration(leg.durationMins)}</span>
                     </div>
                   `;
                 } else {
