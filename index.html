@@ -3338,12 +3338,10 @@
         const currentVal = select.value || "";
         select.innerHTML = "";
         puzzlesDatabase.forEach(p => {
-          if (select.id === "puzzleDropdown" || select.id === "leaderboardPuzzleFilter") {
-            if (p.published === false && !isAdminAuthenticated) return;
-          }
+          if (p.published === false) return;
           const opt = document.createElement("option");
           opt.value = p.name;
-          opt.textContent = p.name + (p.published === false ? " (Unpublished)" : "");
+          opt.textContent = p.name;
           opt.style.background = "#ffffff";
           opt.style.color = "var(--text-main)";
           select.appendChild(opt);
