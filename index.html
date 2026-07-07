@@ -2236,7 +2236,7 @@
     let gameStarted = false;
     let playShuffleAnimation = false;
     let currentClientIp = "Unknown";
-    let isAdminAuthenticated = false;
+    let isAdminAuthenticated = localStorage.getItem("aero_admin_authenticated") === "true";
     let isAdminEditing = false;
 
     async function getUserIpAddress() {
@@ -3235,6 +3235,15 @@
           if (found) {
             currentPuzzle = found;
             currentPuzzleName = found.name;
+            if (found.published === false) {
+              isAdminEditing = true;
+              gameStarted = true;
+              document.body.classList.add("edit-mode");
+              const banner = document.getElementById("editModeBanner");
+              const nameSpan = document.getElementById("editModePuzzleName");
+              if (banner) banner.style.display = "flex";
+              if (nameSpan) nameSpan.textContent = found.name;
+            }
           } else {
             currentPuzzle = INTRODUCTION_PUZZLE;
             currentPuzzleName = "Introduction Puzzle";
@@ -5345,11 +5354,15 @@
     // Admin Link opens Password Authentication Modal
     document.getElementById("adminLink").addEventListener("click", (e) => {
       e.preventDefault();
-      document.getElementById("adminAuthPassword").value = "";
-      openModal("adminAuthModal");
-      setTimeout(() => {
-        document.getElementById("adminAuthPassword").focus();
-      }, 300);
+      if (isAdminAuthenticated) {
+        openAdminPanel();
+      } else {
+        document.getElementById("adminAuthPassword").value = "";
+        openModal("adminAuthModal");
+        setTimeout(() => {
+          document.getElementById("adminAuthPassword").focus();
+        }, 300);
+      }
     });
 
     // Close Authentication Modal on Cancel
@@ -5372,6 +5385,7 @@
       const hash = await hashPassword(password);
       if (hash === ADMIN_PASSWORD_HASH) {
         isAdminAuthenticated = true;
+        localStorage.setItem("aero_admin_authenticated", "true");
         updatePuzzleDropdownOptions();
         closeModal("adminAuthModal");
         openAdminPanel();
