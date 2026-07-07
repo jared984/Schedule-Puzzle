@@ -2286,7 +2286,7 @@
     }
 
     function saveActiveSession() {
-      if (gameStarted && !testCompleted) {
+      if (gameStarted && !testCompleted && !isAdminEditing) {
         const session = {
           name: schedulerName,
           score: currentScore,
@@ -3521,6 +3521,7 @@
         if (banner) banner.style.display = "flex";
         if (nameSpan) nameSpan.textContent = found.name;
         closeModal("rulesModal");
+        localStorage.removeItem("aero_active_session");
       } else {
         isAdminEditing = false;
         document.body.classList.remove("edit-mode");
@@ -6699,6 +6700,10 @@
             return p;
           });
           
+          if (record.scores) {
+            record.scores = record.scores.filter(s => s.puzzle !== currentPuzzle.name);
+          }
+          
           const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
@@ -6721,6 +6726,15 @@
           document.body.classList.remove("edit-mode");
           const banner = document.getElementById("editModeBanner");
           if (banner) banner.style.display = "none";
+          
+          try {
+            let localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
+            localScores = localScores.filter(s => s.puzzle !== currentPuzzle.name);
+            localStorage.setItem("aero_scores", JSON.stringify(localScores));
+          } catch (e) {
+            console.error("Local scores clear failed:", e);
+          }
+          schedulerAttemptCount = 0;
           
           puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...record.customPuzzles ];
           updatePuzzleDropdownOptions();
