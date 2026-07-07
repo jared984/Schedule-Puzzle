@@ -3510,6 +3510,7 @@
       
       if (found.published === false) {
         isAdminEditing = true;
+        gameStarted = true;
         document.body.classList.add("edit-mode");
         const banner = document.getElementById("editModeBanner");
         const nameSpan = document.getElementById("editModePuzzleName");
@@ -3556,7 +3557,9 @@
           }
           updateRulesModalFooter();
           updateSubmitButtonState();
-          openModal("rulesModal");
+          if (!isAdminEditing) {
+            openModal("rulesModal");
+          }
         })
         .catch(err => {
           console.warn("Failed syncing attempt count on puzzle select:", err);
@@ -3571,7 +3574,9 @@
           }
           updateRulesModalFooter();
           updateSubmitButtonState();
-          openModal("rulesModal");
+          if (!isAdminEditing) {
+            openModal("rulesModal");
+          }
         });
     }
 
@@ -3623,7 +3628,7 @@
         document.getElementById("nameInputContainer").style.display = "flex";
       }
       updateRulesNameState();
-      if (!schedulerName) {
+      if (!schedulerName && !isAdminEditing) {
         openModal("rulesModal");
       }
     }
@@ -4938,7 +4943,7 @@
           startGameFlow();
         });
       } else {
-        gameStarted = false;
+        gameStarted = isAdminEditing;
         updateSchedules();
       }
     }
