@@ -6722,11 +6722,6 @@
           });
           if (!writeResponse.ok) throw new Error("Failed to save published puzzle to database");
           
-          isAdminEditing = false;
-          document.body.classList.remove("edit-mode");
-          const banner = document.getElementById("editModeBanner");
-          if (banner) banner.style.display = "none";
-          
           try {
             let localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
             localScores = localScores.filter(s => s.puzzle !== currentPuzzle.name);
@@ -6755,10 +6750,6 @@
     const cancelEditBtn = document.getElementById("editModeCancelBtn");
     if (cancelEditBtn) {
       cancelEditBtn.addEventListener("click", () => {
-        isAdminEditing = false;
-        document.body.classList.remove("edit-mode");
-        const banner = document.getElementById("editModeBanner");
-        if (banner) banner.style.display = "none";
         selectPuzzle("Introduction Puzzle", false);
         const dropdown = document.getElementById("puzzleDropdown");
         if (dropdown) dropdown.value = "Introduction Puzzle";
