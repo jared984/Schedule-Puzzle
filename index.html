@@ -3493,8 +3493,8 @@
       }
     }
 
-    function selectPuzzle(name) {
-      if (gameStarted && !testCompleted && name !== currentPuzzleName) {
+    function selectPuzzle(name, showRules = true) {
+      if (gameStarted && !testCompleted && name !== currentPuzzleName && !isAdminEditing) {
         const session = {
           name: schedulerName,
           score: currentScore,
@@ -3562,7 +3562,7 @@
           }
           updateRulesModalFooter();
           updateSubmitButtonState();
-          if (!isAdminEditing) {
+          if (!isAdminEditing && showRules) {
             openModal("rulesModal");
           }
         })
@@ -3579,7 +3579,7 @@
           }
           updateRulesModalFooter();
           updateSubmitButtonState();
-          if (!isAdminEditing) {
+          if (!isAdminEditing && showRules) {
             openModal("rulesModal");
           }
         });
@@ -5695,7 +5695,7 @@
             puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...(record.customPuzzles || []) ];
             
             if (currentPuzzleName === name) {
-              selectPuzzle("Introduction Puzzle");
+              selectPuzzle("Introduction Puzzle", false);
               const dropdown = document.getElementById("puzzleDropdown");
               if (dropdown) dropdown.value = "Introduction Puzzle";
             }
@@ -6726,7 +6726,7 @@
           updatePuzzleDropdownOptions();
           
           // Select it again as published to load normal play mode
-          selectPuzzle(currentPuzzle.name);
+          selectPuzzle(currentPuzzle.name, false);
           
           closeModal("loadingOverlay");
           showToast(`Puzzle '${currentPuzzle.name}' is now live and published!`);
@@ -6745,7 +6745,7 @@
         document.body.classList.remove("edit-mode");
         const banner = document.getElementById("editModeBanner");
         if (banner) banner.style.display = "none";
-        selectPuzzle("Introduction Puzzle");
+        selectPuzzle("Introduction Puzzle", false);
         const dropdown = document.getElementById("puzzleDropdown");
         if (dropdown) dropdown.value = "Introduction Puzzle";
       });
