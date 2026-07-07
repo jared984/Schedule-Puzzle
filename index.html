@@ -3228,13 +3228,17 @@
           if (puzzleToLoad === 1 || puzzleToLoad === "1") {
             puzzleToLoad = "Introduction Puzzle";
           }
-          const found = puzzlesDatabase.find(p => p.name === puzzleToLoad);
+          let found = puzzlesDatabase.find(p => p.name === puzzleToLoad);
+          if (found && found.published === false && !isAdminAuthenticated) {
+            found = null;
+          }
           if (found) {
             currentPuzzle = found;
             currentPuzzleName = found.name;
           } else {
             currentPuzzle = INTRODUCTION_PUZZLE;
             currentPuzzleName = "Introduction Puzzle";
+            localStorage.setItem("aero_last_played_puzzle", "Introduction Puzzle");
           }
 
           updatePuzzleDropdownOptions();
@@ -3516,6 +3520,7 @@
         const nameSpan = document.getElementById("editModePuzzleName");
         if (banner) banner.style.display = "flex";
         if (nameSpan) nameSpan.textContent = found.name;
+        closeModal("rulesModal");
       } else {
         isAdminEditing = false;
         document.body.classList.remove("edit-mode");
@@ -4242,11 +4247,11 @@
                         ${getAirportsOptionsHTML(leg.to)}
                       </select>
                     </div>
-                    <div class="leg-times" style="display: flex; gap: 3px; justify-content: center; align-items: center; font-size: 9px; margin-bottom: 2px; flex-wrap: wrap;">
+                    <div class="leg-times" style="display: flex; justify-content: space-between; align-items: center; font-size: 9px; margin-bottom: 2px; width: 100%; padding: 0 4px;">
                       <div style="display: flex; align-items: center; gap: 1px;">
                         <span>DEP:</span>
                         <input type="text" class="dep-time-edit-input" data-leg-id="${leg.id}" value="${leg.depTimeStr}" placeholder="HH:MM">
-                        <span style="font-size: 8px; opacity: 0.8;">${leg.tzFrom}</span>
+                        <span style="font-size: 8px; opacity: 0.8; margin-left: 1px;">${leg.tzFrom}</span>
                       </div>
                       <div style="display: flex; align-items: center; gap: 1px;">
                         <span>ARR:</span>
