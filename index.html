@@ -4100,12 +4100,7 @@
         return ["Flight Limit Exceeded", ">10.0 Flight Hours"];
       }
       if (reason.includes("Insufficient rest")) {
-        const match = reason.match(/rest is ([0-9a-zA-Z\s]+)/i);
-        if (match) {
-          let rStr = match[1].trim().replace(/\bh\b/g, "hr").replace(/\bm\b/g, "min");
-          return [rStr + " rest", "between duty days"];
-        }
-        return ["Insufficient Rest", "<10.0h Rest Gap"];
+        return ["Insufficient rest", "<10.0 hrs"];
       }
       return ["Schedule", "Conflict"];
     }
