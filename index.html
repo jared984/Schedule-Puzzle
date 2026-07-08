@@ -3713,6 +3713,7 @@
       currentPuzzle.legs.forEach(leg => {
         leg.hasConflict = false;
         leg.conflictReason = "";
+        leg.has1024Violation = false;
       });
 
       // We will generate computed layout schedules for each row
@@ -3966,10 +3967,14 @@
               if (overlappingLiveSegs.length > 0) {
                 overlappingLiveSegs.sort((a, b) => a.end - b.end);
                 const latestLiveSeg = overlappingLiveSegs[overlappingLiveSegs.length - 1];
-                if (!latestLiveSeg.legRef.hasConflict || !latestLiveSeg.legRef.conflictReason.includes("exceeds 10 hours")) {
-                  latestLiveSeg.legRef.hasConflict = true;
-                  latestLiveSeg.legRef.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(endWindowFlightMins / 60).toFixed(1)} hrs).`;
+                const leg = latestLiveSeg.legRef;
+                if (!leg.has1024Violation) {
+                  leg.has1024Violation = true;
                   conflictsCount++;
+                }
+                if (leg.conflictReason === "" || leg.conflictReason.includes("exceeds 10 hours")) {
+                  leg.hasConflict = true;
+                  leg.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(endWindowFlightMins / 60).toFixed(1)} hrs).`;
                 }
               }
             }
@@ -3988,10 +3993,14 @@
               if (overlappingLiveSegs.length > 0) {
                 overlappingLiveSegs.sort((a, b) => a.end - b.end);
                 const latestLiveSeg = overlappingLiveSegs[overlappingLiveSegs.length - 1];
-                if (!latestLiveSeg.legRef.hasConflict || !latestLiveSeg.legRef.conflictReason.includes("exceeds 10 hours")) {
-                  latestLiveSeg.legRef.hasConflict = true;
-                  latestLiveSeg.legRef.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(startWindowFlightMins / 60).toFixed(1)} hrs).`;
+                const leg = latestLiveSeg.legRef;
+                if (!leg.has1024Violation) {
+                  leg.has1024Violation = true;
                   conflictsCount++;
+                }
+                if (leg.conflictReason === "" || leg.conflictReason.includes("exceeds 10 hours")) {
+                  leg.hasConflict = true;
+                  leg.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(startWindowFlightMins / 60).toFixed(1)} hrs).`;
                 }
               }
             }
