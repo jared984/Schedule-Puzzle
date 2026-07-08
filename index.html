@@ -3605,6 +3605,14 @@
       updateSidebarObjectivesUI();
       precalculateLiveLegs();
       
+      for (let r = 0; r < 6; r++) {
+        if (currentPuzzle.startingLocations && currentPuzzle.startingLocations[r]) {
+          startingLocations[r] = currentPuzzle.startingLocations[r];
+        } else {
+          startingLocations[r] = "";
+        }
+      }
+
       grid = Array(6).fill(null).map(() => Array(5).fill(null));
       
       // Allocate fixed legs to rows (aircraft) on their scheduled day.
@@ -3613,8 +3621,31 @@
         if (day === 0 || isAdminEditing) {
           // Locked day (Monday) or active admin editing mode: keep flights on their original tail/row
           dayLegs.forEach(leg => {
-            const r = (leg.originalRow !== undefined) ? leg.originalRow : 0;
-            grid[r][day] = leg;
+            let rowToPlace = (leg.originalRow !== undefined) ? leg.originalRow : -1;
+            if (rowToPlace === -1) {
+              if (day === 0) {
+                // Monday: align with startingLocations if possible
+                for (let r = 0; r < 6; r++) {
+                  if (startingLocations[r] === leg.from && !grid[r][0]) {
+                    rowToPlace = r;
+                    break;
+                  }
+                }
+              }
+              // Fallback to first available empty row
+              if (rowToPlace === -1) {
+                for (let r = 0; r < 6; r++) {
+                  if (!grid[r][day]) {
+                    rowToPlace = r;
+                    break;
+                  }
+                }
+              }
+            }
+            if (rowToPlace !== -1) {
+              grid[rowToPlace][day] = leg;
+              leg.originalRow = rowToPlace;
+            }
           });
         } else {
           // Play mode: scramble Tuesday through Friday
@@ -3628,12 +3659,12 @@
       }
 
       for (let r = 0; r < 6; r++) {
-        if (currentPuzzle.startingLocations && currentPuzzle.startingLocations[r]) {
-          startingLocations[r] = currentPuzzle.startingLocations[r];
-        } else if (grid[r][0]) {
-          startingLocations[r] = grid[r][0].from;
-        } else {
-          startingLocations[r] = "LAX";
+        if (!startingLocations[r]) {
+          if (grid[r][0]) {
+            startingLocations[r] = grid[r][0].from;
+          } else {
+            startingLocations[r] = "LAX";
+          }
         }
       }
 
