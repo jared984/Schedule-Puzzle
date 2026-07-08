@@ -1209,6 +1209,12 @@
     body.edit-mode #scoreBanner {
       display: none !important;
     }
+    body.edit-mode #puzzleDropdownContainer {
+      display: none !important;
+    }
+    body.edit-mode #editingPuzzleLabel {
+      display: block !important;
+    }
     
     .airport-edit-select {
       background: #ffffff;
@@ -1289,11 +1295,14 @@
           </div>
           <div class="logo-text" style="display: flex; flex-direction: column; align-items: flex-start;">
             <h1>AeroScheduler</h1>
-            <div style="position: relative; display: block; width: 100%; box-sizing: border-box; margin-top: 3px;">
+            <div id="puzzleDropdownContainer" style="position: relative; display: block; width: 100%; box-sizing: border-box; margin-top: 3px;">
               <select id="puzzleDropdown" style="background: rgba(255, 255, 255, 0.45); color: #1e293b; border: 1px solid rgba(0, 0, 0, 0.08); font-size: 12px; font-weight: 700; cursor: pointer; outline: none; padding: 3px 22px 3px 8px; border-radius: 6px; -webkit-appearance: none; -moz-appearance: none; appearance: none; text-overflow: ellipsis; width: 100%; box-sizing: border-box; transition: background 0.2s, border-color 0.2s, color 0.2s;">
                 <option value="Introduction Puzzle" style="background: #ffffff; color: var(--text-main);">Introduction Puzzle</option>
               </select>
               <i class="fa-solid fa-chevron-down" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 9px; color: #1e293b; pointer-events: none; opacity: 0.6;"></i>
+            </div>
+            <div id="editingPuzzleLabel" style="display: none; font-size: 11px; font-weight: 800; color: #cbd5e1; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.25); padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; max-width: 175px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+              Editing: <span id="editingPuzzleNameText"></span>
             </div>
           </div>
         </div>
@@ -3666,6 +3675,11 @@
             startingLocations[r] = "LAX";
           }
         }
+      }
+
+      const editingTextSpan = document.getElementById("editingPuzzleNameText");
+      if (editingTextSpan) {
+        editingTextSpan.textContent = currentPuzzleName;
       }
 
       setupGridDOM();
