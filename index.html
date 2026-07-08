@@ -810,6 +810,17 @@
       z-index: 1;
     }
 
+    body.edit-mode .conflict-badge {
+      top: 2px;
+      right: 2px;
+      left: auto;
+      transform: none;
+      font-size: 9px;
+      padding: 2px 4px;
+      animation: none;
+      box-shadow: none;
+    }
+
     /* Modals & Popups */
     .modal-overlay {
       position: fixed;
@@ -2882,7 +2893,7 @@
                   const arrZ = arrRepo - AIRPORTS[leg.from].tz * 60;
                   segments.push({ start: depZ, end: arrZ });
                   
-                  const dispD = Math.floor(repoEv.depLocalMins / 1440);
+                  const dispD = repoEv.displayDay;
                   if (!dailyEvents[dispD]) dailyEvents[dispD] = [];
                   dailyEvents[dispD].push(repoEv);
                 }
@@ -3834,7 +3845,7 @@
           // 1. Group events by actual operational day
           const dailyEvents = {};
           events.forEach(e => {
-            const d = e.type === "repo" ? Math.floor(e.depLocalMins / 1440) : e.displayDay;
+            const d = e.displayDay;
             if (dailyEvents[d] === undefined) dailyEvents[d] = [];
             dailyEvents[d].push(e);
           });
@@ -3845,12 +3856,16 @@
           
           activeDays.forEach(d => {
             const dayEvs = dailyEvents[d];
-            dayEvs.sort((a, b) => a.depLocalMins - b.depLocalMins);
+            dayEvs.sort((a, b) => {
+              const depA = a.type === "live" ? a.legRef.depLocalMins : a.depLocalMins;
+              const depB = b.type === "live" ? b.legRef.depLocalMins : b.depLocalMins;
+              return depA - depB;
+            });
             
             const firstEv = dayEvs[0];
             const lastEv = dayEvs[dayEvs.length - 1];
             
-            const firstTakeoffLocal = firstEv.depLocalMins;
+            const firstTakeoffLocal = firstEv.type === "live" ? firstEv.legRef.depLocalMins : firstEv.depLocalMins;
             const lastLandingLocal = lastEv.type === "live" ? lastEv.legRef.arrLocalMins : lastEv.arrLocalMins;
             
             const dutyStartLocal = firstTakeoffLocal - 60;
