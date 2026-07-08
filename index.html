@@ -2946,19 +2946,17 @@
                   const fTakeoff = fEv.depLocalMins;
                   const lLanding = lEv.legRef ? lEv.legRef.arrLocalMins : lEv.arrLocalMins;
                   
-                  const dStart = fTakeoff - 60;
-                  const dEnd = lLanding + 30;
-                  const dDuration = dEnd - dStart;
+                  const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
+                  const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
+                  const zStart = (fTakeoff - 60) - AIRPORTS[fFrom].tz * 60;
+                  const zEnd = (lLanding + 30) - AIRPORTS[lTo].tz * 60;
+                  const dDuration = zEnd - zStart;
                   
                   if (dDuration > 840) {
                     hasRule3Conflict = true;
                     break;
                   }
                   
-                  const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
-                  const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
-                  const zStart = dStart - AIRPORTS[fFrom].tz * 60;
-                  const zEnd = dEnd - AIRPORTS[lTo].tz * 60;
                   dailyDuty[actD] = { start: zStart, end: zEnd };
                 }
                 
@@ -3105,16 +3103,13 @@
                 const fTakeoff = fEv.depLocalMins;
                 const lLanding = lEv.legRef ? lEv.legRef.arrLocalMins : lEv.arrLocalMins;
                 
-                const dStart = fTakeoff - 60;
-                const dEnd = lLanding + 30;
-                const dDuration = dEnd - dStart;
-                
-                if (dDuration > 840) rowHasRule3Conflict = true;
-                
                 const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
                 const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
-                const zStart = dStart - AIRPORTS[fFrom].tz * 60;
-                const zEnd = dEnd - AIRPORTS[lTo].tz * 60;
+                const zStart = (fTakeoff - 60) - AIRPORTS[fFrom].tz * 60;
+                const zEnd = (lLanding + 30) - AIRPORTS[lTo].tz * 60;
+                const dDuration = zEnd - zStart;
+                
+                if (dDuration > 840) rowHasRule3Conflict = true;
                 dailyDuty[actD] = { start: zStart, end: zEnd };
               }
               
@@ -3912,15 +3907,12 @@
             const firstTakeoffLocal = firstEv.type === "live" ? firstEv.legRef.depLocalMins : firstEv.depLocalMins;
             const lastLandingLocal = lastEv.type === "live" ? lastEv.legRef.arrLocalMins : lastEv.arrLocalMins;
             
-            const dutyStartLocal = firstTakeoffLocal - 60;
-            const dutyEndLocal = lastLandingLocal + 30;
-            const dutyDuration = dutyEndLocal - dutyStartLocal; // in minutes
-            
             const firstFromAp = firstEv.type === "live" ? firstEv.legRef.from : firstEv.from;
             const lastToAp = lastEv.type === "live" ? lastEv.legRef.to : lastEv.to;
             
-            const zuluDutyStart = dutyStartLocal - AIRPORTS[firstFromAp].tz * 60;
-            const zuluDutyEnd = dutyEndLocal - AIRPORTS[lastToAp].tz * 60;
+            const zuluDutyStart = (firstTakeoffLocal - 60) - AIRPORTS[firstFromAp].tz * 60;
+            const zuluDutyEnd = (lastLandingLocal + 30) - AIRPORTS[lastToAp].tz * 60;
+            const dutyDuration = zuluDutyEnd - zuluDutyStart; // in minutes (Zulu elapsed time)
             
             dailyDuty[d] = { start: zuluDutyStart, end: zuluDutyEnd, duration: dutyDuration };
 
