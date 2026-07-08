@@ -2454,7 +2454,10 @@
         }
       }
       
-      const displayDay = Math.floor(arrRepo / 1440);
+      let displayDay = Math.floor(arrRepo / 1440);
+      if (displayDay >= leg.day) {
+        displayDay = leg.day;
+      }
       
       return {
         depLocalMins: depRepo,
@@ -3907,28 +3910,46 @@
           segments.forEach(seg => {
             const endWindowFlightMins = getFlightTimeInWindow(seg.end, segments);
             if (endWindowFlightMins > 600) {
+              const overlappingLiveSegs = [];
               segments.forEach(s => {
                 const overlapStart = Math.max(s.start, seg.end - 1440);
                 const overlapEnd = Math.min(s.end, seg.end);
                 if (overlapStart < overlapEnd && s.legRef) {
-                  s.legRef.hasConflict = true;
-                  s.legRef.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(endWindowFlightMins / 60).toFixed(1)} hrs).`;
-                  conflictsCount++;
+                  overlappingLiveSegs.push(s);
                 }
               });
+
+              if (overlappingLiveSegs.length > 0) {
+                overlappingLiveSegs.sort((a, b) => a.end - b.end);
+                const latestLiveSeg = overlappingLiveSegs[overlappingLiveSegs.length - 1];
+                if (!latestLiveSeg.legRef.hasConflict || !latestLiveSeg.legRef.conflictReason.includes("exceeds 10 hours")) {
+                  latestLiveSeg.legRef.hasConflict = true;
+                  latestLiveSeg.legRef.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(endWindowFlightMins / 60).toFixed(1)} hrs).`;
+                  conflictsCount++;
+                }
+              }
             }
             
             const startWindowFlightMins = getFlightTimeInWindow(seg.start + 1440, segments);
             if (startWindowFlightMins > 600) {
+              const overlappingLiveSegs = [];
               segments.forEach(s => {
                 const overlapStart = Math.max(s.start, seg.start);
                 const overlapEnd = Math.min(s.end, seg.start + 1440);
                 if (overlapStart < overlapEnd && s.legRef) {
-                  s.legRef.hasConflict = true;
-                  s.legRef.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(startWindowFlightMins / 60).toFixed(1)} hrs).`;
-                  conflictsCount++;
+                  overlappingLiveSegs.push(s);
                 }
               });
+
+              if (overlappingLiveSegs.length > 0) {
+                overlappingLiveSegs.sort((a, b) => a.end - b.end);
+                const latestLiveSeg = overlappingLiveSegs[overlappingLiveSegs.length - 1];
+                if (!latestLiveSeg.legRef.hasConflict || !latestLiveSeg.legRef.conflictReason.includes("exceeds 10 hours")) {
+                  latestLiveSeg.legRef.hasConflict = true;
+                  latestLiveSeg.legRef.conflictReason = `Rolling 24-hour flight hours exceeds 10 hours (${(startWindowFlightMins / 60).toFixed(1)} hrs).`;
+                  conflictsCount++;
+                }
+              }
             }
           });
         }
