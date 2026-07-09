@@ -1351,7 +1351,7 @@
         </div>
 
         <!-- Puzzle Context -->
-        <div class="sidebar-section">
+        <div id="objectivesSidebarSection" class="sidebar-section">
           <h3><i class="fa-solid fa-circle-question"></i> Puzzle Objectives</h3>
           <ul id="sidebarObjectives" style="display:flex; flex-direction:column; gap:6px;">
             <li><i class="fa-solid fa-check"></i> Minimize Repositioning flight times</li>
@@ -3505,6 +3505,7 @@
           splashList.innerHTML = `<div style="font-size: 11px; color: var(--text-secondary);">No additional constraints enabled. Standard swapping only.</div>`;
         }
       }
+      setTimeout(adjustGridRowHeights, 0);
     }
 
     function selectPuzzle(name, showRules = true) {
@@ -6872,6 +6873,39 @@
         if (dropdown) dropdown.value = "Introduction Puzzle";
       });
     }
+
+    function adjustGridRowHeights() {
+      if (document.body.classList.contains("edit-mode")) {
+        return;
+      }
+      
+      const boardGrid = document.getElementById("boardGrid");
+      const objectivesSection = document.getElementById("objectivesSidebarSection");
+      
+      if (!boardGrid || !objectivesSection) return;
+      
+      const gridRect = boardGrid.getBoundingClientRect();
+      const objectivesRect = objectivesSection.getBoundingClientRect();
+      
+      const targetGridHeight = objectivesRect.bottom - gridRect.top;
+      let rowHeight = (targetGridHeight - 40) / 6;
+      
+      if (rowHeight < 100) rowHeight = 100;
+      
+      boardGrid.style.gridTemplateRows = `40px repeat(6, ${rowHeight}px)`;
+      
+      const cells = boardGrid.querySelectorAll(".grid-cell");
+      cells.forEach(cell => {
+        cell.style.height = `${rowHeight}px`;
+      });
+      
+      const rowHeaders = boardGrid.querySelectorAll(".grid-row-header");
+      rowHeaders.forEach(hdr => {
+        hdr.style.height = `${rowHeight}px`;
+      });
+    }
+
+    window.addEventListener("resize", adjustGridRowHeights);
 
     // Initialize Web App on Load
     window.onload = () => initGame(false);
