@@ -4406,11 +4406,11 @@
                 if (isAdminEditing) {
                   card.innerHTML = `
                     <div class="leg-route" style="gap: 4px; align-items: center; justify-content: center; margin-bottom: 2px;">
-                      <select class="airport-edit-select from-select" data-leg-id="${leg.id}">
+                      <select class="airport-edit-select from-select" data-leg-id="${leg.id}" title="${AIRPORTS[leg.from].name}">
                         ${getAirportsOptionsHTML(leg.from)}
                       </select>
                       <i class="fa-solid fa-arrow-right leg-arrow" style="font-size: 10px; margin: 0 1px;"></i>
-                      <select class="airport-edit-select to-select" data-leg-id="${leg.id}">
+                      <select class="airport-edit-select to-select" data-leg-id="${leg.id}" title="${AIRPORTS[leg.to].name}">
                         ${getAirportsOptionsHTML(leg.to)}
                       </select>
                     </div>
