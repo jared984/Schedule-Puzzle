@@ -2464,10 +2464,7 @@
         }
       }
       
-      let displayDay = Math.floor(arrRepo / 1440);
-      if (displayDay >= leg.day) {
-        displayDay = leg.day;
-      }
+      const displayDay = prevLeg ? prevLeg.day : leg.day;
       
       return {
         depLocalMins: depRepo,
@@ -3068,7 +3065,7 @@
                 const arrZ = arrRepo - AIRPORTS[leg.from].tz * 60;
                 segments.push({ start: depZ, end: arrZ });
                 
-                const dispD = Math.floor(repoEv.depLocalMins / 1440);
+                const dispD = repoEv.displayDay;
                 if (!dailyEvents[dispD]) dailyEvents[dispD] = [];
                 dailyEvents[dispD].push(repoEv);
               }
