@@ -1301,7 +1301,7 @@
               </select>
               <i class="fa-solid fa-chevron-down" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 9px; color: #1e293b; pointer-events: none; opacity: 0.6;"></i>
             </div>
-            <div id="editingPuzzleLabel" style="display: none; font-size: 11px; font-weight: 800; color: #000000; background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0, 0, 0, 0.15); padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; max-width: 175px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+            <div id="editingPuzzleLabel" style="display: none; font-size: 11px; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; max-width: 216px; white-space: normal; word-break: break-word;">
               Editing: <span id="editingPuzzleNameText"></span>
             </div>
           </div>
@@ -3526,6 +3526,11 @@
       currentPuzzle = found;
       currentPuzzleName = found.name;
       localStorage.setItem("aero_last_played_puzzle", currentPuzzleName);
+      
+      const editingTextSpan = document.getElementById("editingPuzzleNameText");
+      if (editingTextSpan) {
+        editingTextSpan.textContent = currentPuzzleName;
+      }
       
       if (found.published === false) {
         isAdminEditing = true;
