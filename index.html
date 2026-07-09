@@ -1879,6 +1879,81 @@
     </div>
   </div>
 
+  <!-- Hypothetical Scheduling Analysis Modal -->
+  <div id="hypotheticalModal" class="modal-overlay" style="z-index: 180;">
+    <div class="modal-box" style="width: 550px; gap: 16px; border: 2px solid var(--accent); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 15px rgba(55, 138, 216, 0.2);">
+      <div class="modal-header">
+        <h2 class="modal-title" style="font-size: 16px;">
+          <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent); margin-right: 6px;"></i> Hypothetical Scheduling Analysis
+        </h2>
+      </div>
+      
+      <div class="modal-body" style="gap: 16px;">
+        <!-- Visual Timeline/Connector View -->
+        <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box;">
+          <h4 style="margin: 0; font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Flight Sequence Timeline</h4>
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;">
+            <!-- Leg 1 Card -->
+            <div id="hypotheticalLeg1Card" class="leg-card leg-card-live" style="flex: 1; min-height: 54px; pointer-events: none; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"></div>
+            
+            <!-- Connector Arrow + Repo -->
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; text-align: center; gap: 4px;">
+              <div id="hypotheticalRepoText" style="font-size: 9px; font-weight: 700; color: var(--text-secondary); line-height: 1.2;"></div>
+              <div style="position: relative; width: 100%; display: flex; align-items: center; justify-content: center;">
+                <div style="height: 2px; background: #cbd5e1; width: 80%; position: absolute; z-index: 1;"></div>
+                <i class="fa-solid fa-circle" style="font-size: 6px; color: #cbd5e1; position: absolute; left: 10%; z-index: 2;"></i>
+                <i class="fa-solid fa-plane" style="font-size: 12px; color: var(--accent); z-index: 3; background: var(--bg-main); padding: 0 4px; transform: rotate(90deg);"></i>
+                <i class="fa-solid fa-circle" style="font-size: 6px; color: #cbd5e1; position: absolute; right: 10%; z-index: 2;"></i>
+              </div>
+              <div id="hypotheticalRepoTimeText" style="font-size: 9px; font-family: var(--font-mono); color: var(--text-secondary);"></div>
+            </div>
+            
+            <!-- Leg 2 Card -->
+            <div id="hypotheticalLeg2Card" class="leg-card leg-card-live" style="flex: 1; min-height: 54px; pointer-events: none; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"></div>
+          </div>
+        </div>
+        
+        <!-- Loading State (Computer Thinking) -->
+        <div id="hypotheticalLoader" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 0; gap: 12px; width: 100%;">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; color: var(--accent);"></i>
+          <span style="font-size: 13px; color: var(--text-secondary); font-weight: 500; letter-spacing: 0.5px;">Analyzing duty and rest metrics...</span>
+        </div>
+        
+        <!-- Metrics Display (Plain Text, Faded In) -->
+        <div id="hypotheticalMetrics" style="display: none; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box;">
+          <h4 style="margin: 0 0 4px 0; font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Computed Scheduling Metrics</h4>
+          
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Duty Day 1 Duration</span>
+              <strong id="hypotheticalDuty1Val" style="font-size: 16px; color: var(--text-main); font-weight: 600;">--</strong>
+            </div>
+            
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Duty Day 2 Duration</span>
+              <strong id="hypotheticalDuty2Val" style="font-size: 16px; color: var(--text-main); font-weight: 600;">--</strong>
+            </div>
+            
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px; grid-column: span 2;">
+              <span style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Rest Gap (Between Duty Days)</span>
+              <strong id="hypotheticalRestVal" style="font-size: 16px; color: var(--text-main); font-weight: 600;">--</strong>
+            </div>
+            
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px; grid-column: span 2;">
+              <span style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Rolling 24-Hour Flight Time</span>
+              <strong id="hypotheticalRollingVal" style="font-size: 16px; color: var(--text-main); font-weight: 600;">--</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 16px; width: 100%;">
+        <button id="hypotheticalOkBtn" class="btn btn-primary" style="padding: 10px 24px; font-size: 13px;" disabled>OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- User IP Tracking Popup Modal -->
   <div id="adminIpTrackModal" class="modal-overlay" style="z-index: 160;">
     <div class="modal-box" style="width: 400px; gap: 16px;">
@@ -3522,6 +3597,7 @@
       if (!found) return;
       currentPuzzle = found;
       currentPuzzleName = found.name;
+      selectedHypotheticalLegs = [];
       localStorage.setItem("aero_last_played_puzzle", currentPuzzleName);
       
       const editingTextSpan = document.getElementById("editingPuzzleNameText");
@@ -4323,9 +4399,13 @@
                 // Lock icon if on Day 1
                 const lockMarkup = (c === 0) ? `<i class="fa-solid fa-lock" style="font-size:10px; margin-right:4px; opacity:0.7;"></i>` : ``;
                 
+                const isChecked = selectedHypotheticalLegs.some(item => item.legId === leg.id);
+                const checkboxMarkup = `<input type="checkbox" class="hypothetical-checkbox" data-leg-id="${leg.id}" data-col="${c}" ${isChecked ? "checked" : ""} style="position: absolute; right: 4px; top: 4px; z-index: 10; margin: 0; cursor: pointer; width: 12px; height: 12px; accent-color: var(--accent);" onclick="event.stopPropagation();" onmousedown="event.stopPropagation();">`;
+
                 // Details of live leg
                 if (isAdminEditing) {
                   card.innerHTML = `
+                    ${checkboxMarkup}
                     <div class="leg-route" style="gap: 4px; align-items: center; justify-content: center; margin-bottom: 2px;">
                       <select class="airport-edit-select from-select" data-leg-id="${leg.id}">
                         ${getAirportsOptionsHTML(leg.from)}
@@ -4353,6 +4433,7 @@
                   `;
                 } else {
                   card.innerHTML = `
+                    ${checkboxMarkup}
                     <div class="leg-route">
                       <span class="airport-hoverable">${leg.from}</span>
                       <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
@@ -5013,6 +5094,7 @@
     function resetGame(startTest = false) {
       clearInterval(timerInterval);
       testCompleted = false;
+      selectedHypotheticalLegs = [];
       localStorage.removeItem("aero_active_session");
       
       // Ensure all legs are precalculated with timezones, distances, etc.
@@ -6908,6 +6990,220 @@
     }
 
     window.addEventListener("resize", adjustGridRowHeights);
+
+    // ----------------------------------------------------
+    // HYPOTHETICAL SCHEDULING ANALYSIS LOGIC
+    // ----------------------------------------------------
+    let selectedHypotheticalLegs = [];
+
+    function handleHypotheticalCheckboxChange(checkbox) {
+      const legId = checkbox.dataset.legId;
+      const col = parseInt(checkbox.dataset.col, 10);
+      
+      if (checkbox.checked) {
+        if (selectedHypotheticalLegs.length === 0) {
+          selectedHypotheticalLegs.push({ legId, col, el: checkbox });
+        } else if (selectedHypotheticalLegs.length === 1) {
+          const first = selectedHypotheticalLegs[0];
+          // Check if concurrent days (back-to-back days)
+          if (Math.abs(first.col - col) === 1) {
+            selectedHypotheticalLegs.push({ legId, col, el: checkbox });
+            openHypotheticalPopup();
+          } else {
+            // Uncheck the first one
+            first.el.checked = false;
+            selectedHypotheticalLegs = [{ legId, col, el: checkbox }];
+          }
+        } else {
+          // Should not happen, but reset
+          selectedHypotheticalLegs.forEach(item => {
+            if (item.el) item.el.checked = false;
+          });
+          selectedHypotheticalLegs = [{ legId, col, el: checkbox }];
+        }
+      } else {
+        selectedHypotheticalLegs = selectedHypotheticalLegs.filter(item => item.legId !== legId);
+      }
+    }
+
+    function getHypotheticalMetrics(leg1, leg2) {
+      const tzFrom1 = AIRPORTS[leg1.from].tz;
+      const tzTo1 = AIRPORTS[leg1.to].tz;
+      const tzFrom2 = AIRPORTS[leg2.from].tz;
+      const tzTo2 = AIRPORTS[leg2.to].tz;
+      
+      const [h1, m1] = leg1.depTimeStr.split(":").map(Number);
+      const depLocal1 = leg1.day * 1440 + h1 * 60 + m1;
+      const arrLocal1 = depLocal1 + leg1.durationMins;
+      
+      const [h2, m2] = leg2.depTimeStr.split(":").map(Number);
+      const depLocal2 = leg2.day * 1440 + h2 * 60 + m2;
+      const arrLocal2 = depLocal2 + leg2.durationMins;
+      
+      const tempLeg1 = { ...leg1, depLocalMins: depLocal1, arrLocalMins: arrLocal1 };
+      const tempLeg2 = { ...leg2, depLocalMins: depLocal2, arrLocalMins: arrLocal2 };
+      
+      const repoData = getRepoFlightTimes(leg1.to, tempLeg2, tempLeg1);
+      
+      const zuluTakeoff1 = depLocal1 - tzFrom1 * 60;
+      const zuluDuty1Start = zuluTakeoff1 - 60;
+      
+      let zuluDuty1End;
+      if (repoData.displayDay === tempLeg1.day) {
+        const zuluRepoLanding = repoData.arrLocalMins - tzFrom2 * 60;
+        zuluDuty1End = zuluRepoLanding + 30;
+      } else {
+        const zuluLanding1 = arrLocal1 - tzTo1 * 60;
+        zuluDuty1End = zuluLanding1 + 30;
+      }
+      const duty1Duration = zuluDuty1End - zuluDuty1Start;
+      
+      let zuluDuty2Start;
+      if (repoData.displayDay === tempLeg2.day) {
+        const zuluRepoTakeoff = repoData.depLocalMins - tzTo1 * 60;
+        zuluDuty2Start = zuluRepoTakeoff - 60;
+      } else {
+        const zuluTakeoff2 = depLocal2 - tzFrom2 * 60;
+        zuluDuty2Start = zuluTakeoff2 - 60;
+      }
+      const zuluLanding2 = arrLocal2 - tzTo2 * 60;
+      const zuluDuty2End = zuluLanding2 + 30;
+      const duty2Duration = zuluDuty2End - zuluDuty2Start;
+      
+      const restGap = zuluDuty2Start - zuluDuty1End;
+      
+      const totalSpan = zuluLanding2 - zuluTakeoff1;
+      let rollingFlightMins;
+      if (totalSpan <= 1440) {
+        rollingFlightMins = leg1.durationMins + leg2.durationMins;
+      } else {
+        rollingFlightMins = Math.max(leg1.durationMins, leg2.durationMins);
+      }
+      
+      return {
+        repo: repoData,
+        duty1: duty1Duration,
+        duty2: duty2Duration,
+        rest: restGap,
+        rolling: rollingFlightMins
+      };
+    }
+
+    function openHypotheticalPopup() {
+      if (selectedHypotheticalLegs.length < 2) return;
+      
+      const sortedLegs = [...selectedHypotheticalLegs].sort((a, b) => a.col - b.col);
+      const leg1Item = sortedLegs[0];
+      const leg2Item = sortedLegs[1];
+      
+      const leg1 = currentPuzzle.legs.find(l => l.id === leg1Item.legId);
+      const leg2 = currentPuzzle.legs.find(l => l.id === leg2Item.legId);
+      
+      if (!leg1 || !leg2) return;
+      
+      const card1 = document.getElementById("hypotheticalLeg1Card");
+      if (card1) {
+        card1.innerHTML = `
+          <div class="leg-route" style="justify-content: center;">
+            <span>${leg1.from}</span>
+            <i class="fa-solid fa-arrow-right-long leg-arrow" style="margin: 0 4px;"></i>
+            <span>${leg1.to}</span>
+          </div>
+          <div class="leg-times" style="font-size: 8px; justify-content: center; gap: 4px; margin-top: 2px;">
+            <span>DEP: ${leg1.depTimeStr}</span>
+            <span>ARR: ${formatMinutesToTimeString(leg1.day * 1440 + parseInt(leg1.depTimeStr.split(":")[0]) * 60 + parseInt(leg1.depTimeStr.split(":")[1]) + leg1.durationMins)}</span>
+          </div>
+          <div class="leg-meta" style="font-size: 8px; justify-content: center; margin-top: 2px;">
+            <span>${formatDuration(leg1.durationMins)}</span>
+          </div>
+        `;
+      }
+      
+      const card2 = document.getElementById("hypotheticalLeg2Card");
+      if (card2) {
+        card2.innerHTML = `
+          <div class="leg-route" style="justify-content: center;">
+            <span>${leg2.from}</span>
+            <i class="fa-solid fa-arrow-right-long leg-arrow" style="margin: 0 4px;"></i>
+            <span>${leg2.to}</span>
+          </div>
+          <div class="leg-times" style="font-size: 8px; justify-content: center; gap: 4px; margin-top: 2px;">
+            <span>DEP: ${leg2.depTimeStr}</span>
+            <span>ARR: ${formatMinutesToTimeString(leg2.day * 1440 + parseInt(leg2.depTimeStr.split(":")[0]) * 60 + parseInt(leg2.depTimeStr.split(":")[1]) + leg2.durationMins)}</span>
+          </div>
+          <div class="leg-meta" style="font-size: 8px; justify-content: center; margin-top: 2px;">
+            <span>${formatDuration(leg2.durationMins)}</span>
+          </div>
+        `;
+      }
+      
+      const [h1, m1] = leg1.depTimeStr.split(":").map(Number);
+      const depLocal1 = leg1.day * 1440 + h1 * 60 + m1;
+      const arrLocal1 = depLocal1 + leg1.durationMins;
+      
+      const [h2, m2] = leg2.depTimeStr.split(":").map(Number);
+      const depLocal2 = leg2.day * 1440 + h2 * 60 + m2;
+      const arrLocal2 = depLocal2 + leg2.durationMins;
+      
+      const tempLeg1 = { ...leg1, depLocalMins: depLocal1, arrLocalMins: arrLocal1 };
+      const tempLeg2 = { ...leg2, depLocalMins: depLocal2, arrLocalMins: arrLocal2 };
+      
+      const repoData = getRepoFlightTimes(leg1.to, tempLeg2, tempLeg1);
+      
+      const repoTextEl = document.getElementById("hypotheticalRepoText");
+      const repoTimeTextEl = document.getElementById("hypotheticalRepoTimeText");
+      
+      if (leg1.to === leg2.from) {
+        if (repoTextEl) repoTextEl.innerHTML = "Direct Connection";
+        if (repoTimeTextEl) repoTimeTextEl.innerHTML = "No Repositioning Needed";
+      } else {
+        if (repoTextEl) repoTextEl.innerHTML = `REPO: ${leg1.to} &rarr; ${leg2.from}`;
+        if (repoTimeTextEl) repoTimeTextEl.innerHTML = `Duration: ${formatDuration(repoData.durationMins)}`;
+      }
+      
+      const loader = document.getElementById("hypotheticalLoader");
+      const metricsArea = document.getElementById("hypotheticalMetrics");
+      const okBtn = document.getElementById("hypotheticalOkBtn");
+      
+      if (loader) loader.style.display = "flex";
+      if (metricsArea) metricsArea.style.display = "none";
+      if (okBtn) okBtn.disabled = true;
+      
+      openModal("hypotheticalModal");
+      
+      setTimeout(() => {
+        const metrics = getHypotheticalMetrics(leg1, leg2);
+        
+        document.getElementById("hypotheticalDuty1Val").textContent = `${(metrics.duty1 / 60).toFixed(1)} hrs`;
+        document.getElementById("hypotheticalDuty2Val").textContent = `${(metrics.duty2 / 60).toFixed(1)} hrs`;
+        document.getElementById("hypotheticalRestVal").textContent = `${(metrics.rest / 60).toFixed(1)} hrs`;
+        document.getElementById("hypotheticalRollingVal").textContent = `${(metrics.rolling / 60).toFixed(1)} hrs`;
+        
+        if (loader) loader.style.display = "none";
+        if (metricsArea) metricsArea.style.display = "flex";
+        if (okBtn) okBtn.disabled = false;
+      }, 2000);
+    }
+    
+    function closeHypotheticalPopup() {
+      closeModal("hypotheticalModal");
+      selectedHypotheticalLegs.forEach(item => {
+        if (item.el) item.el.checked = false;
+      });
+      selectedHypotheticalLegs = [];
+      renderGrid();
+    }
+
+    document.addEventListener("change", (e) => {
+      if (e.target.classList.contains("hypothetical-checkbox")) {
+        handleHypotheticalCheckboxChange(e.target);
+      }
+    });
+
+    const hypotheticalOkBtn = document.getElementById("hypotheticalOkBtn");
+    if (hypotheticalOkBtn) {
+      hypotheticalOkBtn.addEventListener("click", closeHypotheticalPopup);
+    }
 
     // Initialize Web App on Load
     window.onload = () => initGame(false);
