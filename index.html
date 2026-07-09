@@ -4123,7 +4123,7 @@
     function getAirportsOptionsHTML(selectedCode) {
       if (!cachedAirportsOptionsHTML) {
         cachedAirportsOptionsHTML = Object.keys(AIRPORTS).sort().map(code => {
-          return `<option value="${code}">${code}</option>`;
+          return `<option value="${code}" title="${AIRPORTS[code].name}">${code}</option>`;
         }).join("");
       }
       return cachedAirportsOptionsHTML.replace(
