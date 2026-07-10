@@ -3353,7 +3353,6 @@
       return null;
     }
 
-    // Methodical day-by-day backtracking solver to find the absolute minimum repo time layout
     function solvePuzzleMethodically(legs, rules, startingLocs) {
       const legsByDay = Array(5).fill(null).map(() => []);
       legs.forEach(leg => {
@@ -3368,6 +3367,14 @@
         const r = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
         currentGridState[0][r] = leg;
       });
+
+      // Resolve starting locations dynamically based on Monday legs
+      const resolvedStartingLocs = startingLocs ? [...startingLocs] : Array(6).fill("LAX");
+      for (let r = 0; r < 6; r++) {
+        if (currentGridState[0][r]) {
+          resolvedStartingLocs[r] = currentGridState[0][r].from;
+        }
+      }
 
       function getPermutations(arr, size) {
         const results = [];
@@ -3396,13 +3403,15 @@
             }
           }
 
-          const startLoc = currentGridState[0][r] ? currentGridState[0][r].from : (startingLocs[r] || "LAX");
+          const startLoc = currentGridState[0][r] ? currentGridState[0][r].from : (resolvedStartingLocs[r] || "LAX");
           let tempLoc = startLoc;
           const simulatedEvents = [];
           const segments = [];
           const dailyEvents = {};
 
+          let currentRepo = null;
           for (const leg of rowLegs) {
+            currentRepo = null;
             if (tempLoc !== leg.from) {
               const idx = rowLegs.indexOf(leg);
               const prevLeg = idx > 0 ? rowLegs[idx - 1] : null;
@@ -3428,6 +3437,7 @@
                 displayDay: repoData.displayDay
               };
               simulatedEvents.push(repoEv);
+              currentRepo = repoEv;
 
               const depZ = repoEv.depLocalMins - AIRPORTS[tempLoc].tz * 60;
               const arrZ = repoEv.arrLocalMins - AIRPORTS[leg.from].tz * 60;
@@ -3454,8 +3464,7 @@
             if (rowLegs.indexOf(leg) > 0) {
               const prevLeg = rowLegs[rowLegs.indexOf(leg) - 1];
               if (prevLeg && rules.rule1) {
-                const connectingRepo = simulatedEvents.find(ev => ev.type === "repo" && ev.to === leg.from);
-                const lastLanding = connectingRepo ? connectingRepo.arrLocalMins : prevLeg.arrLocalMins;
+                const lastLanding = currentRepo ? currentRepo.arrLocalMins : prevLeg.arrLocalMins;
                 if (leg.depLocalMins - lastLanding < 840) {
                   return { isValid: false, totalRepo: 0 };
                 }
