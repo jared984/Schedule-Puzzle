@@ -5648,11 +5648,12 @@
       grid = Array(6).fill(null).map(() => Array(5).fill(null));
       for (let day = 0; day < 5; day++) {
         const dayLegs = currentPuzzle.legs.filter(l => l.day === day);
-        if (currentPuzzle.shuffleType === "consistent") {
+        if (day === 0 || currentPuzzle.shuffleType === "consistent") {
           for (let i = 0; i < dayLegs.length; i++) {
             const leg = dayLegs[i];
             const solvedRow = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
             let rowIdx = (leg.shuffledRow !== undefined && leg.shuffledRow !== null) ? leg.shuffledRow : solvedRow;
+            if (day === 0) rowIdx = solvedRow; // Monday flights never shift from solvedRow
             grid[rowIdx][day] = leg;
           }
         } else {
@@ -6368,10 +6369,16 @@
           // Scramble and assign consistent shuffledRow for each leg
           for (let d = 0; d < 5; d++) {
             const dayLegs = generatorResult.legs.filter(l => l.day === d);
-            const aircraftIndices = [0, 1, 2, 3, 4, 5];
-            shuffleArray(aircraftIndices);
-            for (let i = 0; i < dayLegs.length; i++) {
-              dayLegs[i].shuffledRow = aircraftIndices[i];
+            if (d === 0) {
+              for (let i = 0; i < dayLegs.length; i++) {
+                dayLegs[i].shuffledRow = dayLegs[i].row;
+              }
+            } else {
+              const aircraftIndices = [0, 1, 2, 3, 4, 5];
+              shuffleArray(aircraftIndices);
+              for (let i = 0; i < dayLegs.length; i++) {
+                dayLegs[i].shuffledRow = aircraftIndices[i];
+              }
             }
           }
           
