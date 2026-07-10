@@ -1314,7 +1314,7 @@
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
           <button id="editModeResolveBtn" class="btn" style="background: #3b82f6; color: white; border: none; padding: 6px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> RESOLVE PUZZLE
+            <i class="fa-solid fa-wand-magic-sparkles"></i> RE-SOLVE PUZZLE
           </button>
           <button id="editModePublishBtn" class="btn" style="background: #34d399; color: #064e3b; border: none; padding: 6px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
             <i class="fa-solid fa-cloud-arrow-up"></i> PUBLISH PUZZLE
@@ -1346,7 +1346,7 @@
         </div>
         
         <!-- Down Days Option -->
-        <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="display: none; align-items: center; gap: 6px;">
           <span>Target Idle/Down Days:</span>
           <input type="number" id="editModeIdleDays" placeholder="None" min="0" max="30" style="width: 50px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 3px 6px; font-weight: 600; outline: none; text-align: center;">
         </div>
@@ -3388,6 +3388,12 @@
         let valid = true;
         let originalRepo = 0;
         for (let r = 0; r < 6; r++) {
+          const baseLoc = r === 0 ? "LAX" : (startingLocs[r] || "LAX");
+          if (originalGridState[0][r] && originalGridState[0][r].from !== baseLoc) {
+            valid = false;
+            break;
+          }
+          
           const rowLegs = [];
           for (let day = 0; day < 5; day++) {
             if (originalGridState[day][r]) {
@@ -3591,6 +3597,12 @@
           let dayRepoTime = 0;
 
           for (let r = 0; r < 6; r++) {
+            const baseLoc = r === 0 ? "LAX" : (startingLocs[r] || "LAX");
+            if (currentGridState[0][r] && currentGridState[0][r].from !== baseLoc) {
+              isValid = false;
+              break;
+            }
+
             const rowLegs = [];
             for (let day = 0; day <= d; day++) {
               if (currentGridState[day][r]) {
@@ -4347,7 +4359,15 @@
             const durationMins = repoData.durationMins;
             const displayDay = repoData.displayDay;
             
-            const hasConflict = arrRepo > firstLeg.depLocalMins;
+            let hasConflict = arrRepo > firstLeg.depLocalMins;
+            let conflictReason = "";
+            
+            if (firstLeg.day === 0) {
+              hasConflict = true;
+              conflictReason = `Reposition flight not allowed on Day 1 when Monday has a live leg. Plane starts at ${startLoc}, but first flight departs from ${firstLeg.from}.`;
+            } else if (hasConflict) {
+              conflictReason = `Plane starts at ${startLoc}. Reposition flight lands at ${formatMinutesToTimeString(arrRepo)} ${AIRPORTS[firstLeg.from].tzName}, but first flight departs at ${firstLeg.depTimeStr}.`;
+            }
             
             events.push({
               type: "repo",
@@ -4370,7 +4390,7 @@
             if (hasConflict) {
               conflictsCount++;
               firstLeg.hasConflict = true;
-              firstLeg.conflictReason = `Plane starts at ${startLoc}. Reposition flight lands at ${formatMinutesToTimeString(arrRepo)} ${AIRPORTS[firstLeg.from].tzName}, but first flight departs at ${firstLeg.depTimeStr}.`;
+              firstLeg.conflictReason = conflictReason;
             }
           }
 
@@ -7461,7 +7481,6 @@
       precalculateLiveLegs();
       updateSchedules();
       saveUpdatedPuzzleToDatabase();
-      renderGrid();
     }
 
     const boardGrid = document.getElementById("boardGrid");
@@ -7709,7 +7728,6 @@
     document.querySelectorAll('input[name="editModeViewState"]').forEach(radio => {
       radio.addEventListener("change", () => {
         updateSchedules();
-        renderGrid();
       });
     });
 
@@ -7976,7 +7994,7 @@
         if (item.el) item.el.checked = false;
       });
       selectedHypotheticalLegs = [];
-      renderGrid();
+      updateSchedules();
     }
 
     document.addEventListener("change", (e) => {
