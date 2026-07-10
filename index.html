@@ -5388,6 +5388,26 @@
       openModal("loadingOverlay");
     }
 
+    async function fetchWithTimeout(resource, options = {}) {
+      const { timeout = 15000 } = options;
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      try {
+        const response = await fetch(resource, {
+          ...options,
+          signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+      } catch (err) {
+        clearTimeout(id);
+        if (err.name === "AbortError") {
+          throw new Error("Network request timed out (15s). Please check your internet connection.");
+        }
+        throw err;
+      }
+    }
+
     function closeModal(id) {
       document.getElementById(id).classList.remove("active");
       if (id === "adminModal" || id === "adminIpTrackModal") {
@@ -6497,7 +6517,7 @@
           closeModal("loadingOverlay");
           showLoading("Saving Puzzle...", "Reading database configuration...", 20);
           
-          const response = await fetch(GLOBAL_DB_READ_URL);
+          const response = await fetchWithTimeout(GLOBAL_DB_READ_URL);
           if (!response.ok) throw new Error("Failed to fetch database");
           
           showLoading("Saving Puzzle...", "Updating puzzle indexes...", 50);
@@ -6509,7 +6529,7 @@
           record.customPuzzles.push(newPuzzle);
           
           showLoading("Saving Puzzle...", "Uploading custom puzzle definition...", 80);
-          const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
+          const writeResponse = await fetchWithTimeout(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
@@ -7620,7 +7640,7 @@
       publishBtn.addEventListener("click", async () => {
         showLoading("Publishing Puzzle...", "Reading database configuration...", 20);
         try {
-          const response = await fetch(GLOBAL_DB_READ_URL);
+          const response = await fetchWithTimeout(GLOBAL_DB_READ_URL);
           if (!response.ok) throw new Error("Failed to read database");
           
           showLoading("Publishing Puzzle...", "Evaluating flight solution...", 50);
@@ -7670,7 +7690,7 @@
           }
           
           showLoading("Publishing Puzzle...", "Uploading updates to database...", 85);
-          const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
+          const writeResponse = await fetchWithTimeout(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
