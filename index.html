@@ -3363,7 +3363,7 @@
       const mondayLegs = legsByDay[0];
       const initialRowAssignment = Array(6).fill(null);
       mondayLegs.forEach(leg => {
-        const r = (leg.originalRow !== undefined) ? leg.originalRow : leg.row;
+        const r = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
         initialRowAssignment[r] = leg;
       });
 
@@ -3377,7 +3377,7 @@
       try {
         const originalGridState = Array(5).fill(null).map(() => Array(6).fill(null));
         for (const leg of legs) {
-          const r = (leg.originalRow !== undefined) ? leg.originalRow : leg.row;
+          const r = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
           if (r !== undefined && r >= 0 && r < 6) {
             if (leg.day !== undefined && leg.day >= 0 && leg.day < 5) {
               originalGridState[leg.day][r] = leg;
@@ -3535,7 +3535,7 @@
         minRepoTime = totalOriginalRepo;
         bestSolution = {};
         for (const leg of legs) {
-          const r = (leg.originalRow !== undefined) ? leg.originalRow : leg.row;
+          const r = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
           bestSolution[leg.id] = r;
         }
       }
@@ -4208,7 +4208,7 @@
         if (day === 0 || isAdminEditing) {
           // Locked day (Monday) or active admin editing mode: keep flights on their original tail/row
           dayLegs.forEach(leg => {
-            let rowToPlace = (leg.originalRow !== undefined) ? leg.originalRow : -1;
+            let rowToPlace = (leg.row !== undefined && leg.row !== null) ? leg.row : ((leg.originalRow !== undefined) ? leg.originalRow : -1);
             if (rowToPlace === -1) {
               if (day === 0) {
                 // Monday: align with startingLocations if possible
