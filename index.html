@@ -5000,7 +5000,7 @@
     }
 
     // Resolves plane position during idle blank columns
-    function getAircraftLocationAtDay(r, d, activeLegs) {
+     function getAircraftLocationAtDay(r, d, activeLegs) {
       if (activeLegs.length === 0) {
         return startingLocations[r]; // Default home airport base
       }
@@ -5021,13 +5021,8 @@
         if (idx < activeLegs.length - 1) {
           const nextLeg = activeLegs[idx + 1];
           if (lastLeg.to !== nextLeg.from) {
-            // A repo occurred. If the repo finishes before Day D starts, plane is at nextLeg.from
-            const depRepo = lastLeg.arrLocalMins + 60;
-            const dist = calculateDistance(AIRPORTS[lastLeg.to].lat, AIRPORTS[lastLeg.to].lon, AIRPORTS[nextLeg.from].lat, AIRPORTS[nextLeg.from].lon);
-            const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
-            const tzDiff = AIRPORTS[nextLeg.from].tz - AIRPORTS[lastLeg.to].tz;
-            const arrRepo = depRepo + durationMins + tzDiff * 60;
-
+            const repoData = getRepoFlightTimes(lastLeg.to, nextLeg, lastLeg);
+            const arrRepo = repoData.arrLocalMins;
             const startOfDayD = d * 1440;
             if (arrRepo <= startOfDayD) {
               return nextLeg.from;
@@ -5036,8 +5031,19 @@
         }
         return lastLeg.to;
       } else {
-        // No flight has occurred yet. Plane must be waiting at origin of first scheduled flight
-        return activeLegs[0].from;
+        // No flight has occurred yet. The plane starts at startingLocations[r]
+        // and repositions to activeLegs[0].from before the first flight.
+        const firstLeg = activeLegs[0];
+        const startLoc = startingLocations[r];
+        if (startLoc !== firstLeg.from) {
+          const repoData = getRepoFlightTimes(startLoc, firstLeg, null);
+          const arrRepo = repoData.arrLocalMins;
+          const startOfDayD = d * 1440;
+          if (arrRepo <= startOfDayD) {
+            return firstLeg.from;
+          }
+        }
+        return startLoc;
       }
     }
 
@@ -7977,16 +7983,7 @@
       hypotheticalOkBtn.addEventListener("click", closeHypotheticalPopup);
     }
 
-    // Screen Capture Protection
-    window.addEventListener("blur", () => {
-      if (gameStarted && !testCompleted && !isAdminEditing) {
-        document.getElementById("screenCaptureOverlay").style.display = "flex";
-      }
-    });
 
-    window.addEventListener("focus", () => {
-      document.getElementById("screenCaptureOverlay").style.display = "none";
-    });
 
     window.addEventListener("keydown", (e) => {
       if (gameStarted && !testCompleted && !isAdminEditing) {
