@@ -5329,11 +5329,47 @@
       document.getElementById(id).classList.add("active");
     }
 
+    let progressAnimTimeout = null;
+    function animateProgress(targetPercent, durationMs = 250) {
+      if (progressAnimTimeout) clearTimeout(progressAnimTimeout);
+      
+      const progressBar = document.getElementById("loadingOverlayProgressBar");
+      const progressPercent = document.getElementById("loadingOverlayProgressPercent");
+      if (!progressBar) return;
+      
+      const startPercent = parseInt(progressBar.style.width || "0");
+      const diff = targetPercent - startPercent;
+      
+      if (targetPercent === 0) {
+        progressBar.style.width = "0%";
+        if (progressPercent) progressPercent.innerText = "0%";
+        return;
+      }
+      
+      if (diff === 0) return;
+      
+      const stepTime = 25; // Update every 25ms
+      const totalSteps = Math.max(1, durationMs / stepTime);
+      const stepIncrement = diff / totalSteps;
+      let currentStep = 0;
+      
+      function tick() {
+        currentStep++;
+        const val = Math.min(targetPercent, Math.round(startPercent + stepIncrement * currentStep));
+        progressBar.style.width = `${val}%`;
+        if (progressPercent) progressPercent.innerText = `${val}%`;
+        
+        if (val < targetPercent && currentStep < totalSteps) {
+          progressAnimTimeout = setTimeout(tick, stepTime);
+        }
+      }
+      tick();
+    }
+
     function showLoading(title = "Loading...", subtitle = "Please wait...", percent = null) {
       const titleEl = document.getElementById("loadingOverlayTitle");
       const subEl = document.getElementById("loadingOverlaySub");
       const progressContainer = document.getElementById("loadingOverlayProgressContainer");
-      const progressBar = document.getElementById("loadingOverlayProgressBar");
       const progressPercent = document.getElementById("loadingOverlayProgressPercent");
       
       if (titleEl) titleEl.innerText = title;
@@ -5341,14 +5377,10 @@
       
       if (percent !== null) {
         if (progressContainer) progressContainer.style.display = "block";
-        if (progressBar) progressBar.style.width = `${percent}%`;
-        if (progressPercent) {
-          progressPercent.style.display = "block";
-          progressPercent.innerText = `${percent}%`;
-        }
+        if (progressPercent) progressPercent.style.display = "block";
+        animateProgress(percent, 250);
       } else {
         if (progressContainer) progressContainer.style.display = "none";
-        if (progressPercent) progressPercent.style.display = "none";
       }
       openModal("loadingOverlay");
     }
@@ -7581,10 +7613,12 @@
     const publishBtn = document.getElementById("editModePublishBtn");
     if (publishBtn) {
       publishBtn.addEventListener("click", async () => {
-        showLoading("Publishing Puzzle...", "Updating database records...");
+        showLoading("Publishing Puzzle...", "Reading database configuration...", 20);
         try {
           const response = await fetch(GLOBAL_DB_READ_URL);
           if (!response.ok) throw new Error("Failed to read database");
+          
+          showLoading("Publishing Puzzle...", "Evaluating flight solution...", 50);
           const resObj = await response.json();
           let record = resObj.record || resObj;
           
@@ -7601,6 +7635,7 @@
             return;
           }
 
+          showLoading("Publishing Puzzle...", "Publishing puzzle definitions...", 70);
           record.customPuzzles = record.customPuzzles.map(p => {
             if (p.name === currentPuzzle.name) {
               p.published = true;
@@ -7629,6 +7664,7 @@
             record.scores = record.scores.filter(s => s.puzzle !== currentPuzzle.name);
           }
           
+          showLoading("Publishing Puzzle...", "Uploading updates to database...", 85);
           const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
@@ -7646,6 +7682,7 @@
             })
           });
           if (!writeResponse.ok) throw new Error("Failed to save published puzzle to database");
+          showLoading("Publishing Puzzle...", "Finalizing and loading gameplay...", 100);
           
           try {
             let localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
