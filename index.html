@@ -4297,11 +4297,13 @@
         const viewState = viewStateEl ? viewStateEl.value : "solved";
         grid = Array(6).fill(null).map(() => Array(5).fill(null));
         currentPuzzle.legs.forEach(leg => {
+          const solvedRow = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
+          const shuffledRow = (leg.shuffledRow !== undefined && leg.shuffledRow !== null) ? leg.shuffledRow : solvedRow;
+          
           if (viewState === "shuffled") {
-            if (leg.shuffledRow === undefined) leg.shuffledRow = leg.row;
-            grid[leg.shuffledRow][leg.day] = leg;
+            grid[shuffledRow][leg.day] = leg;
           } else {
-            grid[leg.row][leg.day] = leg;
+            grid[solvedRow][leg.day] = leg;
           }
         });
       }
@@ -5681,7 +5683,8 @@
         if (currentPuzzle.shuffleType === "consistent") {
           for (let i = 0; i < dayLegs.length; i++) {
             const leg = dayLegs[i];
-            let rowIdx = (leg.shuffledRow !== undefined) ? leg.shuffledRow : leg.row;
+            const solvedRow = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
+            let rowIdx = (leg.shuffledRow !== undefined && leg.shuffledRow !== null) ? leg.shuffledRow : solvedRow;
             grid[rowIdx][day] = leg;
           }
         } else {
