@@ -1263,24 +1263,111 @@
       animation: pulseDot 2s infinite;
       border-radius: 50%;
     }
+    
+    /* Screen Capture Protection - Print Styles */
+    @media print {
+      body {
+        display: none !important;
+      }
+    }
+
+    /* Screen Capture Protection - Blur Overlay */
+    #screenCaptureOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      color: #ffffff;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      font-family: 'Outfit', sans-serif;
+      text-align: center;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Screen Capture Blur Overlay -->
+  <div id="screenCaptureOverlay">
+    <i class="fa-solid fa-eye-slash" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;"></i>
+    <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.5px;">Screen Hidden</h2>
+    <p style="font-size: 16px; color: #94a3b8; max-width: 400px; line-height: 1.5; margin: 0 0 24px 0;">To protect game integrity, the puzzle is hidden when the browser loses focus.</p>
+    <button style="background: var(--accent); color: white; border: none; padding: 12px 28px; border-radius: 9999px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);" onclick="window.focus(); document.getElementById('screenCaptureOverlay').style.display='none';">Resume Puzzle</button>
+  </div>
+
   <div class="app-container">
     <!-- Edit Mode Banner -->
-    <div id="editModeBanner" style="display: none; background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; padding: 10px 24px; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2); z-index: 100; border-radius: 8px; margin-bottom: 8px;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span class="pulse-dot" style="width: 8px; height: 8px; background: #34d399; display: inline-block;"></span>
-        <span>EDITING UNPUBLISHED PUZZLE: <span id="editModePuzzleName" style="text-decoration: underline; color: #f3e8ff;">Name</span></span>
+    <div id="editModeBanner" style="display: none; background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; padding: 12px 24px; flex-direction: column; gap: 10px; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2); z-index: 100; border-radius: 8px; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+      <!-- Top Row -->
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="pulse-dot" style="width: 8px; height: 8px; background: #34d399; display: inline-block;"></span>
+          <span>EDITING UNPUBLISHED PUZZLE: <span id="editModePuzzleName" style="text-decoration: underline; color: #f3e8ff;">Name</span></span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button id="editModeResolveBtn" class="btn" style="background: #3b82f6; color: white; border: none; padding: 6px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> RESOLVE PUZZLE
+          </button>
+          <button id="editModePublishBtn" class="btn" style="background: #34d399; color: #064e3b; border: none; padding: 6px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> PUBLISH PUZZLE
+          </button>
+          <button id="editModeCancelBtn" class="btn" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer;">
+            Exit Edit Mode
+          </button>
+        </div>
       </div>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <button id="editModePublishBtn" class="btn" style="background: #34d399; color: #064e3b; border: none; padding: 6px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
-          <i class="fa-solid fa-cloud-arrow-up"></i> PUBLISH PUZZLE
-        </button>
-        <button id="editModeCancelBtn" class="btn" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer;">
-          Exit Edit Mode
-        </button>
+      
+      <!-- Bottom Controls Row -->
+      <div style="display: flex; align-items: center; gap: 16px; width: 100%; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 8px; font-size: 12px;">
+        <!-- Shuffle Option -->
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span>Shuffle:</span>
+          <select id="editModeShuffleType" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 3px 6px; font-weight: 600; outline: none; cursor: pointer;">
+            <option value="user" style="color: #1e293b;">Shuffle By User</option>
+            <option value="consistent" style="color: #1e293b;">Consistent</option>
+          </select>
+        </div>
+        
+        <!-- Try Limit Option -->
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span>Attempts:</span>
+          <select id="editModeTryLimit" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 3px 6px; font-weight: 600; outline: none; cursor: pointer;">
+            <option value="multiple" style="color: #1e293b;">Multiple Tries</option>
+            <option value="once" style="color: #1e293b;">1 Try Only</option>
+          </select>
+        </div>
+        
+        <!-- Down Days Option -->
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span>Target Idle/Down Days:</span>
+          <input type="number" id="editModeIdleDays" placeholder="None" min="0" max="30" style="width: 50px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 3px 6px; font-weight: 600; outline: none; text-align: center;">
+        </div>
+
+        <!-- View State Switch -->
+        <div style="display: flex; align-items: center; gap: 8px; margin-left: auto; background: rgba(0,0,0,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+          <span style="font-weight: 700; color: #f3e8ff;">View Toggle:</span>
+          <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+            <input type="radio" name="editModeViewState" value="solved" checked style="accent-color: #34d399;">
+            <span>Solved View</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; margin-left: 6px;">
+            <input type="radio" name="editModeViewState" value="shuffled" style="accent-color: #34d399;">
+            <span>Shuffled View</span>
+          </label>
+        </div>
+        
+        <!-- Best Solve Repo Time -->
+        <div id="editModeBestRepoDisplay" style="background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.25); border-radius: 6px; padding: 4px 10px; font-weight: 700;">
+          Best Repo Time: <span id="editModeBestRepoVal">--</span>
+        </div>
       </div>
     </div>
 
@@ -1530,7 +1617,7 @@
         <!-- User result container (shown only after submission) -->
         <div id="userResultContainer" style="display: none; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
           <h3 style="color: var(--accent); font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-square-check"></i> Your Submission Result</h3>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
             <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
               <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Efficiency Score</div>
               <div id="userResultScore" style="font-size: 22px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono); margin-top: 2px;">0</div>
@@ -1542,6 +1629,10 @@
             <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
               <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Time Left</div>
               <div id="userResultTimeLeft" style="font-size: 18px; font-weight: 700; color: #000000; font-family: var(--font-mono); margin-top: 4px;">00:00</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
+              <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Best Solver Repo</div>
+              <div id="userResultBestSolverRepo" style="font-size: 18px; font-weight: 700; color: #3b82f6; font-family: var(--font-mono); margin-top: 4px;">0h 0m</div>
             </div>
           </div>
         </div>
@@ -1627,6 +1718,28 @@
               <div class="form-group" style="margin-top: 4px;">
                 <label class="form-label" for="adminNewPuzzleName" style="font-size: 11px; margin-bottom: 2px;">Puzzle Name</label>
                 <input type="text" id="adminNewPuzzleName" class="form-input" placeholder="e.g. Dynamic Level 1" required autocomplete="off" style="font-size: 12px; padding: 6px 10px;">
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 4px;">
+                <div class="form-group">
+                  <label class="form-label" for="adminNewPuzzleShuffle" style="font-size: 11px; margin-bottom: 2px;">Shuffle Mode</label>
+                  <select id="adminNewPuzzleShuffle" class="form-input" style="font-size: 11px; padding: 5px 8px; height: 32px;">
+                    <option value="user">Shuffle By User</option>
+                    <option value="consistent">Consistent</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="adminNewPuzzleTryLimit" style="font-size: 11px; margin-bottom: 2px;">Attempts Mode</label>
+                  <select id="adminNewPuzzleTryLimit" class="form-input" style="font-size: 11px; padding: 5px 8px; height: 32px;">
+                    <option value="multiple">Multiple Tries</option>
+                    <option value="once">1 Try Only</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group" style="margin-top: 2px;">
+                <label class="form-label" for="adminNewPuzzleIdleDays" style="font-size: 11px; margin-bottom: 2px;">Target Idle/Down Days (Optional)</label>
+                <input type="number" id="adminNewPuzzleIdleDays" class="form-input" placeholder="Follow default (e.g. 0 to 3)" min="0" max="30" style="font-size: 11px; padding: 5px 10px; height: 32px;">
               </div>
 
               <button id="adminCreatePuzzleBtn" class="btn btn-primary" style="font-size: 12px; padding: 8px 12px; margin-top: 4px;">
@@ -2527,7 +2640,7 @@
       
       const dayDiff = prevLeg ? (leg.day - prevLeg.day) : leg.day;
       
-      if (dayDiff > 1) {
+      if ((prevLeg && dayDiff > 1) || (!prevLeg && leg.day >= 1)) {
         // Target 14 hours before live flight departure, capped at 23:59 of the day before the live flight
         const targetArr = Math.min(leg.depLocalMins - 840, (leg.day * 1440) - 1);
         const targetDep = targetArr - durationMins - tzDiff * 60;
@@ -2539,7 +2652,7 @@
         }
       }
       
-      const displayDay = prevLeg ? prevLeg.day : leg.day;
+      const displayDay = Math.max(prevLeg ? prevLeg.day : 0, Math.min(leg.day, Math.floor(arrRepo / 1440)));
       
       return {
         depLocalMins: depRepo,
@@ -2769,9 +2882,13 @@
         return count;
       }
 
-      const targetLegCount = Math.floor(Math.random() * 4) + 27; // 27 to 30 legs
-      const dayLegCounts = [5, 5, 5, 5, 5];
-      let remaining = targetLegCount - 25;
+      let targetLegCount = Math.floor(Math.random() * 4) + 27; // 27 to 30 legs
+      if (rules && rules.idleDaysLimit !== undefined && rules.idleDaysLimit !== null && !isNaN(rules.idleDaysLimit)) {
+        targetLegCount = 30 - rules.idleDaysLimit;
+      }
+      
+      const dayLegCounts = [0, 0, 0, 0, 0];
+      let remaining = targetLegCount;
       while (remaining > 0) {
         const randDay = Math.floor(Math.random() * 5);
         if (dayLegCounts[randDay] < 6) {
@@ -3262,6 +3379,223 @@
       };
     }
 
+    // Methodical day-by-day backtracking solver to find the absolute minimum repo time layout
+    function solvePuzzleMethodically(legs, rules, startingLocs) {
+      const legsByDay = Array(5).fill(null).map(() => []);
+      legs.forEach(leg => {
+        legsByDay[leg.day].push(leg);
+      });
+
+      const mondayLegs = legsByDay[0];
+      const initialRowAssignment = Array(6).fill(null);
+      mondayLegs.forEach(leg => {
+        const r = (leg.originalRow !== undefined) ? leg.originalRow : leg.row;
+        initialRowAssignment[r] = leg;
+      });
+
+      let bestSolution = null;
+      let minRepoTime = Infinity;
+
+      const currentGridState = Array(5).fill(null).map(() => Array(6).fill(null));
+      for (let r = 0; r < 6; r++) {
+        currentGridState[0][r] = initialRowAssignment[r];
+      }
+
+      function getPermutations(arr, size) {
+        const results = [];
+        function permute(temp, remaining) {
+          if (temp.length === size) {
+            results.push(temp);
+            return;
+          }
+          for (let i = 0; i < remaining.length; i++) {
+            const next = temp.concat(remaining[i]);
+            const rest = remaining.slice(0, i).concat(remaining.slice(i + 1));
+            permute(next, rest);
+          }
+        }
+        permute([], arr);
+        return results;
+      }
+
+      function search(d, repoAccumulated) {
+        if (d === 5) {
+          if (repoAccumulated < minRepoTime) {
+            minRepoTime = repoAccumulated;
+            bestSolution = {};
+            for (let day = 0; day < 5; day++) {
+              for (let r = 0; r < 6; r++) {
+                const leg = currentGridState[day][r];
+                if (leg) {
+                  bestSolution[leg.id] = r;
+                }
+              }
+            }
+          }
+          return;
+        }
+
+        const dayLegs = legsByDay[d];
+        const numLegs = dayLegs.length;
+        const rowPermutations = getPermutations([0, 1, 2, 3, 4, 5], numLegs);
+
+        for (const rows of rowPermutations) {
+          for (let i = 0; i < numLegs; i++) {
+            currentGridState[d][rows[i]] = dayLegs[i];
+          }
+
+          let isValid = true;
+          let dayRepoTime = 0;
+
+          for (let r = 0; r < 6; r++) {
+            const rowLegs = [];
+            for (let day = 0; day <= d; day++) {
+              if (currentGridState[day][r]) {
+                rowLegs.push(currentGridState[day][r]);
+              }
+            }
+
+            const startLoc = r === 0 ? "LAX" : (currentGridState[0][r] ? currentGridState[0][r].from : (startingLocs[r] || "LAX"));
+            let tempLoc = startLoc;
+            const simulatedEvents = [];
+            let segments = [];
+            let dailyEvents = {};
+
+            for (const leg of rowLegs) {
+              if (tempLoc !== leg.from) {
+                const idx = rowLegs.indexOf(leg);
+                const prevLeg = idx > 0 ? rowLegs[idx - 1] : null;
+
+                const repoData = getRepoFlightTimes(tempLoc, leg, prevLeg);
+                dayRepoTime += repoData.durationMins;
+
+                if (repoData.arrLocalMins > leg.depLocalMins) {
+                  isValid = false;
+                  break;
+                }
+
+                const repoEv = {
+                  type: "repo",
+                  from: tempLoc,
+                  to: leg.from,
+                  depLocalMins: repoData.depLocalMins,
+                  arrLocalMins: repoData.arrLocalMins,
+                  durationMins: repoData.durationMins,
+                  displayDay: repoData.displayDay
+                };
+                simulatedEvents.push(repoEv);
+
+                const depZ = repoEv.depLocalMins - AIRPORTS[tempLoc].tz * 60;
+                const arrZ = repoEv.arrLocalMins - AIRPORTS[leg.from].tz * 60;
+                segments.push({ start: depZ, end: arrZ });
+
+                const dispD = repoEv.displayDay;
+                if (!dailyEvents[dispD]) dailyEvents[dispD] = [];
+                dailyEvents[dispD].push(repoEv);
+              }
+
+              simulatedEvents.push({
+                type: "live",
+                legRef: leg,
+                displayDay: leg.day
+              });
+
+              const depZ = leg.depLocalMins - AIRPORTS[leg.from].tz * 60;
+              const arrZ = leg.arrLocalMins - AIRPORTS[leg.to].tz * 60;
+              segments.push({ start: depZ, end: arrZ, legRef: leg });
+
+              if (!dailyEvents[leg.day]) dailyEvents[leg.day] = [];
+              dailyEvents[leg.day].push({ type: "live", depLocalMins: leg.depLocalMins, arrLocalMins: leg.arrLocalMins, from: leg.from, to: leg.to });
+
+              if (rowLegs.indexOf(leg) > 0) {
+                const prevLeg = rowLegs[rowLegs.indexOf(leg) - 1];
+                if (prevLeg && rules.rule1) {
+                  const connectingRepo = simulatedEvents.find(ev => ev.type === "repo" && ev.to === leg.from);
+                  const lastLanding = connectingRepo ? connectingRepo.arrLocalMins : prevLeg.arrLocalMins;
+                  if (leg.depLocalMins - lastLanding < 840) {
+                    isValid = false;
+                    break;
+                  }
+                }
+              }
+
+              tempLoc = leg.to;
+            }
+
+            if (!isValid) break;
+
+            if (rules.rule3) {
+              let hasRule3Conflict = false;
+              const activeDList = Object.keys(dailyEvents).map(Number).sort((a, b) => a - b);
+              const dailyDuty = {};
+
+              for (const actD of activeDList) {
+                const dayEvs = dailyEvents[actD];
+                dayEvs.sort((a, b) => a.depLocalMins - b.depLocalMins);
+                const fEv = dayEvs[0];
+                const lEv = dayEvs[dayEvs.length - 1];
+                const fTakeoff = fEv.depLocalMins;
+                const lLanding = lEv.legRef ? lEv.legRef.arrLocalMins : lEv.arrLocalMins;
+
+                const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
+                const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
+                const zStart = (fTakeoff - 60) - AIRPORTS[fFrom].tz * 60;
+                const zEnd = (lLanding + 30) - AIRPORTS[lTo].tz * 60;
+                const dDuration = zEnd - zStart;
+
+                if (dDuration > 840) {
+                  hasRule3Conflict = true;
+                  break;
+                }
+                dailyDuty[actD] = { start: zStart, end: zEnd };
+              }
+
+              if (!hasRule3Conflict) {
+                for (let i = 0; i < activeDList.length - 1; i++) {
+                  const d1 = activeDList[i];
+                  const d2 = activeDList[i + 1];
+                  if (dailyDuty[d2].start - dailyDuty[d1].end < 600) {
+                    hasRule3Conflict = true;
+                    break;
+                  }
+                }
+              }
+
+              if (!hasRule3Conflict) {
+                for (const seg of segments) {
+                  if (getFlightTimeInWindow(seg.end, segments) > 600) {
+                    hasRule3Conflict = true;
+                    break;
+                  }
+                  if (getFlightTimeInWindow(seg.start + 1440, segments) > 600) {
+                    hasRule3Conflict = true;
+                    break;
+                  }
+                }
+              }
+
+              if (hasRule3Conflict) {
+                isValid = false;
+                break;
+              }
+            }
+          }
+
+          if (isValid && (repoAccumulated + dayRepoTime < minRepoTime)) {
+            search(d + 1, repoAccumulated + dayRepoTime);
+          }
+
+          for (let i = 0; i < numLegs; i++) {
+            currentGridState[d][rows[i]] = null;
+          }
+        }
+      }
+
+      search(1, 0);
+
+      return { solution: bestSolution, minRepoTime: minRepoTime };
+    }
+
     function initGame(isReplay = false) {
       // Retrieve client IP asynchronously in the background
       getUserIpAddress().then(ip => {
@@ -3613,6 +3947,21 @@
         const nameSpan = document.getElementById("editModePuzzleName");
         if (banner) banner.style.display = "flex";
         if (nameSpan) nameSpan.textContent = found.name;
+        
+        const shuffleSelect = document.getElementById("editModeShuffleType");
+        if (shuffleSelect) shuffleSelect.value = found.shuffleType || "user";
+        
+        const tryLimitSelect = document.getElementById("editModeTryLimit");
+        if (tryLimitSelect) tryLimitSelect.value = found.tryLimit || "multiple";
+        
+        const idleDaysInput = document.getElementById("editModeIdleDays");
+        if (idleDaysInput) idleDaysInput.value = found.idleDaysLimit !== undefined && found.idleDaysLimit !== null ? found.idleDaysLimit : "";
+        
+        const solvedRadio = document.querySelector('input[name="editModeViewState"][value="solved"]');
+        if (solvedRadio) solvedRadio.checked = true;
+        
+        updateEditModeBestRepoVal();
+        
         closeModal("rulesModal");
         localStorage.removeItem("aero_active_session");
       } else {
@@ -3732,11 +4081,19 @@
           });
         } else {
           // Play mode: scramble Tuesday through Friday
-          const aircraftIndices = [0, 1, 2, 3, 4, 5];
-          shuffleArray(aircraftIndices);
-          for (let i = 0; i < dayLegs.length; i++) {
-            const rowIdx = aircraftIndices[i];
-            grid[rowIdx][day] = dayLegs[i];
+          if (currentPuzzle.shuffleType === "consistent") {
+            for (let i = 0; i < dayLegs.length; i++) {
+              const leg = dayLegs[i];
+              let rowIdx = (leg.shuffledRow !== undefined) ? leg.shuffledRow : leg.row;
+              grid[rowIdx][day] = leg;
+            }
+          } else {
+            const aircraftIndices = [0, 1, 2, 3, 4, 5];
+            shuffleArray(aircraftIndices);
+            for (let i = 0; i < dayLegs.length; i++) {
+              const rowIdx = aircraftIndices[i];
+              grid[rowIdx][day] = dayLegs[i];
+            }
           }
         }
       }
@@ -3792,6 +4149,20 @@
     
     // Computes entire operational schedule for all 6 aircraft, generates repos, flags conflicts, and scores.
     function updateSchedules() {
+      if (isAdminEditing) {
+        const viewStateEl = document.querySelector('input[name="editModeViewState"]:checked');
+        const viewState = viewStateEl ? viewStateEl.value : "solved";
+        grid = Array(6).fill(null).map(() => Array(5).fill(null));
+        currentPuzzle.legs.forEach(leg => {
+          if (viewState === "shuffled") {
+            if (leg.shuffledRow === undefined) leg.shuffledRow = leg.row;
+            grid[leg.shuffledRow][leg.day] = leg;
+          } else {
+            grid[leg.row][leg.day] = leg;
+          }
+        });
+      }
+
       totalRepoDistance = 0;
       totalRepoDurationMins = 0;
       repoFlightsCount = 0;
@@ -4405,7 +4776,8 @@
                 // Details of live leg
                 if (isAdminEditing) {
                   card.innerHTML = `
-                    <div class="leg-route" style="gap: 4px; align-items: center; justify-content: center; margin-bottom: 2px;">
+                    <button class="delete-leg-btn" style="position: absolute; right: 4px; top: 4px; z-index: 11; width: 14px; height: 14px; border-radius: 50%; background: #ef4444; color: white; border: none; font-size: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 900; line-height: 1;" onclick="event.stopPropagation(); deleteLegInEditor('${leg.id}');">&times;</button>
+                    <div class="leg-route" style="gap: 4px; align-items: center; justify-content: center; margin-bottom: 2px; padding-right: 12px;">
                       <select class="airport-edit-select from-select" data-leg-id="${leg.id}" title="${AIRPORTS[leg.from].name}">
                         ${getAirportsOptionsHTML(leg.from)}
                       </select>
@@ -4512,7 +4884,7 @@
               card.classList.add("leg-card-animating");
               card.style.animationDelay = `${(r * 5 + c) * 0.04}s`;
             }
-            card.innerHTML = (c === 0) ? `
+            card.innerHTML = (c === 0 && !gameStarted) ? `
               <i class="fa-solid fa-lock" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
               <div style="font-weight: 500; font-size: 11px;">Locked</div>
             ` : `
@@ -4644,10 +5016,18 @@
         }
 
         if (isAdminEditing) {
+          const viewStateEl = document.querySelector('input[name="editModeViewState"]:checked');
+          const viewState = viewStateEl ? viewStateEl.value : "solved";
           for (let r = 0; r < 6; r++) {
             for (let c = 0; c < 5; c++) {
-              if (grid[r][c]) {
-                grid[r][c].originalRow = r;
+              const leg = grid[r][c];
+              if (leg) {
+                if (viewState === "shuffled") {
+                  leg.shuffledRow = r;
+                } else {
+                  leg.row = r;
+                  leg.originalRow = r;
+                }
               }
             }
           }
@@ -4920,8 +5300,41 @@
       }
 
       showLoading("Resolving Player Name...", "Verifying database registration");
-      resolvePlayerName(nameToUse).then(finalName => {
-        closeModal("loadingOverlay");
+      resolvePlayerName(nameToUse).then(async finalName => {
+        if (currentPuzzle && currentPuzzle.tryLimit === "once") {
+          closeModal("loadingOverlay");
+          showLoading("Verifying attempt eligibility...", "Checking leaderboard database...");
+          try {
+            const response = await fetch(GLOBAL_DB_READ_URL);
+            if (!response.ok) throw new Error("Failed to contact database");
+            const resObj = await response.json();
+            const record = resObj.record || resObj;
+            const scores = record.scores || [];
+            
+            const hasScore = scores.some(s => s.name.trim().toLowerCase() === finalName.trim().toLowerCase() && s.puzzle === currentPuzzleName);
+            closeModal("loadingOverlay");
+            
+            if (hasScore) {
+              showConfirm(
+                "Attempt Blocked",
+                `Dear ${finalName}, this puzzle has a strict "1 Try Only" limit, and our records show you have already submitted a score for it. If you believe this is an error, please contact the administrator.`,
+                null,
+                null,
+                "OK",
+                "red"
+              );
+              return;
+            }
+          } catch (e) {
+            closeModal("loadingOverlay");
+            console.error("Attempt verification failed:", e);
+            showToast("Failed to verify eligibility. Check internet connection and try again.", "error");
+            return;
+          }
+        } else {
+          closeModal("loadingOverlay");
+        }
+        
         schedulerName = finalName;
         setCookie("aero_scheduler_name", schedulerName, 365);
         
@@ -5106,11 +5519,19 @@
       grid = Array(6).fill(null).map(() => Array(5).fill(null));
       for (let day = 0; day < 5; day++) {
         const dayLegs = currentPuzzle.legs.filter(l => l.day === day);
-        const aircraftIndices = [0, 1, 2, 3, 4, 5];
-        shuffleArray(aircraftIndices);
-        for (let i = 0; i < dayLegs.length; i++) {
-          const rowIdx = aircraftIndices[i];
-          grid[rowIdx][day] = dayLegs[i];
+        if (currentPuzzle.shuffleType === "consistent") {
+          for (let i = 0; i < dayLegs.length; i++) {
+            const leg = dayLegs[i];
+            let rowIdx = (leg.shuffledRow !== undefined) ? leg.shuffledRow : leg.row;
+            grid[rowIdx][day] = leg;
+          }
+        } else {
+          const aircraftIndices = [0, 1, 2, 3, 4, 5];
+          shuffleArray(aircraftIndices);
+          for (let i = 0; i < dayLegs.length; i++) {
+            const rowIdx = aircraftIndices[i];
+            grid[rowIdx][day] = dayLegs[i];
+          }
         }
       }
 
@@ -5195,6 +5616,15 @@
         document.getElementById("userResultScore").innerText = entry.score.toLocaleString();
         document.getElementById("userResultRepoTime").innerText = entry.repoTime;
         document.getElementById("userResultTimeLeft").innerText = entry.timeLeft;
+        
+        const solverRes = solvePuzzleMethodically(
+          currentPuzzle.legs,
+          currentPuzzle.rules || {},
+          currentPuzzle.startingLocations || Array(6).fill("LAX")
+        );
+        document.getElementById("userResultBestSolverRepo").innerText = 
+          solverRes.minRepoTime === Infinity ? "Unsolvable" : formatDuration(solverRes.minRepoTime);
+          
         document.getElementById("userResultContainer").style.display = "block";
         
         // Reveal score next to the timer in the top bar
@@ -5759,6 +6189,11 @@
       const r3 = document.getElementById("adminRule3").checked;
       const r4 = document.getElementById("adminRule4").checked;
       
+      const shuffleType = document.getElementById("adminNewPuzzleShuffle").value;
+      const tryLimit = document.getElementById("adminNewPuzzleTryLimit").value;
+      const idleDaysVal = document.getElementById("adminNewPuzzleIdleDays").value;
+      const idleDaysLimit = idleDaysVal !== "" ? parseInt(idleDaysVal, 10) : null;
+      
       showLoading("Generating Solvable Puzzle...", "Running backtracking scheduler...");
       
       setTimeout(async () => {
@@ -5767,7 +6202,7 @@
           let generatorTries = 0;
           while ((!generatorResult || !generatorResult.legs || generatorResult.legs.length === 0) && generatorTries < 10) {
             generatorTries++;
-            generatorResult = generateSolvablePuzzle(name, { rule1: r1, rule2: r2, rule3: r3, rule4: r4 });
+            generatorResult = generateSolvablePuzzle(name, { rule1: r1, rule2: r2, rule3: r3, rule4: r4, idleDaysLimit: idleDaysLimit });
           }
           
           if (!generatorResult || !generatorResult.legs || generatorResult.legs.length === 0) {
@@ -5776,12 +6211,25 @@
             return;
           }
           
+          // Scramble and assign consistent shuffledRow for each leg
+          for (let d = 0; d < 5; d++) {
+            const dayLegs = generatorResult.legs.filter(l => l.day === d);
+            const aircraftIndices = [0, 1, 2, 3, 4, 5];
+            shuffleArray(aircraftIndices);
+            for (let i = 0; i < dayLegs.length; i++) {
+              dayLegs[i].shuffledRow = aircraftIndices[i];
+            }
+          }
+          
           const newPuzzle = {
             name: name,
             legs: generatorResult.legs,
             rules: { rule1: r1, rule2: r2, rule3: r3, rule4: r4 },
             startingLocations: generatorResult.startingLocations,
-            published: false
+            published: false,
+            shuffleType: shuffleType,
+            tryLimit: tryLimit,
+            idleDaysLimit: idleDaysLimit
           };
           
           closeModal("loadingOverlay");
@@ -6806,10 +7254,18 @@
 
     function onLegEdited() {
       if (isAdminEditing) {
+        const viewStateEl = document.querySelector('input[name="editModeViewState"]:checked');
+        const viewState = viewStateEl ? viewStateEl.value : "solved";
         for (let r = 0; r < 6; r++) {
           for (let c = 0; c < 5; c++) {
-            if (grid[r][c]) {
-              grid[r][c].originalRow = r;
+            const leg = grid[r][c];
+            if (leg) {
+              if (viewState === "shuffled") {
+                leg.shuffledRow = r;
+              } else {
+                leg.row = r;
+                leg.originalRow = r;
+              }
             }
           }
         }
@@ -6893,10 +7349,37 @@
           let record = resObj.record || resObj;
           
           if (!record.customPuzzles) record.customPuzzles = [];
+          
+          const res = solvePuzzleMethodically(
+            currentPuzzle.legs, 
+            currentPuzzle.rules || {}, 
+            currentPuzzle.startingLocations || Array(6).fill("LAX")
+          );
+          if (res.minRepoTime === Infinity) {
+            closeModal("loadingOverlay");
+            showToast("Cannot publish: No valid conflict-free solution exists for this configuration. Please resolve conflicts first.", "error");
+            return;
+          }
+
           record.customPuzzles = record.customPuzzles.map(p => {
             if (p.name === currentPuzzle.name) {
               p.published = true;
-              currentPuzzle.published = true;
+              p.shuffleType = document.getElementById("editModeShuffleType").value;
+              p.tryLimit = document.getElementById("editModeTryLimit").value;
+              const val = document.getElementById("editModeIdleDays").value;
+              p.idleDaysLimit = val !== "" ? parseInt(val, 10) : null;
+              
+              // Apply solved solution
+              p.legs.forEach(leg => {
+                if (res.solution[leg.id] !== undefined) {
+                  leg.row = res.solution[leg.id];
+                }
+                if (leg.shuffledRow === undefined) {
+                  leg.shuffledRow = leg.row;
+                }
+              });
+              p.startingLocations = currentPuzzle.startingLocations;
+              currentPuzzle = p;
             }
             return p;
           });
@@ -6956,6 +7439,118 @@
         if (dropdown) dropdown.value = "Introduction Puzzle";
       });
     }
+
+    // Helper: Update Edit Mode Best Solve Repo Display
+    function updateEditModeBestRepoVal() {
+      const bestRepoValSpan = document.getElementById("editModeBestRepoVal");
+      if (!bestRepoValSpan || !currentPuzzle) return;
+      const res = solvePuzzleMethodically(
+        currentPuzzle.legs,
+        currentPuzzle.rules || {},
+        currentPuzzle.startingLocations || Array(6).fill("LAX")
+      );
+      if (res.minRepoTime === Infinity) {
+        bestRepoValSpan.textContent = "Unsolvable";
+      } else {
+        bestRepoValSpan.textContent = formatDuration(res.minRepoTime);
+      }
+    }
+
+    // Helper: Resolve Puzzle Action
+    function resolveCurrentPuzzle() {
+      if (!currentPuzzle) return;
+      const res = solvePuzzleMethodically(
+        currentPuzzle.legs,
+        currentPuzzle.rules || {},
+        currentPuzzle.startingLocations || Array(6).fill("LAX")
+      );
+      if (res.minRepoTime === Infinity) {
+        showToast("No valid conflict-free solution found for these flight times. Adjust times first.", "error");
+        return;
+      }
+      
+      // Update each leg's row in currentPuzzle.legs
+      currentPuzzle.legs.forEach(leg => {
+        if (res.solution[leg.id] !== undefined) {
+          leg.row = res.solution[leg.id];
+          leg.originalRow = res.solution[leg.id];
+        }
+      });
+      
+      // Set View Toggle back to "solved"
+      const solvedRadio = document.querySelector('input[name="editModeViewState"][value="solved"]');
+      if (solvedRadio) solvedRadio.checked = true;
+      
+      onLegEdited();
+      updateEditModeBestRepoVal();
+      showToast("Puzzle resolved successfully! Best layout applied.", "success");
+    }
+
+    // Register Resolve Button Click
+    const resolveBtn = document.getElementById("editModeResolveBtn");
+    if (resolveBtn) {
+      resolveBtn.addEventListener("click", resolveCurrentPuzzle);
+    }
+
+    // Register Edit Banner Options Change listeners
+    const editShuffleSelect = document.getElementById("editModeShuffleType");
+    if (editShuffleSelect) {
+      editShuffleSelect.addEventListener("change", () => {
+        if (currentPuzzle) {
+          currentPuzzle.shuffleType = editShuffleSelect.value;
+          saveUpdatedPuzzleToDatabase();
+        }
+      });
+    }
+
+    const editTryLimitSelect = document.getElementById("editModeTryLimit");
+    if (editTryLimitSelect) {
+      editTryLimitSelect.addEventListener("change", () => {
+        if (currentPuzzle) {
+          currentPuzzle.tryLimit = editTryLimitSelect.value;
+          saveUpdatedPuzzleToDatabase();
+        }
+      });
+    }
+
+    const editIdleDaysInput = document.getElementById("editModeIdleDays");
+    if (editIdleDaysInput) {
+      editIdleDaysInput.addEventListener("change", () => {
+        if (currentPuzzle) {
+          const val = editIdleDaysInput.value;
+          currentPuzzle.idleDaysLimit = val !== "" ? parseInt(val, 10) : null;
+          saveUpdatedPuzzleToDatabase();
+        }
+      });
+    }
+
+    // Register View Toggle Radio Buttons change listener
+    document.querySelectorAll('input[name="editModeViewState"]').forEach(radio => {
+      radio.addEventListener("change", () => {
+        updateSchedules();
+        renderGrid();
+      });
+    });
+
+    // Global function to delete a live flight leg in Edit Mode
+    window.deleteLegInEditor = function(legId) {
+      if (!currentPuzzle) return;
+      // Remove leg from currentPuzzle.legs
+      currentPuzzle.legs = currentPuzzle.legs.filter(l => l.id !== legId);
+      
+      // Update grid representation
+      for (let r = 0; r < 6; r++) {
+        for (let c = 0; c < 5; c++) {
+          if (grid[r][c] && grid[r][c].id === legId) {
+            grid[r][c] = null;
+          }
+        }
+      }
+      
+      onLegEdited();
+      updateEditModeBestRepoVal();
+      showToast("Flight deleted. Grid cell is now a down day.", "info");
+    };
 
     function adjustGridRowHeights() {
       if (document.body.classList.contains("edit-mode")) {
@@ -7203,6 +7798,30 @@
     if (hypotheticalOkBtn) {
       hypotheticalOkBtn.addEventListener("click", closeHypotheticalPopup);
     }
+
+    // Screen Capture Protection
+    window.addEventListener("blur", () => {
+      if (gameStarted && !testCompleted && !isAdminEditing) {
+        document.getElementById("screenCaptureOverlay").style.display = "flex";
+      }
+    });
+
+    window.addEventListener("focus", () => {
+      document.getElementById("screenCaptureOverlay").style.display = "none";
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (gameStarted && !testCompleted && !isAdminEditing) {
+        if (e.key === "PrintScreen") {
+          e.preventDefault();
+          showToast("Screenshots are disabled during the test.", "error");
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
+          e.preventDefault();
+          showToast("Printing is disabled during the test.", "error");
+        }
+      }
+    });
 
     // Initialize Web App on Load
     window.onload = () => initGame(false);
