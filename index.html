@@ -3539,7 +3539,8 @@
         permutationsBySize[size] = getPermutations([0, 1, 2, 3, 4, 5], size);
       }
 
-      // Solve day-by-day greedily
+      // 1. Run Greedy Solver first to get a quick upper bound
+      let greedyRepo = Infinity;
       for (let d = 1; d < 5; d++) {
         const dayLegs = legsByDay[d];
         const numLegs = dayLegs.length;
@@ -3550,7 +3551,6 @@
         let minDayRepo = Infinity;
 
         for (const rows of rowPerms) {
-          // Temp assign
           for (let i = 0; i < numLegs; i++) {
             currentGridState[d][rows[i]] = dayLegs[i];
           }
@@ -3561,36 +3561,120 @@
             bestPerm = [...rows];
           }
 
-          // Backtrack
           for (let i = 0; i < numLegs; i++) {
             currentGridState[d][rows[i]] = null;
           }
         }
 
         if (bestPerm === null) {
-          // FAILED to solve Day d
-          return { solution: null, minRepoTime: Infinity };
+          greedyRepo = Infinity;
+          break;
         }
 
-        // Lock best permutation for this day
         for (let i = 0; i < numLegs; i++) {
           currentGridState[d][bestPerm[i]] = dayLegs[i];
         }
+        if (d === 4) {
+          greedyRepo = minDayRepo;
+        }
       }
 
-      // Reconstruct bestSolution mapping
-      const bestSolution = {};
-      for (let day = 0; day < 5; day++) {
+      // Reset the grid state for the full DFS search
+      for (let d = 1; d < 5; d++) {
         for (let r = 0; r < 6; r++) {
-          const leg = currentGridState[day][r];
-          if (leg) {
-            bestSolution[leg.id] = r;
+          currentGridState[d][r] = null;
+        }
+      }
+
+      let minRepoTime = greedyRepo;
+      let bestSolution = null;
+
+      function dfs(d, repoAccumulated) {
+        if (repoAccumulated > minRepoTime) return;
+        if (d === 5) {
+          if (repoAccumulated < minRepoTime || bestSolution === null) {
+            minRepoTime = repoAccumulated;
+            bestSolution = {};
+            for (let day = 0; day < 5; day++) {
+              for (let r = 0; r < 6; r++) {
+                const leg = currentGridState[day][r];
+                if (leg) {
+                  bestSolution[leg.id] = r;
+                }
+              }
+            }
+          }
+          return;
+        }
+
+        const dayLegs = legsByDay[d];
+        const numLegs = dayLegs.length;
+        if (numLegs === 0) {
+          dfs(d + 1, repoAccumulated);
+          return;
+        }
+
+        const rowPerms = permutationsBySize[numLegs];
+        for (const rows of rowPerms) {
+          for (let i = 0; i < numLegs; i++) {
+            currentGridState[d][rows[i]] = dayLegs[i];
+          }
+
+          const resVal = validateUpToDay(d);
+          if (resVal.isValid && resVal.totalRepo <= minRepoTime) {
+            dfs(d + 1, resVal.totalRepo);
+          }
+
+          for (let i = 0; i < numLegs; i++) {
+            currentGridState[d][rows[i]] = null;
           }
         }
       }
 
-      const finalVal = validateUpToDay(4);
-      return { solution: bestSolution, minRepoTime: finalVal.totalRepo };
+      dfs(1, 0);
+
+      // Reconstruct bestSolution mapping if we found a DFS solution
+      if (bestSolution) {
+        return { solution: bestSolution, minRepoTime: minRepoTime };
+      } else if (greedyRepo !== Infinity) {
+        // Fallback to greedy solution if DFS didn't find anything
+        const fallbackSolution = {};
+        for (let d = 1; d < 5; d++) {
+          const dayLegs = legsByDay[d];
+          const numLegs = dayLegs.length;
+          if (numLegs === 0) continue;
+          const rowPerms = permutationsBySize[numLegs];
+          let bestPerm = null;
+          let minDayRepo = Infinity;
+          for (const rows of rowPerms) {
+            for (let i = 0; i < numLegs; i++) {
+              currentGridState[d][rows[i]] = dayLegs[i];
+            }
+            const resVal = validateUpToDay(d);
+            if (resVal.isValid && resVal.totalRepo < minDayRepo) {
+              minDayRepo = resVal.totalRepo;
+              bestPerm = [...rows];
+            }
+            for (let i = 0; i < numLegs; i++) {
+              currentGridState[d][rows[i]] = null;
+            }
+          }
+          for (let i = 0; i < numLegs; i++) {
+            currentGridState[d][bestPerm[i]] = dayLegs[i];
+          }
+        }
+        for (let day = 0; day < 5; day++) {
+          for (let r = 0; r < 6; r++) {
+            const leg = currentGridState[day][r];
+            if (leg) {
+              fallbackSolution[leg.id] = r;
+            }
+          }
+        }
+        return { solution: fallbackSolution, minRepoTime: greedyRepo };
+      } else {
+        return { solution: null, minRepoTime: Infinity };
+      }
     }
 
     function initGame(isReplay = false) {
