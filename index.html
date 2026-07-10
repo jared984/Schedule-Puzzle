@@ -3588,8 +3588,17 @@
 
       let minRepoTime = greedyRepo;
       let bestSolution = null;
+      let statesChecked = 0;
+      let aborted = false;
 
       function dfs(d, repoAccumulated) {
+        if (aborted) return;
+        statesChecked++;
+        if (statesChecked > 50000) {
+          aborted = true;
+          return;
+        }
+
         if (repoAccumulated > minRepoTime) return;
         if (d === 5) {
           if (repoAccumulated < minRepoTime || bestSolution === null) {
@@ -3616,6 +3625,7 @@
 
         const rowPerms = permutationsBySize[numLegs];
         for (const rows of rowPerms) {
+          if (aborted) return;
           for (let i = 0; i < numLegs; i++) {
             currentGridState[d][rows[i]] = dayLegs[i];
           }
@@ -3633,11 +3643,11 @@
 
       dfs(1, 0);
 
-      // Reconstruct bestSolution mapping if we found a DFS solution
-      if (bestSolution) {
+      // Reconstruct bestSolution mapping if we found a DFS solution without aborting
+      if (bestSolution && !aborted) {
         return { solution: bestSolution, minRepoTime: minRepoTime };
       } else if (greedyRepo !== Infinity) {
-        // Fallback to greedy solution if DFS didn't find anything
+        // Fallback to greedy solution if DFS aborted or didn't find anything
         const fallbackSolution = {};
         for (let d = 1; d < 5; d++) {
           const dayLegs = legsByDay[d];
