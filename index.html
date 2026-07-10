@@ -4867,8 +4867,7 @@
             card.className = "leg-card";
             card.style = "border: 2px dashed #10b981; background: #f0fdf4; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15); display: flex; flex-direction: column; gap: 4px; padding: 6px; box-sizing: border-box; justify-content: center; height: 100%; position: relative; z-index: 12;";
             card.innerHTML = `
-              <div style="font-weight: 800; font-size: 10px; color: #0f766e; text-align: center; text-transform: uppercase;">New Flight</div>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto;">
                 <select id="creator-from-${r}-${c}" style="font-size: 10px; padding: 2px; width: 45%; border-radius: 4px; border: 1px solid #10b981; background: white; color: black; outline: none; font-weight: bold;">
                   <option value="" disabled selected>DEP</option>
                   ${getAirportsOptionsHTML("")}
@@ -4883,7 +4882,7 @@
                 <span style="color: #0f766e; font-weight: bold;">DEP:</span>
                 <input type="text" id="creator-time-${r}-${c}" placeholder="HH:MM" style="font-size: 9px; padding: 2px; width: 40px; border-radius: 4px; border: 1px solid #10b981; text-align: center; background: white; color: black; font-weight: bold;">
               </div>
-              <div style="display: flex; gap: 4px; justify-content: center; width: 100%; margin-top: 2px;">
+              <div style="display: flex; gap: 4px; justify-content: center; width: 100%; margin-bottom: auto; margin-top: 2px;">
                 <button style="background: #10b981; color: white; border: none; font-size: 8px; font-weight: 700; padding: 3px 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onclick="saveCreatedLeg(${r}, ${c})">Save</button>
                 <button style="background: #ef4444; color: white; border: none; font-size: 8px; font-weight: 700; padding: 3px 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onclick="cancelCreatedLeg(${r}, ${c})">Cancel</button>
               </div>
@@ -7815,7 +7814,7 @@
     window.saveCreatedLeg = function(r, c) {
       const fromVal = document.getElementById(`creator-from-${r}-${c}`).value;
       const toVal = document.getElementById(`creator-to-${r}-${c}`).value;
-      const timeVal = document.getElementById(`creator-time-${r}-${c}`).value.trim();
+      let timeVal = document.getElementById(`creator-time-${r}-${c}`).value.trim();
 
       if (!fromVal) {
         showToast("Please select a departure airport!", "error");
@@ -7829,6 +7828,19 @@
         showToast("Origin and destination airports must be different!", "error");
         return;
       }
+
+      // Clean up whitespace or extra characters
+      timeVal = timeVal.replace(/[^0-9:]/g, "");
+
+      // Auto-normalize time entries (e.g. 725 -> 07:25, 1430 -> 14:30, 7:25 -> 07:25)
+      if (/^\d{3}$/.test(timeVal)) {
+        timeVal = "0" + timeVal[0] + ":" + timeVal.slice(1);
+      } else if (/^\d{4}$/.test(timeVal)) {
+        timeVal = timeVal.slice(0, 2) + ":" + timeVal.slice(2);
+      } else if (/^\d:\d{2}$/.test(timeVal)) {
+        timeVal = "0" + timeVal;
+      }
+
       const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
       if (!timeRegex.test(timeVal)) {
         showToast("Invalid departure time! Use HH:MM format (00:00 - 23:59)", "error");
