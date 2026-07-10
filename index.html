@@ -4861,7 +4861,35 @@
           // Find events assigned to this (row, day) cell
           const cellEvents = schedules[r].filter(ev => ev.displayDay === c);
 
-          if (cellEvents.length > 0) {
+          if (isAdminEditing && window.openLegCreators && window.openLegCreators.has(`${r},${c}`)) {
+            // Render Creator Form
+            const card = document.createElement("div");
+            card.className = "leg-card";
+            card.style = "border: 2px dashed #10b981; background: #f0fdf4; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15); display: flex; flex-direction: column; gap: 4px; padding: 6px; box-sizing: border-box; justify-content: center; height: 100%; position: relative; z-index: 12;";
+            card.innerHTML = `
+              <div style="font-weight: 800; font-size: 10px; color: #0f766e; text-align: center; text-transform: uppercase;">New Flight</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
+                <select id="creator-from-${r}-${c}" style="font-size: 10px; padding: 2px; width: 45%; border-radius: 4px; border: 1px solid #10b981; background: white; color: black; outline: none; font-weight: bold;">
+                  <option value="" disabled selected>DEP</option>
+                  ${getAirportsOptionsHTML("")}
+                </select>
+                <i class="fa-solid fa-arrow-right" style="font-size: 8px; color: #10b981;"></i>
+                <select id="creator-to-${r}-${c}" style="font-size: 10px; padding: 2px; width: 45%; border-radius: 4px; border: 1px solid #10b981; background: white; color: black; outline: none; font-weight: bold;">
+                  <option value="" disabled selected>ARR</option>
+                  ${getAirportsOptionsHTML("")}
+                </select>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px; font-size: 9px; justify-content: center; width: 100%;">
+                <span style="color: #0f766e; font-weight: bold;">DEP:</span>
+                <input type="text" id="creator-time-${r}-${c}" placeholder="HH:MM" style="font-size: 9px; padding: 2px; width: 40px; border-radius: 4px; border: 1px solid #10b981; text-align: center; background: white; color: black; font-weight: bold;">
+              </div>
+              <div style="display: flex; gap: 4px; justify-content: center; width: 100%; margin-top: 2px;">
+                <button style="background: #10b981; color: white; border: none; font-size: 8px; font-weight: 700; padding: 3px 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onclick="saveCreatedLeg(${r}, ${c})">Save</button>
+                <button style="background: #ef4444; color: white; border: none; font-size: 8px; font-weight: 700; padding: 3px 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onclick="cancelCreatedLeg(${r}, ${c})">Cancel</button>
+              </div>
+            `;
+            cell.appendChild(card);
+          } else if (cellEvents.length > 0) {
             cellEvents.forEach(ev => {
               if (ev.type === "live") {
                 const leg = ev.legRef;
@@ -4954,88 +4982,81 @@
                   card.style.animationDelay = `${(r * 5 + c) * 0.04}s`;
                 }
                 
-                card.innerHTML = `
-                  <div class="leg-route">
-                    <span class="airport-hoverable">${ev.from}</span>
-                    <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
-                    <span class="airport-hoverable">${ev.to}</span>
-                  </div>
-                  <div class="leg-times">
-                    <span>DEP: ${formatMinutesToTimeString(ev.depLocalMins)} ${ev.tzFrom}</span>
-                    <span>ARR: ${formatMinutesToTimeString(ev.arrLocalMins)} ${ev.tzTo}</span>
-                  </div>
-                  <div class="leg-meta">
-                    <span>REPO Flight</span>
-                    <span class="leg-duration">${formatDuration(ev.durationMins)}</span>
-                  </div>
-                `;
-
-                // No conflict highlighting on the repo flight cell itself
+                if (isAdminEditing) {
+                  card.style.display = "flex";
+                  card.style.flexDirection = "column";
+                  card.style.alignItems = "center";
+                  card.style.justifyContent = "center";
+                  card.style.padding = "4px";
+                  
+                  card.innerHTML = `
+                    <div class="leg-route" style="margin-bottom: 2px;">
+                      <span class="airport-hoverable">${ev.from}</span>
+                      <i class="fa-solid fa-arrow-right-long leg-arrow" style="margin: 0 4px;"></i>
+                      <span class="airport-hoverable">${ev.to}</span>
+                    </div>
+                    <div class="leg-times" style="font-size: 8px; margin-bottom: 2px; width: 100%; display: flex; justify-content: space-around;">
+                      <span>DEP: ${formatMinutesToTimeString(ev.depLocalMins)}</span>
+                      <span>ARR: ${formatMinutesToTimeString(ev.arrLocalMins)}</span>
+                    </div>
+                    <div class="leg-meta" style="font-size: 8px; margin-bottom: 4px; width: 100%; display: flex; justify-content: space-around;">
+                      <span>REPO</span>
+                      <span>${formatDuration(ev.durationMins)}</span>
+                    </div>
+                    <button class="add-leg-btn" style="width: 16px; height: 16px; border-radius: 50%; background: #10b981; color: white; border: none; font-size: 10px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3); transition: all 0.2s;" onclick="openLegCreator(${r}, ${c})" title="Add Flight Leg">+</button>
+                  `;
+                } else {
+                  card.innerHTML = `
+                    <div class="leg-route">
+                      <span class="airport-hoverable">${ev.from}</span>
+                      <i class="fa-solid fa-arrow-right-long leg-arrow"></i>
+                      <span class="airport-hoverable">${ev.to}</span>
+                    </div>
+                    <div class="leg-times">
+                      <span>DEP: ${formatMinutesToTimeString(ev.depLocalMins)} ${ev.tzFrom}</span>
+                      <span>ARR: ${formatMinutesToTimeString(ev.arrLocalMins)} ${ev.tzTo}</span>
+                    </div>
+                    <div class="leg-meta">
+                      <span>REPO Flight</span>
+                      <span class="leg-duration">${formatDuration(ev.durationMins)}</span>
+                    </div>
+                  `;
+                }
 
                 cell.appendChild(card);
               }
             });
           } else {
-            if (isAdminEditing && window.openLegCreators && window.openLegCreators.has(`${r},${c}`)) {
-              // Render Creator Form
-              const card = document.createElement("div");
-              card.className = "leg-card";
-              card.style = "border: 2px dashed #10b981; background: #f0fdf4; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15); display: flex; flex-direction: column; gap: 4px; padding: 6px; box-sizing: border-box; justify-content: center; height: 100%; position: relative; z-index: 12;";
-              card.innerHTML = `
-                <div style="font-weight: 800; font-size: 10px; color: #0f766e; text-align: center; text-transform: uppercase;">New Flight</div>
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
-                  <select id="creator-from-${r}-${c}" style="font-size: 10px; padding: 2px; width: 45%; border-radius: 4px; border: 1px solid #10b981; background: white; color: black; outline: none; font-weight: bold;">
-                    <option value="" disabled selected>DEP</option>
-                    ${getAirportsOptionsHTML("")}
-                  </select>
-                  <i class="fa-solid fa-arrow-right" style="font-size: 8px; color: #10b981;"></i>
-                  <select id="creator-to-${r}-${c}" style="font-size: 10px; padding: 2px; width: 45%; border-radius: 4px; border: 1px solid #10b981; background: white; color: black; outline: none; font-weight: bold;">
-                    <option value="" disabled selected>ARR</option>
-                    ${getAirportsOptionsHTML("")}
-                  </select>
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px; font-size: 9px; justify-content: center; width: 100%;">
-                  <span style="color: #0f766e; font-weight: bold;">DEP:</span>
-                  <input type="text" id="creator-time-${r}-${c}" placeholder="HH:MM" style="font-size: 9px; padding: 2px; width: 40px; border-radius: 4px; border: 1px solid #10b981; text-align: center; background: white; color: black; font-weight: bold;">
-                </div>
-                <div style="display: flex; gap: 4px; justify-content: center; width: 100%; margin-top: 2px;">
-                  <button style="background: #10b981; color: white; border: none; font-size: 8px; font-weight: 700; padding: 3px 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onclick="saveCreatedLeg(${r}, ${c})">Save</button>
-                  <button style="background: #ef4444; color: white; border: none; font-size: 8px; font-weight: 700; padding: 3px 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onclick="cancelCreatedLeg(${r}, ${c})">Cancel</button>
-                </div>
-              `;
-              cell.appendChild(card);
-            } else {
-              // Render an Idle Placeholder Card
-              const activeLegs = [];
-              for (let day = 0; day < 5; day++) {
-                if (grid[r][day]) activeLegs.push(grid[r][day]);
-              }
-              
-              const idleLoc = getAircraftLocationAtDay(r, c, activeLegs);
-              const card = document.createElement("div");
-              card.className = "leg-card leg-card-idle";
-              if (playShuffleAnimation) {
-                card.classList.add("leg-card-animating");
-                card.style.animationDelay = `${(r * 5 + c) * 0.04}s`;
-              }
-              
-              let cardContent = `
-                <i class="fa-solid fa-bed" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
-                <div style="font-weight: 500; font-size: 11px;">Idle in <span class="airport-hoverable">${idleLoc}</span></div>
-              `;
-              
-              if (isAdminEditing) {
-                cardContent += `
-                  <button class="add-leg-btn" style="position: absolute; bottom: 4px; right: 4px; width: 18px; height: 18px; border-radius: 50%; background: #10b981; color: white; border: none; font-size: 10px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3); transition: all 0.2s;" onclick="openLegCreator(${r}, ${c})" title="Add Flight Leg">+</button>
-                `;
-              }
-              
-              card.innerHTML = (c === 0 && !gameStarted) ? `
-                <i class="fa-solid fa-lock" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
-                <div style="font-weight: 500; font-size: 11px;">Locked</div>
-              ` : cardContent;
-              cell.appendChild(card);
+            // Render an Idle Placeholder Card
+            const activeLegs = [];
+            for (let day = 0; day < 5; day++) {
+              if (grid[r][day]) activeLegs.push(grid[r][day]);
             }
+            
+            const idleLoc = getAircraftLocationAtDay(r, c, activeLegs);
+            const card = document.createElement("div");
+            card.className = "leg-card leg-card-idle";
+            if (playShuffleAnimation) {
+              card.classList.add("leg-card-animating");
+              card.style.animationDelay = `${(r * 5 + c) * 0.04}s`;
+            }
+            
+            let cardContent = `
+              <i class="fa-solid fa-bed" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
+              <div style="font-weight: 500; font-size: 11px; margin-bottom: 6px;">Idle in <span class="airport-hoverable">${idleLoc}</span></div>
+            `;
+            
+            if (isAdminEditing) {
+              cardContent += `
+                <button class="add-leg-btn" style="width: 18px; height: 18px; border-radius: 50%; background: #10b981; color: white; border: none; font-size: 10px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3); transition: all 0.2s;" onclick="openLegCreator(${r}, ${c})" title="Add Flight Leg">+</button>
+              `;
+            }
+            
+            card.innerHTML = (c === 0 && !gameStarted) ? `
+              <i class="fa-solid fa-lock" style="font-size:12px; margin-bottom:4px; opacity:0.6;"></i>
+              <div style="font-weight: 500; font-size: 11px;">Locked</div>
+            ` : cardContent;
+            cell.appendChild(card);
           }
         }
       }
