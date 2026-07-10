@@ -4803,7 +4803,7 @@
             <span>Airplane #${r+1}</span>
           </div>
           <div style="font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 4px;">
-            Starts at: <strong style="color: var(--accent);" class="airport-hoverable">${startingLocations[r]}</strong>
+            Starts at: <strong style="color: var(--accent);" class="airport-hoverable row-start-location" data-row="${r}">${startingLocations[r]}</strong>
           </div>
         `;
         gridContainer.appendChild(rowHeader);
@@ -7438,6 +7438,10 @@
         for (let r = 0; r < 6; r++) {
           if (grid[r][0]) {
             startingLocations[r] = grid[r][0].from;
+          }
+          const startEl = document.querySelector(`.row-start-location[data-row="${r}"]`);
+          if (startEl) {
+            startEl.textContent = startingLocations[r];
           }
         }
         currentPuzzle.startingLocations = [...startingLocations];
