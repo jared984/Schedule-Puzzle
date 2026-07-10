@@ -3040,11 +3040,13 @@
             let rowConflict = false;
             let segments = [];
             let dailyEvents = {};
+            let currentRepo = null;
             
             for (let d2 = 0; d2 <= d; d2++) {
               const leg = tempRowGrid[d2];
               if (!leg) continue;
               
+              currentRepo = null;
               if (tempLoc !== leg.from) {
                 let prevLeg = null;
                 for (let p = d2 - 1; p >= 0; p--) {
@@ -3075,6 +3077,7 @@
                 };
                 
                 simulatedEvents.push(repoEv);
+                currentRepo = repoEv;
                 const depZ = depRepo - AIRPORTS[tempLoc].tz * 60;
                 const arrZ = arrRepo - AIRPORTS[leg.from].tz * 60;
                 segments.push({ start: depZ, end: arrZ });
@@ -3106,8 +3109,7 @@
                   }
                 }
                 if (prevLeg && rules.rule1) {
-                  const connectingRepo = simulatedEvents.find(ev => ev.type === "repo" && ev.to === leg.from);
-                  const lastLanding = connectingRepo ? connectingRepo.arrLocalMins : prevLeg.arrLocalMins;
+                  const lastLanding = currentRepo ? currentRepo.arrLocalMins : prevLeg.arrLocalMins;
                   if (leg.depLocalMins - lastLanding < 840) {
                     rowConflict = true;
                     break;
