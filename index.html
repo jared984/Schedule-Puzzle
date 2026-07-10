@@ -2420,7 +2420,8 @@
     const INTRODUCTION_PUZZLE = {
       name: "Introduction Puzzle",
       legs: FIXED_LIVE_LEGS,
-      rules: { rule1: true, rule2: false, rule3: false, rule4: false }
+      rules: { rule1: true, rule2: false, rule3: false, rule4: false },
+      bestSolverRepo: 1246
     };
 
     let puzzlesDatabase = [ INTRODUCTION_PUZZLE ];
@@ -5740,13 +5741,18 @@
         document.getElementById("userResultRepoTime").innerText = entry.repoTime;
         document.getElementById("userResultTimeLeft").innerText = entry.timeLeft;
         
-        const solverRes = solvePuzzleMethodically(
-          currentPuzzle.legs,
-          currentPuzzle.rules || {},
-          currentPuzzle.startingLocations || Array(6).fill("LAX")
-        );
-        document.getElementById("userResultBestSolverRepo").innerText = 
-          solverRes.minRepoTime === Infinity ? "Unsolvable" : formatDuration(solverRes.minRepoTime);
+        let bestSolverTime = "Unsolvable";
+        if (currentPuzzle.bestSolverRepo !== undefined && currentPuzzle.bestSolverRepo !== null) {
+          bestSolverTime = formatDuration(currentPuzzle.bestSolverRepo);
+        } else {
+          const solverRes = solvePuzzleMethodically(
+            currentPuzzle.legs,
+            currentPuzzle.rules || {},
+            currentPuzzle.startingLocations || Array(6).fill("LAX")
+          );
+          bestSolverTime = solverRes.minRepoTime === Infinity ? "Unsolvable" : formatDuration(solverRes.minRepoTime);
+        }
+        document.getElementById("userResultBestSolverRepo").innerText = bestSolverTime;
           
         document.getElementById("userResultContainer").style.display = "block";
         
@@ -7510,6 +7516,7 @@
           record.customPuzzles = record.customPuzzles.map(p => {
             if (p.name === currentPuzzle.name) {
               p.published = true;
+              p.bestSolverRepo = res.minRepoTime;
               p.shuffleType = document.getElementById("editModeShuffleType").value;
               p.tryLimit = document.getElementById("editModeTryLimit").value;
               const val = document.getElementById("editModeIdleDays").value;
