@@ -7670,15 +7670,8 @@
     function resolveCurrentPuzzle() {
       if (!currentPuzzle) return;
       
-      // Show loading overlay
-      const overlay = document.getElementById("loadingOverlay");
-      const text = document.getElementById("loadingText");
-      const progressContainer = document.getElementById("loadingProgressContainer");
-      if (overlay && text) {
-        text.textContent = "Solving puzzle methodically...";
-        if (progressContainer) progressContainer.style.display = "none";
-        overlay.style.display = "flex";
-      }
+      // Show loading overlay using standard showLoading helper
+      showLoading("Solving puzzle methodically...", "Finding the absolute most efficient layout...");
       
       setTimeout(() => {
         try {
@@ -7689,7 +7682,7 @@
             2000000 // 2 million states limit for full resolve precision
           );
           
-          if (overlay) overlay.style.display = "none";
+          closeModal("loadingOverlay");
           
           if (res.minRepoTime === Infinity) {
             showToast("No valid conflict-free solution found for these flight times. Adjust times first.", "error");
@@ -7712,7 +7705,7 @@
           updateEditModeBestRepoVal();
           showToast("Puzzle resolved successfully! Best layout applied.", "success");
         } catch (e) {
-          if (overlay) overlay.style.display = "none";
+          closeModal("loadingOverlay");
           showToast("An error occurred during solver execution: " + e.message, "error");
         }
       }, 50);
