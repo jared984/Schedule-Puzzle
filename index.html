@@ -1939,12 +1939,18 @@
 
   <!-- Loading Overlay -->
   <div id="loadingOverlay" class="modal-overlay" style="z-index: 200; background: rgba(255, 255, 255, 0.85);">
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; background: #ffffff; border: 1px solid var(--border-color); border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); backdrop-filter: blur(10px); width: 350px;">
-      <div style="font-size: 55px; color: var(--accent); animation: flipHourglass 1.8s infinite ease-in-out; margin-bottom: 5px;">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; background: #ffffff; border: 1px solid var(--border-color); border-radius: 20px; padding: 36px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); backdrop-filter: blur(10px); width: 350px;">
+      <div style="font-size: 50px; color: var(--accent); animation: flipHourglass 1.8s infinite ease-in-out; margin-bottom: 2px;">
         <i class="fa-solid fa-hourglass-half"></i>
       </div>
-      <h3 id="loadingOverlayTitle" style="font-size: 18px; font-weight: 700; color: var(--text-main);">Loading...</h3>
-      <p id="loadingOverlaySub" style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">Please wait...</p>
+      <h3 id="loadingOverlayTitle" style="font-size: 17px; font-weight: 700; color: var(--text-main); margin: 0;">Loading...</h3>
+      <p id="loadingOverlaySub" style="font-size: 13px; color: var(--text-secondary); line-height: 1.4; margin: 0;">Please wait...</p>
+      
+      <!-- Real-time Progress Bar -->
+      <div id="loadingOverlayProgressContainer" style="display: none; width: 100%; background: #e2e8f0; border-radius: 9999px; height: 6px; overflow: hidden; margin-top: 4px;">
+        <div id="loadingOverlayProgressBar" style="width: 0%; background: var(--accent); height: 100%; transition: width 0.1s ease;"></div>
+      </div>
+      <div id="loadingOverlayProgressPercent" style="display: none; font-size: 12px; font-weight: 700; color: var(--accent); margin-top: -4px;">0%</div>
     </div>
   </div>
 
@@ -2855,7 +2861,6 @@
       function countSameAirportConnections(legsList) {
         let count = 0;
         const planeLocations = Array(6).fill("");
-        const airportsKeys = Object.keys(AIRPORTS);
         
         for (let r2 = 0; r2 < 6; r2++) {
           const rowLegs = legsList.filter(l => l.row === r2).map(l => l.leg).sort((a,b)=>a.day - b.day);
@@ -2898,341 +2903,153 @@
       }
       
       const airportsKeys = Object.keys(AIRPORTS);
-      let attempts = 0;
-      let generatedLegs = null;
-      let initialPlaneLocations = null;
+      const legs = [];
+      const planeLocations = Array(6).fill(null);
+      for (let r = 0; r < 6; r++) {
+        planeLocations[r] = airportsKeys[Math.floor(Math.random() * airportsKeys.length)];
+      }
+      const initialPlaneLocations = [...planeLocations];
       
-      while (attempts < 100) {
-        attempts++;
-        const legs = [];
-        let hasAllowedConflict = false;
-        const planeLocations = Array(6).fill(null);
-        for (let r = 0; r < 6; r++) {
-          planeLocations[r] = airportsKeys[Math.floor(Math.random() * airportsKeys.length)];
-        }
-        initialPlaneLocations = [...planeLocations];
+      let success = true;
+      let legCounter = 1;
+      
+      for (let d = 0; d < 5; d++) {
+        const activeRows = [0, 1, 2, 3, 4, 5];
+        shuffleArray(activeRows);
+        const rowsToSchedule = activeRows.slice(0, dayLegCounts[d]);
         
-        let success = true;
-        let legCounter = 1;
-        
-        for (let d = 0; d < 5; d++) {
-          const activeRows = [0, 1, 2, 3, 4, 5];
-          shuffleArray(activeRows);
-          const rowsToSchedule = activeRows.slice(0, dayLegCounts[d]);
+        for (const r of rowsToSchedule) {
+          let placed = false;
+          let retryLeg = 0;
           
-          for (const r of rowsToSchedule) {
-            let placed = false;
-            let retryLeg = 0;
+          while (retryLeg < 50 && !placed) {
+            retryLeg++;
+            const startAp = planeLocations[r];
+            let depAp = startAp;
+            let hasRepo = false;
+            let repoDist = 0;
+            let repoDuration = 0;
             
-            while (retryLeg < 50 && !placed) {
-              retryLeg++;
-              const startAp = planeLocations[r];
-              let depAp = startAp;
-              let hasRepo = false;
-              let repoDist = 0;
-              let repoDuration = 0;
-              
-              const currentSameAirportCount = countSameAirportConnections(legs);
-              const forceRepo = currentSameAirportCount >= 2;
-              
-              if ((Math.random() < 0.85 || forceRepo) && d > 0) {
-                const repoCandidates = airportsKeys.filter(k => {
-                  if (k === startAp) return false;
-                  const dist = calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
-                  return dist >= 50 && dist <= 850;
-                });
-                
-                if (repoCandidates.length > 0) {
-                  depAp = repoCandidates[Math.floor(Math.random() * repoCandidates.length)];
-                  hasRepo = true;
-                  repoDist = Math.round(calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[depAp].lat, AIRPORTS[depAp].lon));
-                  repoDuration = Math.round((repoDist / CRUISE_SPEED) * 60);
-                }
-              }
-              
-              let minHour = 7;
-              if (d > 0 && rules.rule3) {
-                const rowLegs = legs.filter(l => l.row === r).map(l => l.leg);
-                const tempRowGrid = Array(5).fill(null);
-                rowLegs.forEach(l => tempRowGrid[l.day] = l);
-                
-                let prevLeg = null;
-                for (let p = d - 1; p >= 0; p--) {
-                  if (tempRowGrid[p]) {
-                    prevLeg = tempRowGrid[p];
-                    break;
-                  }
-                }
-                
-                if (prevLeg) {
-                  let prevArrMins = prevLeg.arrLocalMins;
-                  if (hasRepo) {
-                    const tzDiffVal = AIRPORTS[depAp].tz - AIRPORTS[prevLeg.to].tz;
-                    prevArrMins = (prevLeg.arrLocalMins + 60) + repoDuration + tzDiffVal * 60;
-                  }
-                  const earliestLocalMins = prevArrMins + 690;
-                  const earliestLocalMinsOfDay = earliestLocalMins - d * 1440;
-                  if (earliestLocalMinsOfDay > 0) {
-                    minHour = Math.ceil(earliestLocalMinsOfDay / 60);
-                  }
-                }
-              }
-              
-              let startHour = 7;
-              if (minHour <= 14) {
-                startHour = Math.max(7, minHour) + Math.floor(Math.random() * (15 - Math.max(7, minHour)));
-              } else {
-                startHour = minHour + Math.floor(Math.random() * 3);
-              }
-              
-              const startMin = 5 * Math.floor(Math.random() * 12); // 0 to 55 snapped to 5 min
-              const depTimeStr = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
-              
-              const destCandidates = [];
-              airportsKeys.forEach(k => {
-                if (k === depAp) return;
-                const dist = calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
-                if (dist >= 1000 && dist <= 2250) {
-                  destCandidates.push({ code: k, dist: dist });
-                }
+            const currentSameAirportCount = countSameAirportConnections(legs);
+            const forceRepo = currentSameAirportCount >= 2;
+            
+            if ((Math.random() < 0.85 || forceRepo) && d > 0) {
+              const repoCandidates = airportsKeys.filter(k => {
+                if (k === startAp) return false;
+                const dist = calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
+                return dist >= 50 && dist <= 850;
               });
               
-              if (destCandidates.length === 0) continue;
-              
-              const selected = destCandidates[Math.floor(Math.random() * destCandidates.length)];
-              const destAp = selected.code;
-              
-              const dist = Math.round(calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[destAp].lat, AIRPORTS[destAp].lon));
-              const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
-              
-              const candidateLeg = {
-                id: `leg-${name.replace(/\s+/g, '-')}-${legCounter}`,
-                from: depAp,
-                to: destAp,
-                day: d,
-                depTimeStr: depTimeStr,
-                distance: dist,
-                durationMins: durationMins,
-              };
-              
-              const fromA = AIRPORTS[depAp];
-              const toA = AIRPORTS[destAp];
-              const [h, m] = depTimeStr.split(":").map(Number);
-              
-              candidateLeg.depLocalMins = d * 1440 + h * 60 + m;
-              const tzDiff = toA.tz - fromA.tz;
-              candidateLeg.arrLocalMins = candidateLeg.depLocalMins + durationMins + tzDiff * 60;
-              
+              if (repoCandidates.length > 0) {
+                depAp = repoCandidates[Math.floor(Math.random() * repoCandidates.length)];
+                hasRepo = true;
+                repoDist = Math.round(calculateDistance(AIRPORTS[startAp].lat, AIRPORTS[startAp].lon, AIRPORTS[depAp].lat, AIRPORTS[depAp].lon));
+                repoDuration = Math.round((repoDist / CRUISE_SPEED) * 60);
+              }
+            }
+            
+            let minHour = 7;
+            if (d > 0 && rules.rule3) {
               const rowLegs = legs.filter(l => l.row === r).map(l => l.leg);
               const tempRowGrid = Array(5).fill(null);
               rowLegs.forEach(l => tempRowGrid[l.day] = l);
-              tempRowGrid[d] = candidateLeg;
               
-              const simulatedEvents = [];
-              let firstLeg = null;
-              for (let p = 0; p < 5; p++) {
+              let prevLeg = null;
+              for (let p = d - 1; p >= 0; p--) {
                 if (tempRowGrid[p]) {
-                  firstLeg = tempRowGrid[p];
+                  prevLeg = tempRowGrid[p];
                   break;
                 }
               }
-              const simulatedStartLoc = r === 0 ? "LAX" : (firstLeg ? firstLeg.from : "LAX");
               
-              let tempLoc = simulatedStartLoc;
-              let rowConflict = false;
-              let segments = [];
-              let dailyEvents = {};
-              
-              for (let d2 = 0; d2 <= d; d2++) {
-                const leg = tempRowGrid[d2];
-                if (!leg) continue;
-                
-                if (tempLoc !== leg.from) {
-                  let prevLeg = null;
-                  for (let p = d2 - 1; p >= 0; p--) {
-                    if (tempRowGrid[p]) {
-                      prevLeg = tempRowGrid[p];
-                      break;
-                    }
-                  }
-                  const repoData = getRepoFlightTimes(tempLoc, leg, prevLeg);
-                  const depRepo = repoData.depLocalMins;
-                  const arrRepo = repoData.arrLocalMins;
-                  const repoDur = repoData.durationMins;
-                  const displayDay = repoData.displayDay;
-                  
-                  if (arrRepo > leg.depLocalMins) {
-                    rowConflict = true;
-                    break;
-                  }
-                  
-                  const repoEv = {
-                    type: "repo",
-                    from: tempLoc,
-                    to: leg.from,
-                    depLocalMins: depRepo,
-                    arrLocalMins: arrRepo,
-                    durationMins: repoDur,
-                    displayDay: displayDay
-                  };
-                  
-                  simulatedEvents.push(repoEv);
-                  const depZ = depRepo - AIRPORTS[tempLoc].tz * 60;
-                  const arrZ = arrRepo - AIRPORTS[leg.from].tz * 60;
-                  segments.push({ start: depZ, end: arrZ });
-                  
-                  const dispD = repoEv.displayDay;
-                  if (!dailyEvents[dispD]) dailyEvents[dispD] = [];
-                  dailyEvents[dispD].push(repoEv);
+              if (prevLeg) {
+                let prevArrMins = prevLeg.arrLocalMins;
+                if (hasRepo) {
+                  const tzDiffVal = AIRPORTS[depAp].tz - AIRPORTS[prevLeg.to].tz;
+                  prevArrMins = (prevLeg.arrLocalMins + 60) + repoDuration + tzDiffVal * 60;
                 }
-                
-                simulatedEvents.push({
-                  type: "live",
-                  legRef: leg,
-                  displayDay: leg.day
-                });
-                
-                const depZ = leg.depLocalMins - AIRPORTS[leg.from].tz * 60;
-                const arrZ = leg.arrLocalMins - AIRPORTS[leg.to].tz * 60;
-                segments.push({ start: depZ, end: arrZ, legRef: leg });
-                
-                if (!dailyEvents[leg.day]) dailyEvents[leg.day] = [];
-                dailyEvents[leg.day].push({ type: "live", depLocalMins: leg.depLocalMins, arrLocalMins: leg.arrLocalMins, from: leg.from, to: leg.to });
-                
-                if (d2 > 0) {
-                  let prevLeg = null;
-                  for (let p = d2 - 1; p >= 0; p--) {
-                    if (tempRowGrid[p]) {
-                      prevLeg = tempRowGrid[p];
-                      break;
-                    }
-                  }
-                  if (prevLeg && rules.rule1) {
-                    const connectingRepo = simulatedEvents.find(ev => ev.type === "repo" && ev.to === leg.from);
-                    const lastLanding = connectingRepo ? connectingRepo.arrLocalMins : prevLeg.arrLocalMins;
-                    if (leg.depLocalMins - lastLanding < 840) {
-                      rowConflict = true;
-                      break;
-                    }
-                  }
-                }
-                
-                tempLoc = leg.to;
-              }
-              
-              if (rowConflict) continue;
-              
-              if (rules.rule3) {
-                let hasRule3Conflict = false;
-                const activeDList = Object.keys(dailyEvents).map(Number).sort((a,b)=>a-b);
-                const dailyDuty = {};
-                
-                for (const actD of activeDList) {
-                  const dayEvs = dailyEvents[actD];
-                  dayEvs.sort((a,b) => a.depLocalMins - b.depLocalMins);
-                  const fEv = dayEvs[0];
-                  const lEv = dayEvs[dayEvs.length - 1];
-                  const fTakeoff = fEv.depLocalMins;
-                  const lLanding = lEv.legRef ? lEv.legRef.arrLocalMins : lEv.arrLocalMins;
-                  
-                  const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
-                  const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
-                  const zStart = (fTakeoff - 60) - AIRPORTS[fFrom].tz * 60;
-                  const zEnd = (lLanding + 30) - AIRPORTS[lTo].tz * 60;
-                  const dDuration = zEnd - zStart;
-                  
-                  if (dDuration > 840) {
-                    hasRule3Conflict = true;
-                    break;
-                  }
-                  
-                  dailyDuty[actD] = { start: zStart, end: zEnd };
-                }
-                
-                if (!hasRule3Conflict) {
-                  for (let i = 0; i < activeDList.length - 1; i++) {
-                    const d1 = activeDList[i];
-                    const d2 = activeDList[i+1];
-                    if (dailyDuty[d2].start - dailyDuty[d1].end < 600) {
-                      hasRule3Conflict = true;
-                      break;
-                    }
-                  }
-                }
-                
-                if (!hasRule3Conflict) {
-                  for (const seg of segments) {
-                    if (getFlightTimeInWindow(seg.end, segments) > 600) {
-                      hasRule3Conflict = true;
-                      break;
-                    }
-                    if (getFlightTimeInWindow(seg.start + 1440, segments) > 600) {
-                      hasRule3Conflict = true;
-                      break;
-                    }
-                  }
-                }
-                
-                if (hasRule3Conflict) {
-                  let hasSameAirportConn = false;
-                  const rowLegsInOrder = [];
-                  for (let d2 = 0; d2 <= d; d2++) {
-                    if (tempRowGrid[d2]) rowLegsInOrder.push(tempRowGrid[d2]);
-                  }
-                  if (rowLegsInOrder.length > 1) {
-                    let checkLoc = rowLegsInOrder[0].to;
-                    for (let i = 1; i < rowLegsInOrder.length; i++) {
-                      if (checkLoc === rowLegsInOrder[i].from) {
-                        hasSameAirportConn = true;
-                        break;
-                      }
-                      checkLoc = rowLegsInOrder[i].to;
-                    }
-                  }
-                  
-                  rowConflict = true;
+                const earliestLocalMins = prevArrMins + 690;
+                const earliestLocalMinsOfDay = earliestLocalMins - d * 1440;
+                if (earliestLocalMinsOfDay > 0) {
+                  minHour = Math.ceil(earliestLocalMinsOfDay / 60);
                 }
               }
-              
-              candidateLeg.originalRow = r;
-              legs.push({ row: r, leg: candidateLeg });
-              planeLocations[r] = destAp;
-              placed = true;
-              legCounter++;
             }
             
-            if (!placed) {
-              success = false;
-              break;
+            let startHour = 7;
+            if (minHour <= 14) {
+              startHour = Math.max(7, minHour) + Math.floor(Math.random() * (15 - Math.max(7, minHour)));
+            } else {
+              startHour = minHour + Math.floor(Math.random() * 3);
             }
-          }
-          if (!success) break;
-        }
-        
-        if (success && legs.length >= targetLegCount) {
-          let totalSameAirportClean = 0;
-          let totalSameAirportWithConflict = 0;
-          let totalRule3Conflicts = 0;
-          
-          for (let r = 0; r < 6; r++) {
-            const rowLegs = legs.filter(l => l.row === r).map(l => l.leg).sort((a,b)=>a.day - b.day);
+            
+            const startMin = 5 * Math.floor(Math.random() * 12); // 0 to 55 snapped to 5 min
+            const depTimeStr = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
+            
+            const destCandidates = [];
+            airportsKeys.forEach(k => {
+              if (k === depAp) return;
+              const dist = calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[k].lat, AIRPORTS[k].lon);
+              if (dist >= 1000 && dist <= 2250) {
+                destCandidates.push({ code: k, dist: dist });
+              }
+            });
+            
+            if (destCandidates.length === 0) continue;
+            
+            const selected = destCandidates[Math.floor(Math.random() * destCandidates.length)];
+            const destAp = selected.code;
+            
+            const dist = Math.round(calculateDistance(AIRPORTS[depAp].lat, AIRPORTS[depAp].lon, AIRPORTS[destAp].lat, AIRPORTS[destAp].lon));
+            const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
+            
+            const candidateLeg = {
+              id: `leg-${name.replace(/\s+/g, '-')}-${legCounter}`,
+              from: depAp,
+              to: destAp,
+              day: d,
+              depTimeStr: depTimeStr,
+              distance: dist,
+              durationMins: durationMins,
+            };
+            
+            const fromA = AIRPORTS[depAp];
+            const toA = AIRPORTS[destAp];
+            const [h, m] = depTimeStr.split(":").map(Number);
+            
+            candidateLeg.depLocalMins = d * 1440 + h * 60 + m;
+            const tzDiff = toA.tz - fromA.tz;
+            candidateLeg.arrLocalMins = candidateLeg.depLocalMins + durationMins + tzDiff * 60;
+            
+            const rowLegs = legs.filter(l => l.row === r).map(l => l.leg);
+            const tempRowGrid = Array(5).fill(null);
+            rowLegs.forEach(l => tempRowGrid[l.day] = l);
+            tempRowGrid[d] = candidateLeg;
+            
             const simulatedEvents = [];
-            const simulatedStartLoc = r === 0 ? "LAX" : rowLegs.length > 0 ? rowLegs[0].from : "LAX";
+            let firstLeg = null;
+            for (let p = 0; p < 5; p++) {
+              if (tempRowGrid[p]) {
+                firstLeg = tempRowGrid[p];
+                break;
+              }
+            }
+            const simulatedStartLoc = r === 0 ? "LAX" : (firstLeg ? firstLeg.from : "LAX");
             
             let tempLoc = simulatedStartLoc;
+            let rowConflict = false;
             let segments = [];
             let dailyEvents = {};
             
-            for (let d2 = 0; d2 < 5; d2++) {
-              const leg = rowLegs.find(l => l.day === d2);
+            for (let d2 = 0; d2 <= d; d2++) {
+              const leg = tempRowGrid[d2];
               if (!leg) continue;
               
               if (tempLoc !== leg.from) {
                 let prevLeg = null;
                 for (let p = d2 - 1; p >= 0; p--) {
-                  const checkLeg = rowLegs.find(l => l.day === p);
-                  if (checkLeg) {
-                    prevLeg = checkLeg;
+                  if (tempRowGrid[p]) {
+                    prevLeg = tempRowGrid[p];
                     break;
                   }
                 }
@@ -3241,6 +3058,11 @@
                 const arrRepo = repoData.arrLocalMins;
                 const repoDur = repoData.durationMins;
                 const displayDay = repoData.displayDay;
+                
+                if (arrRepo > leg.depLocalMins) {
+                  rowConflict = true;
+                  break;
+                }
                 
                 const repoEv = {
                   type: "repo",
@@ -3275,12 +3097,31 @@
               if (!dailyEvents[leg.day]) dailyEvents[leg.day] = [];
               dailyEvents[leg.day].push({ type: "live", depLocalMins: leg.depLocalMins, arrLocalMins: leg.arrLocalMins, from: leg.from, to: leg.to });
               
+              if (d2 > 0) {
+                let prevLeg = null;
+                for (let p = d2 - 1; p >= 0; p--) {
+                  if (tempRowGrid[p]) {
+                    prevLeg = tempRowGrid[p];
+                    break;
+                  }
+                }
+                if (prevLeg && rules.rule1) {
+                  const connectingRepo = simulatedEvents.find(ev => ev.type === "repo" && ev.to === leg.from);
+                  const lastLanding = connectingRepo ? connectingRepo.arrLocalMins : prevLeg.arrLocalMins;
+                  if (leg.depLocalMins - lastLanding < 840) {
+                    rowConflict = true;
+                    break;
+                  }
+                }
+              }
+              
               tempLoc = leg.to;
             }
             
-            // Check for Rule 3 conflicts
-            let rowHasRule3Conflict = false;
+            if (rowConflict) continue;
+            
             if (rules.rule3) {
+              let hasRule3Conflict = false;
               const activeDList = Object.keys(dailyEvents).map(Number).sort((a,b)=>a-b);
               const dailyDuty = {};
               
@@ -3298,85 +3139,218 @@
                 const zEnd = (lLanding + 30) - AIRPORTS[lTo].tz * 60;
                 const dDuration = zEnd - zStart;
                 
-                if (dDuration > 840) rowHasRule3Conflict = true;
+                if (dDuration > 840) {
+                  hasRule3Conflict = true;
+                  break;
+                }
+                
                 dailyDuty[actD] = { start: zStart, end: zEnd };
               }
               
-              for (let i = 0; i < activeDList.length - 1; i++) {
-                const d1 = activeDList[i];
-                const d2 = activeDList[i+1];
-                if (dailyDuty[d2].start - dailyDuty[d1].end < 600) rowHasRule3Conflict = true;
-              }
-              
-              for (const seg of segments) {
-                if (getFlightTimeInWindow(seg.end, segments) > 600) rowHasRule3Conflict = true;
-                if (getFlightTimeInWindow(seg.start + 1440, segments) > 600) rowHasRule3Conflict = true;
-              }
-            }
-            
-            // Count same-airport connections
-            if (rowLegs.length > 1) {
-              let tempLoc = rowLegs[0].to;
-              for (let d2 = 0; d2 < 5; d2++) {
-                const leg = rowLegs.find(l => l.day === d2);
-                if (!leg) continue;
-                if (leg.day === rowLegs[0].day) continue;
-                
-                if (tempLoc === leg.from) {
-                  if (rowHasRule3Conflict) {
-                    totalSameAirportWithConflict++;
-                  } else {
-                    totalSameAirportClean++;
+              if (!hasRule3Conflict) {
+                for (let i = 0; i < activeDList.length - 1; i++) {
+                  const d1 = activeDList[i];
+                  const d2 = activeDList[i+1];
+                  if (dailyDuty[d2].start - dailyDuty[d1].end < 600) {
+                    hasRule3Conflict = true;
+                    break;
                   }
                 }
-                tempLoc = leg.to;
+              }
+              
+              if (!hasRule3Conflict) {
+                for (const seg of segments) {
+                  if (getFlightTimeInWindow(seg.end, segments) > 600) {
+                    hasRule3Conflict = true;
+                    break;
+                  }
+                  if (getFlightTimeInWindow(seg.start + 1440, segments) > 600) {
+                    hasRule3Conflict = true;
+                    break;
+                  }
+                }
+              }
+              
+              if (hasRule3Conflict) {
+                rowConflict = true;
               }
             }
             
-            if (rowHasRule3Conflict) {
-              totalRule3Conflicts++;
+            candidateLeg.originalRow = r;
+            legs.push({ row: r, leg: candidateLeg });
+            planeLocations[r] = destAp;
+            placed = true;
+            legCounter++;
+          }
+          
+          if (!placed) {
+            success = false;
+            break;
+          }
+        }
+        if (!success) break;
+      }
+      
+      if (success && legs.length >= targetLegCount) {
+        let totalSameAirportClean = 0;
+        let totalSameAirportWithConflict = 0;
+        let totalRule3Conflicts = 0;
+        
+        for (let r = 0; r < 6; r++) {
+          const rowLegs = legs.filter(l => l.row === r).map(l => l.leg).sort((a,b)=>a.day - b.day);
+          const simulatedEvents = [];
+          const simulatedStartLoc = r === 0 ? "LAX" : rowLegs.length > 0 ? rowLegs[0].from : "LAX";
+          
+          let tempLoc = simulatedStartLoc;
+          let segments = [];
+          let dailyEvents = {};
+          
+          for (let d2 = 0; d2 < 5; d2++) {
+            const leg = rowLegs.find(l => l.day === d2);
+            if (!leg) continue;
+            
+            if (tempLoc !== leg.from) {
+              let prevLeg = null;
+              for (let p = d2 - 1; p >= 0; p--) {
+                const checkLeg = rowLegs.find(l => l.day === p);
+                if (checkLeg) {
+                  prevLeg = checkLeg;
+                  break;
+                }
+              }
+              const repoData = getRepoFlightTimes(tempLoc, leg, prevLeg);
+              const depRepo = repoData.depLocalMins;
+              const arrRepo = repoData.arrLocalMins;
+              const repoDur = repoData.durationMins;
+              const displayDay = repoData.displayDay;
+              
+              const repoEv = {
+                type: "repo",
+                from: tempLoc,
+                to: leg.from,
+                depLocalMins: depRepo,
+                arrLocalMins: arrRepo,
+                durationMins: repoDur,
+                displayDay: displayDay
+              };
+              
+              simulatedEvents.push(repoEv);
+              const depZ = depRepo - AIRPORTS[tempLoc].tz * 60;
+              const arrZ = arrRepo - AIRPORTS[leg.from].tz * 60;
+              segments.push({ start: depZ, end: arrZ });
+              
+              const dispD = repoEv.displayDay;
+              if (!dailyEvents[dispD]) dailyEvents[dispD] = [];
+              dailyEvents[dispD].push(repoEv);
+            }
+            
+            simulatedEvents.push({
+              type: "live",
+              legRef: leg,
+              displayDay: leg.day
+            });
+            
+            const depZ = leg.depLocalMins - AIRPORTS[leg.from].tz * 60;
+            const arrZ = leg.arrLocalMins - AIRPORTS[leg.to].tz * 60;
+            segments.push({ start: depZ, end: arrZ, legRef: leg });
+            
+            if (!dailyEvents[leg.day]) dailyEvents[leg.day] = [];
+            dailyEvents[leg.day].push({ type: "live", depLocalMins: leg.depLocalMins, arrLocalMins: leg.arrLocalMins, from: leg.from, to: leg.to });
+            
+            tempLoc = leg.to;
+          }
+          
+          let rowHasRule3Conflict = false;
+          if (rules.rule3) {
+            const activeDList = Object.keys(dailyEvents).map(Number).sort((a,b)=>a-b);
+            const dailyDuty = {};
+            
+            for (const actD of activeDList) {
+              const dayEvs = dailyEvents[actD];
+              dayEvs.sort((a,b) => a.depLocalMins - b.depLocalMins);
+              const fEv = dayEvs[0];
+              const lEv = dayEvs[dayEvs.length - 1];
+              const fTakeoff = fEv.depLocalMins;
+              const lLanding = lEv.legRef ? lEv.legRef.arrLocalMins : lEv.arrLocalMins;
+              
+              const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
+              const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
+              const zStart = (fTakeoff - 60) - AIRPORTS[fFrom].tz * 60;
+              const zEnd = (lLanding + 30) - AIRPORTS[lTo].tz * 60;
+              const dDuration = zEnd - zStart;
+              
+              if (dDuration > 840) rowHasRule3Conflict = true;
+              dailyDuty[actD] = { start: zStart, end: zEnd };
+            }
+            
+            for (let i = 0; i < activeDList.length - 1; i++) {
+              const d1 = activeDList[i];
+              const d2 = activeDList[i+1];
+              if (dailyDuty[d2].start - dailyDuty[d1].end < 600) rowHasRule3Conflict = true;
+            }
+            
+            for (const seg of segments) {
+              if (getFlightTimeInWindow(seg.end, segments) > 600) rowHasRule3Conflict = true;
+              if (getFlightTimeInWindow(seg.start + 1440, segments) > 600) rowHasRule3Conflict = true;
             }
           }
           
-          let allRepoDurations = [];
-          for (let r = 0; r < 6; r++) {
-            const rowLegs = legs.filter(l => l.row === r).map(l => l.leg).sort((a,b)=>a.day - b.day);
-            if (rowLegs.length === 0) continue;
-            
-            let tempLoc = initialPlaneLocations[r];
-            for (let i = 0; i < rowLegs.length; i++) {
-              const leg = rowLegs[i];
-              if (tempLoc !== leg.from) {
-                const repoD = calculateDistance(AIRPORTS[tempLoc].lat, AIRPORTS[tempLoc].lon, AIRPORTS[leg.from].lat, AIRPORTS[leg.from].lon);
-                const repoDur = Math.round((repoD / CRUISE_SPEED) * 60);
-                allRepoDurations.push(repoDur);
+          if (rowLegs.length > 1) {
+            let tempLoc = rowLegs[0].to;
+            for (let d2 = 0; d2 < 5; d2++) {
+              const leg = rowLegs.find(l => l.day === d2);
+              if (!leg) continue;
+              if (leg.day === rowLegs[0].day) continue;
+              
+              if (tempLoc === leg.from) {
+                if (rowHasRule3Conflict) {
+                  totalSameAirportWithConflict++;
+                } else {
+                  totalSameAirportClean++;
+                }
               }
               tempLoc = leg.to;
             }
           }
-          const avgRepoDuration = allRepoDurations.length > 0 ? (allRepoDurations.reduce((sum, d) => sum + d, 0) / allRepoDurations.length) : 0;
-          const isValidRepoDuration = allRepoDurations.length > 0 ? (avgRepoDuration >= 45 && avgRepoDuration <= 75) : true;
-
-          const isValidSameAirportClean = totalSameAirportClean <= 3;
-          const isValidTrickConflictCount = totalRule3Conflicts === 0;
-          const avgDuration = legs.reduce((sum, l) => sum + l.leg.durationMins, 0) / legs.length;
-          const isValidAverageDuration = avgDuration >= 168 && avgDuration <= 204; // 2.8h to 3.4h (around 3.0h)
           
-          if (isValidSameAirportClean && isValidTrickConflictCount && isValidAverageDuration && isValidRepoDuration) {
-            console.log(`[Generator] SUCCESS! Generated puzzle in ${attempts} attempts. Average Live: ${(avgDuration / 60).toFixed(2)}h, Average Repo: ${avgRepoDuration.toFixed(1)} mins`);
-            generatedLegs = legs.map(l => l.leg);
-            break;
-          } else {
-            console.warn(`[Generator Attempt ${attempts}] Candidate rejected at final check. SameAirportClean: ${totalSameAirportClean} (<=3: ${isValidSameAirportClean}), SameAirportWithConflict: ${totalSameAirportWithConflict}, Rule3Conflicts: ${totalRule3Conflicts} (valid: ${isValidTrickConflictCount}), AvgDuration: ${(avgDuration / 60).toFixed(2)}h (2.8-3.4h: ${isValidAverageDuration}), AvgRepoDuration: ${avgRepoDuration.toFixed(1)} mins (45-75: ${isValidRepoDuration})`);
-            success = false;
+          if (rowHasRule3Conflict) {
+            totalRule3Conflicts++;
           }
         }
+        
+        let allRepoDurations = [];
+        for (let r = 0; r < 6; r++) {
+          const rowLegs = legs.filter(l => l.row === r).map(l => l.leg).sort((a,b)=>a.day - b.day);
+          if (rowLegs.length === 0) continue;
+          
+          let tempLoc = initialPlaneLocations[r];
+          for (let i = 0; i < rowLegs.length; i++) {
+            const leg = rowLegs[i];
+            if (tempLoc !== leg.from) {
+              const repoD = calculateDistance(AIRPORTS[tempLoc].lat, AIRPORTS[tempLoc].lon, AIRPORTS[leg.from].lat, AIRPORTS[leg.from].lon);
+              const repoDur = Math.round((repoD / CRUISE_SPEED) * 60);
+              allRepoDurations.push(repoDur);
+            }
+            tempLoc = leg.to;
+          }
+        }
+        const avgRepoDuration = allRepoDurations.length > 0 ? (allRepoDurations.reduce((sum, d) => sum + d, 0) / allRepoDurations.length) : 0;
+        const isValidRepoDuration = allRepoDurations.length > 0 ? (avgRepoDuration >= 45 && avgRepoDuration <= 75) : true;
+
+        const isValidSameAirportClean = totalSameAirportClean <= 3;
+        const isValidTrickConflictCount = totalRule3Conflicts === 0;
+        const avgDuration = legs.reduce((sum, l) => sum + l.leg.durationMins, 0) / legs.length;
+        const isValidAverageDuration = avgDuration >= 168 && avgDuration <= 204;
+
+        if (isValidSameAirportClean && isValidTrickConflictCount && isValidAverageDuration && isValidRepoDuration) {
+          console.log(`[Generator] SUCCESS! Average Live: ${(avgDuration / 60).toFixed(2)}h, Average Repo: ${avgRepoDuration.toFixed(1)} mins`);
+          return {
+            legs: legs.map(l => l.leg),
+            startingLocations: initialPlaneLocations
+          };
+        }
       }
-      
-      return {
-        legs: generatedLegs,
-        startingLocations: initialPlaneLocations
-      };
+      return null;
     }
 
     // Methodical day-by-day backtracking solver to find the absolute minimum repo time layout
@@ -5152,11 +5126,27 @@
       document.getElementById(id).classList.add("active");
     }
 
-    function showLoading(title = "Loading...", subtitle = "Please wait...") {
+    function showLoading(title = "Loading...", subtitle = "Please wait...", percent = null) {
       const titleEl = document.getElementById("loadingOverlayTitle");
       const subEl = document.getElementById("loadingOverlaySub");
+      const progressContainer = document.getElementById("loadingOverlayProgressContainer");
+      const progressBar = document.getElementById("loadingOverlayProgressBar");
+      const progressPercent = document.getElementById("loadingOverlayProgressPercent");
+      
       if (titleEl) titleEl.innerText = title;
       if (subEl) subEl.innerText = subtitle;
+      
+      if (percent !== null) {
+        if (progressContainer) progressContainer.style.display = "block";
+        if (progressBar) progressBar.style.width = `${percent}%`;
+        if (progressPercent) {
+          progressPercent.style.display = "block";
+          progressPercent.innerText = `${percent}%`;
+        }
+      } else {
+        if (progressContainer) progressContainer.style.display = "none";
+        if (progressPercent) progressPercent.style.display = "none";
+      }
       openModal("loadingOverlay");
     }
 
@@ -6194,15 +6184,34 @@
       const idleDaysVal = document.getElementById("adminNewPuzzleIdleDays").value;
       const idleDaysLimit = idleDaysVal !== "" ? parseInt(idleDaysVal, 10) : null;
       
-      showLoading("Generating Solvable Puzzle...", "Running backtracking scheduler...");
+      showLoading("Generating Solvable Puzzle...", "Running backtracking scheduler...", 0);
       
       setTimeout(async () => {
         try {
           let generatorResult = null;
-          let generatorTries = 0;
-          while ((!generatorResult || !generatorResult.legs || generatorResult.legs.length === 0) && generatorTries < 10) {
-            generatorTries++;
+          let attempts = 0;
+          const maxAttempts = 1000;
+          let lastYieldTime = Date.now();
+          
+          while (!generatorResult && attempts < maxAttempts) {
+            attempts++;
+            
             generatorResult = generateSolvablePuzzle(name, { rule1: r1, rule2: r2, rule3: r3, rule4: r4, idleDaysLimit: idleDaysLimit });
+            
+            const percent = Math.round((attempts / maxAttempts) * 100);
+            const tryNum = Math.floor((attempts - 1) / 100) + 1;
+            const draftNum = ((attempts - 1) % 100) + 1;
+            
+            if (Date.now() - lastYieldTime > 30 || attempts === maxAttempts || generatorResult) {
+              showLoading(
+                `Generating Solvable Puzzle (${percent}%)`,
+                `Evaluating schedule candidates... Try ${tryNum}/10, Draft ${draftNum}/100`,
+                percent
+              );
+              // Yield execution to keep UI responsive
+              await new Promise(resolve => setTimeout(resolve, 0));
+              lastYieldTime = Date.now();
+            }
           }
           
           if (!generatorResult || !generatorResult.legs || generatorResult.legs.length === 0) {
