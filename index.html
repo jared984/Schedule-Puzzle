@@ -1947,10 +1947,12 @@
       <p id="loadingOverlaySub" style="font-size: 13px; color: var(--text-secondary); line-height: 1.4; margin: 0;">Please wait...</p>
       
       <!-- Real-time Progress Bar -->
-      <div id="loadingOverlayProgressContainer" style="display: none; width: 100%; background: #e2e8f0; border-radius: 9999px; height: 6px; overflow: hidden; margin-top: 4px;">
-        <div id="loadingOverlayProgressBar" style="width: 0%; background: var(--accent); height: 100%; transition: width 0.1s ease;"></div>
+      <div id="loadingOverlayProgressContainer" style="display: none; width: 100%; margin-top: 10px;">
+        <div style="background: rgba(16, 185, 129, 0.1); border-radius: 12px; height: 16px; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.2); position: relative; display: flex; align-items: center; justify-content: center;">
+          <div id="loadingOverlayProgressBar" style="width: 0%; background: linear-gradient(90deg, #10b981, #059669); height: 100%; position: absolute; left: 0; top: 0; transition: width 0.2s ease;"></div>
+          <span id="loadingOverlayProgressPercent" style="font-size: 10px; font-weight: 800; color: #064e3b; z-index: 1; text-shadow: 0 0 2px rgba(255,255,255,0.8);">0%</span>
+        </div>
       </div>
-      <div id="loadingOverlayProgressPercent" style="display: none; font-size: 12px; font-weight: 700; color: var(--accent); margin-top: -4px;">0%</div>
     </div>
   </div>
 
@@ -6456,10 +6458,12 @@
           };
           
           closeModal("loadingOverlay");
-          showLoading("Saving Puzzle...", "Uploading custom puzzle definition...");
+          showLoading("Saving Puzzle...", "Reading database configuration...", 20);
           
           const response = await fetch(GLOBAL_DB_READ_URL);
           if (!response.ok) throw new Error("Failed to fetch database");
+          
+          showLoading("Saving Puzzle...", "Updating puzzle indexes...", 50);
           const resObj = await response.json();
           let record = resObj.record || resObj;
           
@@ -6467,6 +6471,7 @@
           record.customPuzzles = record.customPuzzles.filter(p => p.name !== name);
           record.customPuzzles.push(newPuzzle);
           
+          showLoading("Saving Puzzle...", "Uploading custom puzzle definition...", 80);
           const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
@@ -6485,6 +6490,7 @@
           });
           
           if (!writeResponse.ok) throw new Error("Failed to save to database");
+          showLoading("Saving Puzzle...", "Finalizing and loading puzzle...", 100);
           
           puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...record.customPuzzles ];
           updatePuzzleDropdownOptions();
@@ -6521,10 +6527,12 @@
         "Delete Puzzle",
         `Are you sure you want to delete the puzzle '${name}'? This will also delete all submitted scores for this puzzle.`,
         async () => {
-          showLoading("Deleting Puzzle...", "Updating database...");
+          showLoading("Deleting Puzzle...", "Reading database configuration...", 20);
           try {
             const response = await fetch(GLOBAL_DB_READ_URL);
             if (!response.ok) throw new Error("Failed to fetch database");
+            
+            showLoading("Deleting Puzzle...", "Wiping puzzle definitions...", 50);
             const resObj = await response.json();
             let record = resObj.record || resObj;
             
@@ -6535,6 +6543,7 @@
               record.scores = record.scores.filter(s => s.puzzle !== name);
             }
             
+            showLoading("Deleting Puzzle...", "Uploading database updates...", 80);
             const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
               method: "PUT",
               headers: {
