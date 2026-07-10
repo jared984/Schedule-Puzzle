@@ -7532,6 +7532,7 @@
           const solvedRadio = document.querySelector('input[name="editModeViewState"][value="solved"]');
           if (solvedRadio) solvedRadio.checked = true;
           
+          updateSchedules();
           onLegEdited();
           updateEditModeBestRepoVal();
           showToast("Puzzle resolved successfully! Best layout applied.", "success");
