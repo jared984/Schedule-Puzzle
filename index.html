@@ -3034,7 +3034,7 @@
                 break;
               }
             }
-            const simulatedStartLoc = r === 0 ? "LAX" : (firstLeg ? firstLeg.from : "LAX");
+            const simulatedStartLoc = initialPlaneLocations[r];
             
             let tempLoc = simulatedStartLoc;
             let rowConflict = false;
@@ -3199,7 +3199,7 @@
         for (let r = 0; r < 6; r++) {
           const rowLegs = legs.filter(l => l.row === r).map(l => l.leg).sort((a,b)=>a.day - b.day);
           const simulatedEvents = [];
-          const simulatedStartLoc = r === 0 ? "LAX" : rowLegs.length > 0 ? rowLegs[0].from : "LAX";
+          const simulatedStartLoc = initialPlaneLocations[r];
           
           let tempLoc = simulatedStartLoc;
           let segments = [];
@@ -3354,7 +3354,7 @@
     }
 
     // Methodical day-by-day backtracking solver to find the absolute minimum repo time layout
-    function solvePuzzleMethodically(legs, rules, startingLocs) {
+    function solvePuzzleMethodically(legs, rules, startingLocs, maxStatesOverride) {
       const legsByDay = Array(5).fill(null).map(() => []);
       legs.forEach(leg => {
         legsByDay[leg.day].push(leg);
@@ -3388,7 +3388,7 @@
         let valid = true;
         let originalRepo = 0;
         for (let r = 0; r < 6; r++) {
-          const baseLoc = r === 0 ? "LAX" : (startingLocs[r] || "LAX");
+          const baseLoc = startingLocs[r] || "LAX";
           if (originalGridState[0][r] && originalGridState[0][r].from !== baseLoc) {
             valid = false;
             break;
@@ -3401,7 +3401,7 @@
             }
           }
           
-          const startLoc = r === 0 ? "LAX" : (originalGridState[0][r] ? originalGridState[0][r].from : (startingLocs[r] || "LAX"));
+          const startLoc = originalGridState[0][r] ? originalGridState[0][r].from : baseLoc;
           let tempLoc = startLoc;
           const simulatedEvents = [];
           let segments = [];
@@ -3541,7 +3541,7 @@
       }
 
       let statesChecked = 0;
-      const maxStates = 10000;
+      const maxStates = (maxStatesOverride !== undefined) ? maxStatesOverride : 10000;
 
       const currentGridState = Array(5).fill(null).map(() => Array(6).fill(null));
       for (let r = 0; r < 6; r++) {
@@ -3597,7 +3597,7 @@
           let dayRepoTime = 0;
 
           for (let r = 0; r < 6; r++) {
-            const baseLoc = r === 0 ? "LAX" : (startingLocs[r] || "LAX");
+            const baseLoc = startingLocs[r] || "LAX";
             if (currentGridState[0][r] && currentGridState[0][r].from !== baseLoc) {
               isValid = false;
               break;
@@ -3610,7 +3610,7 @@
               }
             }
 
-            const startLoc = r === 0 ? "LAX" : (currentGridState[0][r] ? currentGridState[0][r].from : (startingLocs[r] || "LAX"));
+            const startLoc = currentGridState[0][r] ? currentGridState[0][r].from : baseLoc;
             let tempLoc = startLoc;
             const simulatedEvents = [];
             let segments = [];
@@ -4312,7 +4312,7 @@
           const solvedRow = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
           const shuffledRow = (leg.shuffledRow !== undefined && leg.shuffledRow !== null) ? leg.shuffledRow : solvedRow;
           
-          if (viewState === "shuffled") {
+          if (viewState === "shuffled" && leg.day > 0) {
             grid[shuffledRow][leg.day] = leg;
           } else {
             grid[solvedRow][leg.day] = leg;
@@ -5188,10 +5188,15 @@
               const leg = grid[r][c];
               if (leg) {
                 if (viewState === "shuffled") {
-                  leg.shuffledRow = r;
+                  if (leg.day > 0) {
+                    leg.shuffledRow = r;
+                  }
                 } else {
                   leg.row = r;
                   leg.originalRow = r;
+                  if (leg.day === 0) {
+                    leg.shuffledRow = r;
+                  }
                 }
               }
             }
@@ -7462,10 +7467,15 @@
             const leg = grid[r][c];
             if (leg) {
               if (viewState === "shuffled") {
-                leg.shuffledRow = r;
+                if (leg.day > 0) {
+                  leg.shuffledRow = r;
+                }
               } else {
                 leg.row = r;
                 leg.originalRow = r;
+                if (leg.day === 0) {
+                  leg.shuffledRow = r;
+                }
               }
             }
           }
@@ -7659,31 +7669,53 @@
     // Helper: Resolve Puzzle Action
     function resolveCurrentPuzzle() {
       if (!currentPuzzle) return;
-      const res = solvePuzzleMethodically(
-        currentPuzzle.legs,
-        currentPuzzle.rules || {},
-        currentPuzzle.startingLocations || Array(6).fill("LAX")
-      );
-      if (res.minRepoTime === Infinity) {
-        showToast("No valid conflict-free solution found for these flight times. Adjust times first.", "error");
-        return;
+      
+      // Show loading overlay
+      const overlay = document.getElementById("loadingOverlay");
+      const text = document.getElementById("loadingText");
+      const progressContainer = document.getElementById("loadingProgressContainer");
+      if (overlay && text) {
+        text.textContent = "Solving puzzle methodically...";
+        if (progressContainer) progressContainer.style.display = "none";
+        overlay.style.display = "flex";
       }
       
-      // Update each leg's row in currentPuzzle.legs
-      currentPuzzle.legs.forEach(leg => {
-        if (res.solution[leg.id] !== undefined) {
-          leg.row = res.solution[leg.id];
-          leg.originalRow = res.solution[leg.id];
+      setTimeout(() => {
+        try {
+          const res = solvePuzzleMethodically(
+            currentPuzzle.legs,
+            currentPuzzle.rules || {},
+            currentPuzzle.startingLocations || Array(6).fill("LAX"),
+            2000000 // 2 million states limit for full resolve precision
+          );
+          
+          if (overlay) overlay.style.display = "none";
+          
+          if (res.minRepoTime === Infinity) {
+            showToast("No valid conflict-free solution found for these flight times. Adjust times first.", "error");
+            return;
+          }
+          
+          // Update each leg's row in currentPuzzle.legs
+          currentPuzzle.legs.forEach(leg => {
+            if (res.solution[leg.id] !== undefined) {
+              leg.row = res.solution[leg.id];
+              leg.originalRow = res.solution[leg.id];
+            }
+          });
+          
+          // Set View Toggle back to "solved"
+          const solvedRadio = document.querySelector('input[name="editModeViewState"][value="solved"]');
+          if (solvedRadio) solvedRadio.checked = true;
+          
+          onLegEdited();
+          updateEditModeBestRepoVal();
+          showToast("Puzzle resolved successfully! Best layout applied.", "success");
+        } catch (e) {
+          if (overlay) overlay.style.display = "none";
+          showToast("An error occurred during solver execution: " + e.message, "error");
         }
-      });
-      
-      // Set View Toggle back to "solved"
-      const solvedRadio = document.querySelector('input[name="editModeViewState"][value="solved"]');
-      if (solvedRadio) solvedRadio.checked = true;
-      
-      onLegEdited();
-      updateEditModeBestRepoVal();
-      showToast("Puzzle resolved successfully! Best layout applied.", "success");
+      }, 50);
     }
 
     // Register Resolve Button Click
