@@ -574,6 +574,8 @@
       justify-content: center;
       gap: 4px;
       box-shadow: none;
+      height: 100%;
+      box-sizing: border-box;
     }
 
     .aircraft-title {
@@ -610,7 +612,8 @@
       border-bottom: 1px solid #cbd5e1;
       border-right: 1px solid #cbd5e1;
       border-radius: 0;
-      height: 128px;
+      height: 100%;
+      box-sizing: border-box;
       padding: 2px;
       display: flex;
       flex-direction: column;
@@ -1195,7 +1198,7 @@
       grid-template-rows: 40px repeat(6, 150px) !important;
     }
     body.edit-mode .grid-cell {
-      height: 150px !important;
+      height: 100% !important;
     }
     body.edit-mode .leg-card {
       height: 68px !important;
@@ -5780,10 +5783,12 @@
         resolvePlayerName(schedulerName).then(() => {
           closeModal("loadingOverlay");
           startGameFlow();
+          adjustGridRowHeights();
         });
       } else {
         gameStarted = isAdminEditing;
         updateSchedules();
+        adjustGridRowHeights();
       }
     }
 
@@ -7938,12 +7943,12 @@
       
       const cells = boardGrid.querySelectorAll(".grid-cell");
       cells.forEach(cell => {
-        cell.style.height = `${rowHeight}px`;
+        cell.style.height = "";
       });
       
       const rowHeaders = boardGrid.querySelectorAll(".grid-row-header");
       rowHeaders.forEach(hdr => {
-        hdr.style.height = `${rowHeight}px`;
+        hdr.style.height = "";
       });
     }
 
