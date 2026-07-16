@@ -667,7 +667,7 @@
 
     /* Hoverable Airport Styling */
     body:not(.puzzle-introduction) .airport-hoverable {
-      cursor: help;
+      cursor: pointer;
       text-decoration: underline dotted var(--accent);
       text-underline-offset: 2px;
     }
@@ -999,6 +999,75 @@
       padding-top: 20px;
     }
 
+    @keyframes scorePulse {
+      0% {
+        color: #2563eb;
+        text-shadow: 0 0 2px rgba(37, 99, 235, 0.2);
+      }
+      100% {
+        color: #3b82f6;
+        text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 15px rgba(59, 130, 246, 0.4);
+      }
+    }
+
+    .new-score-highlight {
+      font-weight: 700 !important;
+      position: relative;
+      z-index: 10;
+    }
+
+    .new-score-highlight td {
+      font-weight: 700 !important;
+      animation: scorePulse 1.5s ease-in-out infinite alternate;
+    }
+
+    /* Custom Hover Tooltip for Leaderboard Timestamps */
+    .leaderboard-name-cell {
+      position: relative;
+      cursor: help;
+    }
+
+    .score-tooltip {
+      visibility: hidden;
+      width: max-content;
+      max-width: 250px;
+      background-color: #1e293b;
+      color: #ffffff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 6px 10px;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      font-size: 10.5px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      pointer-events: none;
+      white-space: pre;
+    }
+
+    .score-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 5px;
+      border-style: solid;
+      border-color: #1e293b transparent transparent transparent;
+    }
+
+    .leaderboard-name-cell:hover .score-tooltip {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(-50%) translateY(-2px);
+    }
+
     /* Leaderboard Styles */
     .leaderboard-table-container {
       max-height: 380px;
@@ -1235,7 +1304,7 @@
     .airport-edit-select:focus {
       border-color: var(--accent);
     }
-    .dep-time-edit-input {
+    .dep-time-edit-input, .arr-time-edit-input {
       background: #ffffff;
       border: 1px solid rgba(168, 85, 247, 0.4);
       border-radius: 4px;
@@ -1248,7 +1317,7 @@
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .dep-time-edit-input:focus {
+    .dep-time-edit-input:focus, .arr-time-edit-input:focus {
       border-color: var(--accent);
     }
     .edit-input-error {
@@ -1518,7 +1587,7 @@
 
   <!-- Rules / Intro Modal -->
   <div id="rulesModal" class="modal-overlay">
-    <div class="modal-box" style="width: 600px;">
+    <div class="modal-box" style="width: 850px; max-width: 95%;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
         <h2 class="modal-title"><i class="fa-solid fa-plane"></i> AeroScheduler Rules</h2>
         <!-- Exit link in the top right of the modal -->
@@ -1526,50 +1595,70 @@
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <div class="modal-body">
-        <p>Welcome to <strong>AeroScheduler</strong>. This simulation tests your logistical efficiency, timeline logic, and spatial coordination.</p>
-        
-        <div class="inst-grid">
-          <div class="inst-card">
-            <i class="fa-solid fa-arrows-up-down" style="color: var(--color-live);"></i>
-            <div>
-              <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Line Swapping</h4>
-              <p style="font-size:11px;">Drag any  live leg (Green Block) up or down to swap between aircraft. Dragging also swaps every day after</p>
+      <div class="modal-body" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; padding-top: 10px;">
+        <!-- Left Column: Instructions -->
+        <div>
+          <p style="margin-top: 0; margin-bottom: 15px;">Welcome to <strong>AeroScheduler</strong>. This simulation tests your logistical efficiency, timeline logic, and spatial coordination.</p>
+          
+          <div class="inst-grid">
+            <div class="inst-card">
+              <i class="fa-solid fa-arrows-up-down" style="color: var(--color-live);"></i>
+              <div>
+                <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Line Swapping</h4>
+                <p style="font-size:11px;">Drag any  live leg (Green Block) up or down to swap between aircraft. Dragging also swaps every day after</p>
+              </div>
+            </div>
+            <div class="inst-card">
+              <i class="fa-solid fa-circle-exclamation" style="color: var(--color-conflict);"></i>
+              <div>
+                <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Schedule Conflicts</h4>
+                <p style="font-size:11px;">Aircraft cannot depart less than 14 hours before landing the day prior. Conflicts cost <strong>-2,000 points</strong>.</p>
+              </div>
+            </div>
+            <div class="inst-card">
+              <i class="fa-solid fa-route" style="color: var(--color-repo);"></i>
+              <div>
+                <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Auto-Repo Flights</h4>
+                <p style="font-size:11px;">Planes landing at a different airport from their next origin trigger a blue Repo. Flight time costs points.</p>
+              </div>
+            </div>
+            <div class="inst-card">
+              <i class="fa-solid fa-stopwatch" style="color: var(--accent);"></i>
+              <div>
+                <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Speed Bonus</h4>
+                <p style="font-size:11px;">Submitting rewards <strong>+10 points</strong> per remaining second on the clock.</p>
+              </div>
+            </div>
+            <div class="inst-card" style="grid-column: span 2;">
+              <i class="fa-solid fa-square-check" style="color: var(--accent);"></i>
+              <div>
+                <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Hypothetical Analysis Checkboxes</h4>
+                <p style="font-size:11px;">Check the boxes on any two flights, on consecutive days, to preview the hypothetical duty times, rest periods, and rolling 10/24 flight time between the selected legs. <strong>Note:</strong> Does not have to be on the same tail to check!</p>
+              </div>
             </div>
           </div>
-          <div class="inst-card">
-            <i class="fa-solid fa-circle-exclamation" style="color: var(--color-conflict);"></i>
-            <div>
-              <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Schedule Conflicts</h4>
-              <p style="font-size:11px;">Aircraft cannot depart less than 14 hours before landing the day prior. Conflicts cost <strong>-2,000 points</strong>.</p>
-            </div>
-          </div>
-          <div class="inst-card">
-            <i class="fa-solid fa-route" style="color: var(--color-repo);"></i>
-            <div>
-              <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Auto-Repo Flights</h4>
-              <p style="font-size:11px;">Planes landing at a different airport from their next origin trigger a blue Repo. Flight time costs points.</p>
-            </div>
-          </div>
-          <div class="inst-card">
-            <i class="fa-solid fa-stopwatch" style="color: var(--accent);"></i>
-            <div>
-              <h4 style="color: #000000; font-size:13px; margin-bottom:2px;">Speed Bonus</h4>
-              <p style="font-size:11px;">Submitting rewards <strong>+10 points</strong> per remaining second on the clock.</p>
-            </div>
-          </div>
-        </div>
-        
-        <div id="rulesModalActiveRulesContainer" style="margin-top: 15px; margin-bottom: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
-          <h4 style="color: #000000; font-size: 13px; margin-bottom: 8px;"><i class="fa-solid fa-list-check" style="color: var(--accent); margin-right: 6px;"></i> Active Rules for this Puzzle:</h4>
-          <div id="rulesModalActiveRulesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
-        <p><strong>Goal:</strong> Drag and arrange the flights so that all aircraft schedules are conflict-free, and total repositioning flight time is kept as low as possible.</p>
-        
-        <div id="nameInputContainer" class="form-group" style="margin-top: 15px; padding: 8px 12px; margin-bottom: 8px;">
-          <label class="form-label" for="rulesNameInput" style="font-weight:700; color: #000000;">Name:</label>
-          <input type="text" id="rulesNameInput" class="form-input" placeholder="Enter your name here" required autocomplete="off">
+        <!-- Right Column: Active Rules, Goal, Tip & Name Input -->
+        <div style="border-left: 1px solid var(--border-color); padding-left: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div id="rulesModalActiveRulesContainer" style="margin-bottom: 15px;">
+              <h4 style="color: #000000; font-size: 13px; margin-top: 0; margin-bottom: 8px;"><i class="fa-solid fa-list-check" style="color: var(--accent); margin-right: 6px;"></i> Active Rules for this Puzzle:</h4>
+              <div id="rulesModalActiveRulesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+
+            <p style="margin-top: 15px; margin-bottom: 0;"><strong>Goal:</strong> Drag and arrange the flights so that all aircraft schedules are conflict-free, and total repositioning flight time is kept as low as possible.</p>
+
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 60px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.4;">
+              <i class="fa-solid fa-circle-info" style="color: var(--accent); margin-top: 2px;"></i>
+              <span><strong>Tip:</strong> Hover over any airport code to discover its city name, or click it to view its location on Google Maps (disabled during the Introduction Puzzle).</span>
+            </p>
+          </div>
+          
+          <div id="nameInputContainer" class="form-group" style="margin-top: 20px; padding: 8px 12px; margin-bottom: 0;">
+            <label class="form-label" for="rulesNameInput" style="font-weight:700; color: #000000;">Name:</label>
+            <input type="text" id="rulesNameInput" class="form-input" placeholder="Enter your name here" required autocomplete="off">
+          </div>
         </div>
       </div>
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-top: 15px; border-top: 1px solid var(--border-color);">
@@ -1620,22 +1709,34 @@
         <!-- User result container (shown only after submission) -->
         <div id="userResultContainer" style="display: none; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
           <h3 style="color: var(--accent); font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-square-check"></i> Your Submission Result</h3>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
-            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
-              <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Efficiency Score</div>
-              <div id="userResultScore" style="font-size: 22px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono); margin-top: 2px;">0</div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center; align-items: start;">
+            <!-- Column 1 -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="color: var(--text-secondary); font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; min-height: 26px; display: flex; align-items: center; justify-content: center; line-height: 1.2;">Efficiency Score</div>
+              <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; height: 48px; box-sizing: border-box;">
+                <span id="userResultScore" style="font-size: 22px; font-weight: 800; color: var(--color-live); font-family: var(--font-mono); line-height: 1;">0</span>
+              </div>
             </div>
-            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
-              <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Total Repo Time</div>
-              <div id="userResultRepoTime" style="font-size: 18px; font-weight: 700; color: #000000; font-family: var(--font-mono); margin-top: 4px;">0h 0m</div>
+            <!-- Column 2 -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="color: var(--text-secondary); font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; min-height: 26px; display: flex; align-items: center; justify-content: center; line-height: 1.2;">Total Repo Time</div>
+              <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; height: 48px; box-sizing: border-box;">
+                <span id="userResultRepoTime" style="font-size: 18px; font-weight: 700; color: #000000; font-family: var(--font-mono); line-height: 1;">0h 0m</span>
+              </div>
             </div>
-            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
-              <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Time Left</div>
-              <div id="userResultTimeLeft" style="font-size: 18px; font-weight: 700; color: #000000; font-family: var(--font-mono); margin-top: 4px;">00:00</div>
+            <!-- Column 3 -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="color: var(--text-secondary); font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; min-height: 26px; display: flex; align-items: center; justify-content: center; line-height: 1.2;">Time Left</div>
+              <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; height: 48px; box-sizing: border-box;">
+                <span id="userResultTimeLeft" style="font-size: 18px; font-weight: 700; color: #000000; font-family: var(--font-mono); line-height: 1;">00:00</span>
+              </div>
             </div>
-            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px;">
-               <div style="color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Puzzles Best Possible Solution</div>
-              <div id="userResultBestSolverRepo" style="font-size: 18px; font-weight: 700; color: #3b82f6; font-family: var(--font-mono); margin-top: 4px;">0h 0m</div>
+            <!-- Column 4 -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="color: var(--text-secondary); font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; min-height: 26px; display: flex; align-items: center; justify-content: center; line-height: 1.2;">Puzzles Best Possible Solution</div>
+              <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; height: 48px; box-sizing: border-box;">
+                <span id="userResultBestSolverRepo" style="font-size: 18px; font-weight: 700; color: #3b82f6; font-family: var(--font-mono); line-height: 1;">0h 0m</span>
+              </div>
             </div>
           </div>
         </div>
@@ -2109,7 +2210,7 @@
     const ADMIN_PASSWORD_HASH = "39c7bb8a9163e9885e78f4cc610e38d29883b290008a0d9a7356d80d3548a0f0";
 
     // Global Database Configuration using JSONBin.io API
-    const GLOBAL_DB_READ_URL = "https://api.jsonbin.io/v3/b/6a3d856fda38895dfeff408e/latest";
+    const GLOBAL_DB_READ_URL = { toString: () => "https://api.jsonbin.io/v3/b/6a3d856fda38895dfeff408e/latest?nocache=" + Date.now() };
     const GLOBAL_DB_WRITE_URL = "https://api.jsonbin.io/v3/b/6a3d856fda38895dfeff408e";
     const GLOBAL_DB_MASTER_KEY = "$2a$10$wcNILpAnI0blYmml8KlczubuglaF4NPs4hJKwYiajsyaAVYtfNIpi";
 
@@ -2419,6 +2520,7 @@
     let grid = Array(6).fill(null).map(() => Array(5).fill(null));
     let schedulerName = "";
     let schedulerAttemptCount = 0;
+    let lastSubmittedEntryName = null;
     let currentPuzzleName = "Introduction Puzzle";
 
     // Fallback Introduction Puzzle definition
@@ -2664,7 +2766,17 @@
         }
       }
       
-      const displayDay = Math.max(prevLeg ? prevLeg.day : 0, Math.min(leg.day, Math.floor(arrRepo / 1440)));
+      let displayDay;
+      if (prevLeg) {
+        const dayDiff = leg.day - prevLeg.day;
+        if (dayDiff > 1) {
+          displayDay = leg.day - 1;
+        } else {
+          displayDay = prevLeg.day;
+        }
+      } else {
+        displayDay = Math.max(0, Math.floor(arrRepo / 1440));
+      }
       
       return {
         depLocalMins: depRepo,
@@ -2701,6 +2813,11 @@
     // ----------------------------------------------------
     function resolvePlayerName(rawName) {
       if (!rawName) return Promise.resolve("");
+      const formatted = formatNameCapitalization(rawName);
+      const nameInput = document.getElementById("rulesNameInput");
+      if (nameInput) {
+        nameInput.value = formatted;
+      }
       return fetch(GLOBAL_DB_READ_URL)
         .then(response => {
           if (!response.ok) throw new Error("DB read failed");
@@ -2731,37 +2848,37 @@
 
           const nameMappings = (data && data.nameMappings) ? data.nameMappings : {};
           
-          let current = rawName.trim();
+          let current = formatted;
           let seen = new Set();
           while (nameMappings[current] && !seen.has(current)) {
             seen.add(current);
-            current = nameMappings[current].trim();
+            current = formatNameCapitalization(nameMappings[current]);
           }
           const finalName = current;
 
           // If the player has been renamed, synchronize their local scores names in localStorage
-          if (finalName && finalName !== rawName.trim()) {
+          if (finalName && finalName !== formatted) {
             try {
               let localScores = JSON.parse(localStorage.getItem("aero_scores") || "[]");
               let localUpdated = false;
               localScores.forEach(entry => {
                 if (!entry || !entry.name) return;
                 
-                const numPrefix = rawName.trim() + " #";
+                const numPrefix = formatted + " #";
                 if (entry.name.startsWith(numPrefix)) {
                   entry.name = finalName + " #" + entry.name.slice(numPrefix.length);
                   localUpdated = true;
                   return;
                 }
                 
-                const abortSuffix = rawName.trim() + " (Aborted)";
+                const abortSuffix = formatted + " (Aborted)";
                 if (entry.name === abortSuffix) {
                   entry.name = finalName + " (Aborted)";
                   localUpdated = true;
                   return;
                 }
                 
-                if (entry.name === rawName.trim()) {
+                if (entry.name === formatted) {
                   entry.name = finalName;
                   localUpdated = true;
                   return;
@@ -2897,10 +3014,13 @@
       if (rules && rules.idleDaysLimit !== undefined && rules.idleDaysLimit !== null && !isNaN(rules.idleDaysLimit)) {
         targetLegCount = 30 - rules.idleDaysLimit;
       }
+      targetLegCount = Math.max(10, Math.min(30, targetLegCount));
       
       const dayLegCounts = [0, 0, 0, 0, 0];
       let remaining = targetLegCount;
-      while (remaining > 0) {
+      let safetyCounter = 0;
+      while (remaining > 0 && safetyCounter < 1000) {
+        safetyCounter++;
         const randDay = Math.floor(Math.random() * 5);
         if (dayLegCounts[randDay] < 6) {
           dayLegCounts[randDay]++;
@@ -3017,6 +3137,7 @@
               depTimeStr: depTimeStr,
               distance: dist,
               durationMins: durationMins,
+              row: r
             };
             
             const fromA = AIRPORTS[depAp];
@@ -3361,11 +3482,26 @@
       return null;
     }
 
-    function solvePuzzleMethodically(legs, rules, startingLocs) {
-      const legsByDay = Array(5).fill(null).map(() => []);
+    function solvePuzzleMethodically(legs, rules, startingLocs, maxStates = 5000) {
+      // Filter legs to keep only the latest leg for each (day, row) combination to handle duplicates/orphans
+      const uniqueLegsMap = {};
       legs.forEach(leg => {
+        const r = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
+        const key = `${leg.day},${r}`;
+        uniqueLegsMap[key] = leg;
+      });
+      const activeLegs = Object.values(uniqueLegsMap);
+
+      const legsByDay = Array(5).fill(null).map(() => []);
+      activeLegs.forEach(leg => {
         legsByDay[leg.day].push(leg);
       });
+
+      for (let d = 0; d < 5; d++) {
+        if (legsByDay[d].length > 6) {
+          return { solution: null, minRepoTime: Infinity };
+        }
+      }
 
       const currentGridState = Array(5).fill(null).map(() => Array(6).fill(null));
 
@@ -3401,143 +3537,203 @@
         return results;
       }
 
-      function validateUpToDay(d) {
+      // Distance cache map
+      const distanceCache = {};
+      function getCachedDistance(loc1, loc2) {
+        const key = `${loc1},${loc2}`;
+        if (distanceCache[key] !== undefined) {
+          return distanceCache[key];
+        }
+        const lat1 = AIRPORTS[loc1].lat;
+        const lon1 = AIRPORTS[loc1].lon;
+        const lat2 = AIRPORTS[loc2].lat;
+        const lon2 = AIRPORTS[loc2].lon;
+        const dist = Math.round(calculateDistance(lat1, lon1, lat2, lon2));
+        distanceCache[key] = dist;
+        return dist;
+      }
+
+      // Helper: getRepoFlightTimes wrapper using distance cache
+      function getCachedRepoFlightTimes(tempLoc, leg, prevLeg) {
+        const dist = getCachedDistance(tempLoc, leg.from);
+        const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
+        const tzDiff = AIRPORTS[leg.from].tz - AIRPORTS[tempLoc].tz;
+        
+        let depRepo = prevLeg ? prevLeg.arrLocalMins + 60 : 0;
+        let arrRepo = depRepo + durationMins + tzDiff * 60;
+        
+        const dayDiff = prevLeg ? (leg.day - prevLeg.day) : leg.day;
+        
+        if ((prevLeg && dayDiff > 1) || (!prevLeg && leg.day >= 1)) {
+          const targetArr = Math.min(leg.depLocalMins - 840, (leg.day * 1440) - 1);
+          const targetDep = targetArr - durationMins - tzDiff * 60;
+          const minDepAllowed = prevLeg ? (prevLeg.arrLocalMins + 60) : 0;
+          
+          if (targetDep >= minDepAllowed) {
+            depRepo = targetDep;
+            arrRepo = targetArr;
+          }
+        }
+        
+        let displayDay;
+        if (prevLeg) {
+          const dayDiff = leg.day - prevLeg.day;
+          if (dayDiff > 1) {
+            displayDay = leg.day - 1;
+          } else {
+            displayDay = prevLeg.day;
+          }
+        } else {
+          displayDay = Math.max(0, Math.floor(arrRepo / 1440));
+        }
+        
+        return {
+          depLocalMins: depRepo,
+          arrLocalMins: arrRepo,
+          durationMins: durationMins,
+          distance: dist,
+          displayDay: displayDay
+        };
+      }
+
+      function validateRowUpToDay(r, d) {
+        const rowLegs = [];
+        for (let day = 0; day <= d; day++) {
+          if (currentGridState[day][r]) {
+            rowLegs.push(currentGridState[day][r]);
+          }
+        }
+
+        const startLoc = currentGridState[0][r] ? currentGridState[0][r].from : (resolvedStartingLocs[r] || "LAX");
+        let tempLoc = startLoc;
+        const simulatedEvents = [];
+        const segments = [];
+        const dailyEvents = {};
+
         let totalRepo = 0;
-        for (let r = 0; r < 6; r++) {
-          const rowLegs = [];
-          for (let day = 0; day <= d; day++) {
-            if (currentGridState[day][r]) {
-              rowLegs.push(currentGridState[day][r]);
+        let currentRepo = null;
+        for (let idx = 0; idx < rowLegs.length; idx++) {
+          const leg = rowLegs[idx];
+          currentRepo = null;
+          if (tempLoc !== leg.from) {
+            const prevLeg = idx > 0 ? rowLegs[idx - 1] : null;
+
+            if (leg.day === 0) {
+              return { isValid: false, repo: 0 };
+            }
+
+            const repoData = getCachedRepoFlightTimes(tempLoc, leg, prevLeg);
+            totalRepo += repoData.durationMins;
+
+            if (repoData.arrLocalMins > leg.depLocalMins) {
+              return { isValid: false, repo: 0 };
+            }
+
+            const repoEv = {
+              type: "repo",
+              from: tempLoc,
+              to: leg.from,
+              depLocalMins: repoData.depLocalMins,
+              arrLocalMins: repoData.arrLocalMins,
+              durationMins: repoData.durationMins,
+              displayDay: repoData.displayDay
+            };
+            simulatedEvents.push(repoEv);
+            currentRepo = repoEv;
+
+            const depZ = repoEv.depLocalMins - AIRPORTS[tempLoc].tz * 60;
+            const arrZ = repoEv.arrLocalMins - AIRPORTS[leg.from].tz * 60;
+            segments.push({ start: depZ, end: arrZ });
+
+            const dispD = repoEv.displayDay;
+            if (!dailyEvents[dispD]) dailyEvents[dispD] = [];
+            dailyEvents[dispD].push(repoEv);
+          }
+
+          simulatedEvents.push({
+            type: "live",
+            legRef: leg,
+            displayDay: leg.day
+          });
+
+          const depZ = leg.depLocalMins - AIRPORTS[leg.from].tz * 60;
+          const arrZ = leg.arrLocalMins - AIRPORTS[leg.to].tz * 60;
+          segments.push({ start: depZ, end: arrZ, legRef: leg });
+
+          if (!dailyEvents[leg.day]) dailyEvents[leg.day] = [];
+          dailyEvents[leg.day].push({ type: "live", depLocalMins: leg.depLocalMins, arrLocalMins: leg.arrLocalMins, from: leg.from, to: leg.to });
+
+          if (idx > 0) {
+            const prevLeg = rowLegs[idx - 1];
+            if (prevLeg && rules.rule1) {
+              const lastLanding = currentRepo ? currentRepo.arrLocalMins : prevLeg.arrLocalMins;
+              if (leg.depLocalMins - lastLanding < 840) {
+                return { isValid: false, repo: 0 };
+              }
             }
           }
 
-          const startLoc = currentGridState[0][r] ? currentGridState[0][r].from : (resolvedStartingLocs[r] || "LAX");
-          let tempLoc = startLoc;
-          const simulatedEvents = [];
-          const segments = [];
-          const dailyEvents = {};
+          tempLoc = leg.to;
+        }
 
-          let currentRepo = null;
-          for (const leg of rowLegs) {
-            currentRepo = null;
-            if (tempLoc !== leg.from) {
-              const idx = rowLegs.indexOf(leg);
-              const prevLeg = idx > 0 ? rowLegs[idx - 1] : null;
+        if (rules.rule3) {
+          let hasRule3Conflict = false;
+          const activeDList = Object.keys(dailyEvents).map(Number).sort((a,b)=>a-b);
+          const dailyDuty = {};
 
-              if (leg.day === 0) {
-                return { isValid: false, totalRepo: 0 };
-              }
+          for (let i = 0; i < activeDList.length; i++) {
+            const actD = activeDList[i];
+            const dayEvs = dailyEvents[actD];
+            dayEvs.sort((a,b) => a.depLocalMins - b.depLocalMins);
+            const fEv = dayEvs[0];
+            const lEv = dayEvs[dayEvs.length - 1];
+            const fTakeoff = fEv.depLocalMins;
+            const lLanding = lEv.legRef ? lEv.legRef.arrLocalMins : lEv.arrLocalMins;
 
-              const repoData = getRepoFlightTimes(tempLoc, leg, prevLeg);
-              totalRepo += repoData.durationMins;
+            const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
+            const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
+            const zStart = (fTakeoff - 60) - AIRPORTS[fFrom].tz * 60;
+            const zEnd = (lLanding + 30) - AIRPORTS[lTo].tz * 60;
+            const dDuration = zEnd - zStart;
 
-              if (repoData.arrLocalMins > leg.depLocalMins) {
-                return { isValid: false, totalRepo: 0 };
-              }
-
-              const repoEv = {
-                type: "repo",
-                from: tempLoc,
-                to: leg.from,
-                depLocalMins: repoData.depLocalMins,
-                arrLocalMins: repoData.arrLocalMins,
-                durationMins: repoData.durationMins,
-                displayDay: repoData.displayDay
-              };
-              simulatedEvents.push(repoEv);
-              currentRepo = repoEv;
-
-              const depZ = repoEv.depLocalMins - AIRPORTS[tempLoc].tz * 60;
-              const arrZ = repoEv.arrLocalMins - AIRPORTS[leg.from].tz * 60;
-              segments.push({ start: depZ, end: arrZ });
-
-              const dispD = repoEv.displayDay;
-              if (!dailyEvents[dispD]) dailyEvents[dispD] = [];
-              dailyEvents[dispD].push(repoEv);
+            if (dDuration > 840) {
+              hasRule3Conflict = true;
+              break;
             }
-
-            simulatedEvents.push({
-              type: "live",
-              legRef: leg,
-              displayDay: leg.day
-            });
-
-            const depZ = leg.depLocalMins - AIRPORTS[leg.from].tz * 60;
-            const arrZ = leg.arrLocalMins - AIRPORTS[leg.to].tz * 60;
-            segments.push({ start: depZ, end: arrZ, legRef: leg });
-
-            if (!dailyEvents[leg.day]) dailyEvents[leg.day] = [];
-            dailyEvents[leg.day].push({ type: "live", depLocalMins: leg.depLocalMins, arrLocalMins: leg.arrLocalMins, from: leg.from, to: leg.to });
-
-            if (rowLegs.indexOf(leg) > 0) {
-              const prevLeg = rowLegs[rowLegs.indexOf(leg) - 1];
-              if (prevLeg && rules.rule1) {
-                const lastLanding = currentRepo ? currentRepo.arrLocalMins : prevLeg.arrLocalMins;
-                if (leg.depLocalMins - lastLanding < 840) {
-                  return { isValid: false, totalRepo: 0 };
-                }
-              }
-            }
-
-            tempLoc = leg.to;
+            dailyDuty[actD] = { start: zStart, end: zEnd };
           }
 
-          if (rules.rule3) {
-            let hasRule3Conflict = false;
-            const activeDList = Object.keys(dailyEvents).map(Number).sort((a,b)=>a-b);
-            const dailyDuty = {};
-
-            for (const actD of activeDList) {
-              const dayEvs = dailyEvents[actD];
-              dayEvs.sort((a,b) => a.depLocalMins - b.depLocalMins);
-              const fEv = dayEvs[0];
-              const lEv = dayEvs[dayEvs.length - 1];
-              const fTakeoff = fEv.depLocalMins;
-              const lLanding = lEv.legRef ? lEv.legRef.arrLocalMins : lEv.arrLocalMins;
-
-              const fFrom = fEv.legRef ? fEv.legRef.from : fEv.from;
-              const lTo = lEv.legRef ? lEv.legRef.to : lEv.to;
-              const zStart = (fTakeoff - 60) - AIRPORTS[fFrom].tz * 60;
-              const zEnd = (lLanding + 30) - AIRPORTS[lTo].tz * 60;
-              const dDuration = zEnd - zStart;
-
-              if (dDuration > 840) {
+          if (!hasRule3Conflict) {
+            for (let i = 0; i < activeDList.length - 1; i++) {
+              const d1 = activeDList[i];
+              const d2 = activeDList[i + 1];
+              if (dailyDuty[d2].start - dailyDuty[d1].end < 600) {
                 hasRule3Conflict = true;
                 break;
               }
-              dailyDuty[actD] = { start: zStart, end: zEnd };
-            }
-
-            if (!hasRule3Conflict) {
-              for (let i = 0; i < activeDList.length - 1; i++) {
-                const d1 = activeDList[i];
-                const d2 = activeDList[i + 1];
-                if (dailyDuty[d2].start - dailyDuty[d1].end < 600) {
-                  hasRule3Conflict = true;
-                  break;
-                }
-              }
-            }
-
-            if (!hasRule3Conflict) {
-              for (const seg of segments) {
-                if (getFlightTimeInWindow(seg.end, segments) > 600) {
-                  hasRule3Conflict = true;
-                  break;
-                }
-                if (getFlightTimeInWindow(seg.start + 1440, segments) > 600) {
-                  hasRule3Conflict = true;
-                  break;
-                }
-              }
-            }
-
-            if (hasRule3Conflict) {
-              return { isValid: false, totalRepo: 0 };
             }
           }
+
+          if (!hasRule3Conflict) {
+            for (let i = 0; i < segments.length; i++) {
+              const seg = segments[i];
+              if (getFlightTimeInWindow(seg.end, segments) > 600) {
+                hasRule3Conflict = true;
+                break;
+              }
+              if (getFlightTimeInWindow(seg.start + 1440, segments) > 600) {
+                hasRule3Conflict = true;
+                break;
+              }
+            }
+          }
+
+          if (hasRule3Conflict) {
+            return { isValid: false, repo: 0 };
+          }
         }
-        return { isValid: true, totalRepo: totalRepo };
+
+        return { isValid: true, repo: totalRepo };
       }
 
       const permutationsBySize = {};
@@ -3545,8 +3741,19 @@
         permutationsBySize[size] = getPermutations([0, 1, 2, 3, 4, 5], size);
       }
 
+      // Calculate initial row repos
+      const initialRowRepos = Array(6).fill(0);
+      for (let r = 0; r < 6; r++) {
+        const res = validateRowUpToDay(r, 0);
+        if (!res.isValid) {
+          return { solution: null, minRepoTime: Infinity };
+        }
+        initialRowRepos[r] = res.repo;
+      }
+
       // 1. Run Greedy Solver first to get a quick upper bound
       let greedyRepo = Infinity;
+      let greedyRowRepos = [...initialRowRepos];
       for (let d = 1; d < 5; d++) {
         const dayLegs = legsByDay[d];
         const numLegs = dayLegs.length;
@@ -3555,20 +3762,31 @@
         const rowPerms = permutationsBySize[numLegs];
         let bestPerm = null;
         let minDayRepo = Infinity;
+        let bestNewRepos = null;
 
-        for (const rows of rowPerms) {
+        for (let pIdx = 0; pIdx < rowPerms.length; pIdx++) {
+          const rows = rowPerms[pIdx];
+          let valid = true;
+          const newRepos = [...greedyRowRepos];
           for (let i = 0; i < numLegs; i++) {
-            currentGridState[d][rows[i]] = dayLegs[i];
+            const r = rows[i];
+            currentGridState[d][r] = dayLegs[i];
+            const resVal = validateRowUpToDay(r, d);
+            currentGridState[d][r] = null;
+            if (!resVal.isValid) {
+              valid = false;
+              break;
+            }
+            newRepos[r] = resVal.repo;
           }
 
-          const resVal = validateUpToDay(d);
-          if (resVal.isValid && resVal.totalRepo < minDayRepo) {
-            minDayRepo = resVal.totalRepo;
-            bestPerm = [...rows];
-          }
-
-          for (let i = 0; i < numLegs; i++) {
-            currentGridState[d][rows[i]] = null;
+          if (valid) {
+            const tot = newRepos.reduce((sum, val) => sum + val, 0);
+            if (tot < minDayRepo) {
+              minDayRepo = tot;
+              bestPerm = rows;
+              bestNewRepos = newRepos;
+            }
           }
         }
 
@@ -3580,8 +3798,55 @@
         for (let i = 0; i < numLegs; i++) {
           currentGridState[d][bestPerm[i]] = dayLegs[i];
         }
+        greedyRowRepos = bestNewRepos;
         if (d === 4) {
           greedyRepo = minDayRepo;
+        }
+      }
+
+      // Check if the current layout is valid and can serve as a baseline/fallback
+      let currentLayoutValid = true;
+      let currentLayoutRepo = Infinity;
+      
+      const tempGrid = Array(5).fill(null).map(() => Array(6).fill(null));
+      for (const leg of legs) {
+        const r = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
+        if (r !== undefined && r !== null && r >= 0 && r < 6) {
+          if (tempGrid[leg.day][r] !== null) {
+            currentLayoutValid = false;
+          }
+          tempGrid[leg.day][r] = leg;
+        } else {
+          currentLayoutValid = false;
+        }
+      }
+      
+      if (currentLayoutValid) {
+        const savedGridState = Array(5).fill(null).map(() => Array(6).fill(null));
+        for (let d = 0; d < 5; d++) {
+          for (let r = 0; r < 6; r++) {
+            savedGridState[d][r] = currentGridState[d][r];
+            currentGridState[d][r] = tempGrid[d][r];
+          }
+        }
+        
+        const layoutRepos = Array(6).fill(0);
+        for (let r = 0; r < 6; r++) {
+          const valRes = validateRowUpToDay(r, 4);
+          if (!valRes.isValid) {
+            currentLayoutValid = false;
+            break;
+          }
+          layoutRepos[r] = valRes.repo;
+        }
+        if (currentLayoutValid) {
+          currentLayoutRepo = layoutRepos.reduce((sum, val) => sum + val, 0);
+        }
+        
+        for (let d = 0; d < 5; d++) {
+          for (let r = 0; r < 6; r++) {
+            currentGridState[d][r] = savedGridState[d][r];
+          }
         }
       }
 
@@ -3594,17 +3859,82 @@
 
       let minRepoTime = greedyRepo;
       let bestSolution = null;
+
+      if (greedyRepo !== Infinity) {
+        bestSolution = {};
+        let reconRowRepos = [...initialRowRepos];
+        for (let d = 1; d < 5; d++) {
+          const dayLegs = legsByDay[d];
+          const numLegs = dayLegs.length;
+          if (numLegs === 0) continue;
+          const rowPerms = permutationsBySize[numLegs];
+          let bestPerm = null;
+          let minDayRepo = Infinity;
+          let bestNewRepos = null;
+          for (let pIdx = 0; pIdx < rowPerms.length; pIdx++) {
+            const rows = rowPerms[pIdx];
+            let valid = true;
+            const newRepos = [...reconRowRepos];
+            for (let i = 0; i < numLegs; i++) {
+              const r = rows[i];
+              currentGridState[d][r] = dayLegs[i];
+              const resVal = validateRowUpToDay(r, d);
+              currentGridState[d][r] = null;
+              if (!resVal.isValid) {
+                valid = false;
+                break;
+              }
+              newRepos[r] = resVal.repo;
+            }
+            if (valid) {
+              const tot = newRepos.reduce((sum, val) => sum + val, 0);
+              if (tot < minDayRepo) {
+                minDayRepo = tot;
+                bestPerm = rows;
+                bestNewRepos = newRepos;
+              }
+            }
+          }
+          for (let i = 0; i < numLegs; i++) {
+            currentGridState[d][bestPerm[i]] = dayLegs[i];
+          }
+          reconRowRepos = bestNewRepos;
+        }
+        for (let day = 0; day < 5; day++) {
+          for (let r = 0; r < 6; r++) {
+            const leg = currentGridState[day][r];
+            if (leg) {
+              bestSolution[leg.id] = r;
+            }
+          }
+        }
+        for (let d = 1; d < 5; d++) {
+          for (let r = 0; r < 6; r++) {
+            currentGridState[d][r] = null;
+          }
+        }
+      }
+
+      if (currentLayoutValid && (currentLayoutRepo < minRepoTime || minRepoTime === Infinity)) {
+        minRepoTime = currentLayoutRepo;
+        bestSolution = {};
+        legs.forEach(leg => {
+          bestSolution[leg.id] = (leg.row !== undefined && leg.row !== null) ? leg.row : leg.originalRow;
+        });
+      }
+
       let statesChecked = 0;
       let aborted = false;
 
-      function dfs(d, repoAccumulated) {
+      function dfs(d, rowRepos) {
         if (aborted) return;
         statesChecked++;
-        if (statesChecked > 50000) {
+        if (statesChecked > maxStates) {
           aborted = true;
           return;
         }
 
+        const repoAccumulated = rowRepos.reduce((sum, val) => sum + val, 0);
         if (repoAccumulated > minRepoTime) return;
         if (d === 5) {
           if (repoAccumulated < minRepoTime || bestSolution === null) {
@@ -3625,75 +3955,69 @@
         const dayLegs = legsByDay[d];
         const numLegs = dayLegs.length;
         if (numLegs === 0) {
-          dfs(d + 1, repoAccumulated);
+          dfs(d + 1, rowRepos);
           return;
         }
 
         const rowPerms = permutationsBySize[numLegs];
-        for (const rows of rowPerms) {
+        
+        // Pre-calculate validity and repo for assigning each leg to each row at day d
+        const tempRepos = Array(numLegs).fill(null).map(() => Array(6).fill(null));
+        for (let i = 0; i < numLegs; i++) {
+          for (let r = 0; r < 6; r++) {
+            currentGridState[d][r] = dayLegs[i];
+            const resVal = validateRowUpToDay(r, d);
+            currentGridState[d][r] = null;
+            if (resVal.isValid) {
+              tempRepos[i][r] = resVal.repo;
+            }
+          }
+        }
+
+        for (let pIdx = 0; pIdx < rowPerms.length; pIdx++) {
           if (aborted) return;
+          const rows = rowPerms[pIdx];
+          
+          let valid = true;
+          const nextRowRepos = [...rowRepos];
           for (let i = 0; i < numLegs; i++) {
-            currentGridState[d][rows[i]] = dayLegs[i];
+            const r = rows[i];
+            const repo = tempRepos[i][r];
+            if (repo === null) {
+              valid = false;
+              break;
+            }
+            nextRowRepos[r] = repo;
           }
 
-          const resVal = validateUpToDay(d);
-          if (resVal.isValid && resVal.totalRepo <= minRepoTime) {
-            dfs(d + 1, resVal.totalRepo);
-          }
-
-          for (let i = 0; i < numLegs; i++) {
-            currentGridState[d][rows[i]] = null;
+          if (valid) {
+            const totalNextRepo = nextRowRepos.reduce((sum, val) => sum + val, 0);
+            if (totalNextRepo <= minRepoTime) {
+              for (let i = 0; i < numLegs; i++) {
+                currentGridState[d][rows[i]] = dayLegs[i];
+              }
+              dfs(d + 1, nextRowRepos);
+              for (let i = 0; i < numLegs; i++) {
+                currentGridState[d][rows[i]] = null;
+              }
+            }
           }
         }
       }
 
-      dfs(1, 0);
+      dfs(1, initialRowRepos);
 
-      // Reconstruct bestSolution mapping if we found a DFS solution without aborting
-      if (bestSolution && !aborted) {
+      if (bestSolution) {
         return { solution: bestSolution, minRepoTime: minRepoTime };
-      } else if (greedyRepo !== Infinity) {
-        // Fallback to greedy solution if DFS aborted or didn't find anything
-        const fallbackSolution = {};
-        for (let d = 1; d < 5; d++) {
-          const dayLegs = legsByDay[d];
-          const numLegs = dayLegs.length;
-          if (numLegs === 0) continue;
-          const rowPerms = permutationsBySize[numLegs];
-          let bestPerm = null;
-          let minDayRepo = Infinity;
-          for (const rows of rowPerms) {
-            for (let i = 0; i < numLegs; i++) {
-              currentGridState[d][rows[i]] = dayLegs[i];
-            }
-            const resVal = validateUpToDay(d);
-            if (resVal.isValid && resVal.totalRepo < minDayRepo) {
-              minDayRepo = resVal.totalRepo;
-              bestPerm = [...rows];
-            }
-            for (let i = 0; i < numLegs; i++) {
-              currentGridState[d][rows[i]] = null;
-            }
-          }
-          for (let i = 0; i < numLegs; i++) {
-            currentGridState[d][bestPerm[i]] = dayLegs[i];
-          }
-        }
-        for (let day = 0; day < 5; day++) {
-          for (let r = 0; r < 6; r++) {
-            const leg = currentGridState[day][r];
-            if (leg) {
-              fallbackSolution[leg.id] = r;
-            }
-          }
-        }
-        return { solution: fallbackSolution, minRepoTime: greedyRepo };
       } else {
         return { solution: null, minRepoTime: Infinity };
       }
     }
 
     function initGame(isReplay = false) {
+      // Initialize local database cache immediately
+      populatePuzzlesDatabase([]);
+
       // Retrieve client IP asynchronously in the background
       getUserIpAddress().then(ip => {
         currentClientIp = ip;
@@ -3730,7 +4054,7 @@
           
           // Parse custom puzzles from database
           const customPuzzles = data.customPuzzles || [];
-          puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...customPuzzles ];
+          populatePuzzlesDatabase(customPuzzles);
           
           let puzzleToLoad = localStorage.getItem("aero_last_played_puzzle") || data.puzzleToLoad || "Introduction Puzzle";
           if (puzzleToLoad === 1 || puzzleToLoad === "1") {
@@ -3834,8 +4158,7 @@
           console.error("Failed to fetch database on initGame, using defaults:", err);
           currentPuzzleName = "Introduction Puzzle";
           currentPuzzle = INTRODUCTION_PUZZLE;
-          puzzlesDatabase = [ INTRODUCTION_PUZZLE ];
-          updatePuzzleDropdownOptions();
+          populatePuzzlesDatabase([]);
           const dropdown = document.getElementById("puzzleDropdown");
           if (dropdown) {
             dropdown.value = "Introduction Puzzle";
@@ -3852,6 +4175,26 @@
           }
           setupGameInitialUI();
         });
+    }
+
+    function populatePuzzlesDatabase(cloudCustomPuzzles = null) {
+      if (cloudCustomPuzzles === null) {
+        cloudCustomPuzzles = puzzlesDatabase.filter(p => p.name !== "Introduction Puzzle");
+      }
+      
+      const localCustomPuzzles = JSON.parse(localStorage.getItem("aero_local_custom_puzzles") || "[]");
+      const mergedMap = new Map();
+      
+      cloudCustomPuzzles.forEach(p => {
+        mergedMap.set(p.name, p);
+      });
+      
+      localCustomPuzzles.forEach(p => {
+        mergedMap.set(p.name, p);
+      });
+      
+      puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...Array.from(mergedMap.values()) ];
+      updatePuzzleDropdownOptions();
     }
 
     function updatePuzzleDropdownOptions() {
@@ -4613,6 +4956,19 @@
       );
     }
 
+    // Helper: Formats first letter of each word to uppercase, rest to lowercase
+    function formatNameCapitalization(name) {
+      if (!name) return "";
+      return name
+        .trim()
+        .split(/\s+/)
+        .map(part => {
+          if (!part) return "";
+          return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+        })
+        .join(" ");
+    }
+
     // Helper: Formats absolute day-offset minutes into digital clock string
     function formatMinutesToTimeString(absMins) {
       const minutesInDay = ((absMins % 1440) + 1440) % 1440;
@@ -4630,6 +4986,24 @@
       return `${h}h ${m}m`;
     }
 
+    // Helper: Formats ISO string or Date into MM-DD-YYYY    HH:MM:SSZ in UTC
+    function formatTimestampZ(isoString) {
+      if (!isoString) return "";
+      try {
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return "";
+        const yr = d.getUTCFullYear();
+        const mo = String(d.getUTCMonth() + 1).padStart(2, "0");
+        const dy = String(d.getUTCDate()).padStart(2, "0");
+        const hr = String(d.getUTCHours()).padStart(2, "0");
+        const min = String(d.getUTCMinutes()).padStart(2, "0");
+        const sec = String(d.getUTCSeconds()).padStart(2, "0");
+        return `${mo}-${dy}-${yr}    ${hr}:${min}:${sec}Z`;
+      } catch (e) {
+        return "";
+      }
+    }
+
     // Helper: Computes visual day offset text
     function getDayOffsetText(depAbs, arrAbs) {
       const depDay = Math.floor(depAbs / 1440);
@@ -4642,13 +5016,7 @@
     function getShortConflictReasonLines(reason) {
       if (!reason) return ["Schedule", "Conflict"];
       if (reason.includes("between legs")) {
-        const match = reason.match(/([0-9a-zA-Z\s]+)\s+between\s+legs/);
-        if (match) {
-          let durationStr = match[1].trim();
-          durationStr = durationStr.replace(/^Only\s+/, "");
-          durationStr = durationStr.replace(/\bh\b/g, "hr").replace(/\bm\b/g, "min");
-          return [durationStr, "between legs"];
-        }
+        return ["Less than 14 hours", "between legs"];
       }
       if (reason.includes("Overlapping flight timing")) {
         return ["Overlapping", "flights"];
@@ -4873,19 +5241,25 @@
             card.style = "border: 2px dashed #10b981; background: #f0fdf4; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15); display: flex; flex-direction: column; gap: 4px; padding: 6px; box-sizing: border-box; justify-content: center; height: 100%; position: relative; z-index: 12;";
             card.innerHTML = `
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto;">
-                <select id="creator-from-${r}-${c}" style="font-size: 10px; padding: 2px; width: 45%; border-radius: 4px; border: 1px solid #10b981; background: white; color: black; outline: none; font-weight: bold;">
-                  <option value="" disabled selected>DEP</option>
+                <select id="creator-from-${r}-${c}" onchange="syncCreatorAirports(${r}, ${c})" style="font-size: 10px; padding: 2px; width: 45%; border-radius: 4px; border: 1px solid #10b981; background: white; color: black; outline: none; font-weight: bold;">
+                  <option value="" disabled selected></option>
                   ${getAirportsOptionsHTML("")}
                 </select>
                 <i class="fa-solid fa-arrow-right" style="font-size: 8px; color: #10b981;"></i>
-                <select id="creator-to-${r}-${c}" style="font-size: 10px; padding: 2px; width: 45%; border-radius: 4px; border: 1px solid #10b981; background: white; color: black; outline: none; font-weight: bold;">
-                  <option value="" disabled selected>ARR</option>
+                <select id="creator-to-${r}-${c}" onchange="syncCreatorAirports(${r}, ${c})" style="font-size: 10px; padding: 2px; width: 45%; border-radius: 4px; border: 1px solid #10b981; background: white; color: black; outline: none; font-weight: bold;">
+                  <option value="" disabled selected></option>
                   ${getAirportsOptionsHTML("")}
                 </select>
               </div>
-              <div style="display: flex; align-items: center; gap: 4px; font-size: 9px; justify-content: center; width: 100%;">
-                <span style="color: #0f766e; font-weight: bold;">DEP:</span>
-                <input type="text" id="creator-time-${r}-${c}" placeholder="HH:MM" style="font-size: 9px; padding: 2px; width: 40px; border-radius: 4px; border: 1px solid #10b981; text-align: center; background: white; color: black; font-weight: bold;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9px; width: 100%; padding: 0; gap: 2px;">
+                <div style="display: flex; align-items: center; gap: 1px;">
+                  <span style="color: #0f766e; font-weight: bold;">DEP:</span>
+                  <input type="text" id="creator-dep-time-${r}-${c}" oninput="syncCreatorTimes(${r}, ${c}, 'dep')" onchange="formatCreatorTimeInput(this)" onkeydown="if(event.key === 'Enter') { saveCreatedLeg(${r}, ${c}); }" onmousedown="event.stopPropagation()" ondragstart="event.stopPropagation(); event.preventDefault();" onfocus="this.select(); const cell = this.closest('.grid-cell'); if (cell) cell.draggable = false;" onblur="const cell = this.closest('.grid-cell'); if (cell) cell.draggable = true;" onclick="this.select()" placeholder="HH:MM" style="font-size: 9px; padding: 2px; width: 42px; border-radius: 4px; border: 1px solid #10b981; text-align: center; background: white; color: black; font-weight: bold;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 1px;">
+                  <span style="color: #0f766e; font-weight: bold;">ARR:</span>
+                  <input type="text" id="creator-arr-time-${r}-${c}" oninput="syncCreatorTimes(${r}, ${c}, 'arr')" onchange="formatCreatorTimeInput(this)" onkeydown="if(event.key === 'Enter') { saveCreatedLeg(${r}, ${c}); }" onmousedown="event.stopPropagation()" ondragstart="event.stopPropagation(); event.preventDefault();" onfocus="this.select(); const cell = this.closest('.grid-cell'); if (cell) cell.draggable = false;" onblur="const cell = this.closest('.grid-cell'); if (cell) cell.draggable = true;" onclick="this.select()" placeholder="HH:MM" style="font-size: 9px; padding: 2px; width: 42px; border-radius: 4px; border: 1px solid #10b981; text-align: center; background: white; color: black; font-weight: bold;">
+                </div>
               </div>
               <div style="display: flex; gap: 4px; justify-content: center; width: 100%; margin-bottom: auto; margin-top: 2px;">
                 <button style="background: #10b981; color: white; border: none; font-size: 8px; font-weight: 700; padding: 3px 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onclick="saveCreatedLeg(${r}, ${c})">Save</button>
@@ -4915,23 +5289,24 @@
                   card.innerHTML = `
                     <button class="delete-leg-btn" style="position: absolute; right: 4px; top: 4px; z-index: 11; width: 14px; height: 14px; border-radius: 50%; background: #ef4444; color: white; border: none; font-size: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 900; line-height: 1;" onclick="event.stopPropagation(); deleteLegInEditor('${leg.id}');">&times;</button>
                     <div class="leg-route" style="gap: 4px; align-items: center; justify-content: center; margin-bottom: 2px; padding-right: 12px;">
-                      <select class="airport-edit-select from-select" data-leg-id="${leg.id}" title="${AIRPORTS[leg.from].name}">
+                      <select class="airport-edit-select from-select" data-leg-id="${leg.id}" title="${AIRPORTS[leg.from].name}" onmousedown="event.stopPropagation()" ondragstart="event.stopPropagation(); event.preventDefault();">
                         ${getAirportsOptionsHTML(leg.from)}
                       </select>
                       <i class="fa-solid fa-arrow-right leg-arrow" style="font-size: 10px; margin: 0 1px;"></i>
-                      <select class="airport-edit-select to-select" data-leg-id="${leg.id}" title="${AIRPORTS[leg.to].name}">
+                      <select class="airport-edit-select to-select" data-leg-id="${leg.id}" title="${AIRPORTS[leg.to].name}" onmousedown="event.stopPropagation()" ondragstart="event.stopPropagation(); event.preventDefault();">
                         ${getAirportsOptionsHTML(leg.to)}
                       </select>
                     </div>
                     <div class="leg-times" style="display: flex; justify-content: space-between; align-items: center; font-size: 9px; margin-bottom: 2px; width: 100%; padding: 0 4px;">
                       <div style="display: flex; align-items: center; gap: 1px;">
                         <span>DEP:</span>
-                        <input type="text" class="dep-time-edit-input" data-leg-id="${leg.id}" value="${leg.depTimeStr}" placeholder="HH:MM">
+                        <input type="text" class="dep-time-edit-input" data-leg-id="${leg.id}" value="${leg.depTimeStr}" placeholder="HH:MM" onmousedown="event.stopPropagation()" ondragstart="event.stopPropagation(); event.preventDefault();" onfocus="this.select(); const cell = this.closest('.grid-cell'); if (cell) cell.draggable = false;" onblur="const cell = this.closest('.grid-cell'); if (cell) cell.draggable = true;" onclick="this.select()">
                         <span style="font-size: 8px; opacity: 0.8; margin-left: 1px;">${leg.tzFrom}</span>
                       </div>
                       <div style="display: flex; align-items: center; gap: 1px;">
                         <span>ARR:</span>
-                        <span style="font-weight: 700; font-size: 9px;">${formatMinutesToTimeString(leg.arrLocalMins)} ${leg.tzTo}</span>
+                        <input type="text" class="arr-time-edit-input" data-leg-id="${leg.id}" value="${formatMinutesToTimeString(leg.arrLocalMins)}" placeholder="HH:MM" onmousedown="event.stopPropagation()" ondragstart="event.stopPropagation(); event.preventDefault();" onfocus="this.select(); const cell = this.closest('.grid-cell'); if (cell) cell.draggable = false;" onblur="const cell = this.closest('.grid-cell'); if (cell) cell.draggable = true;" onclick="this.select()">
+                        <span style="font-size: 8px; opacity: 0.8; margin-left: 1px;">${leg.tzTo}</span>
                       </div>
                     </div>
                     <div class="leg-meta" style="justify-content: space-between; font-size: 9px; padding: 0 4px;">
@@ -4993,6 +5368,9 @@
                   card.style.justifyContent = "center";
                   card.style.padding = "4px";
                   
+                  const hasLiveLeg = grid[r][c] !== null && grid[r][c] !== undefined;
+                  const addBtnMarkup = !hasLiveLeg ? `<button class="add-leg-btn" style="width: 16px; height: 16px; border-radius: 50%; background: #10b981; color: white; border: none; font-size: 10px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3); transition: all 0.2s;" onclick="openLegCreator(${r}, ${c})" title="Add Flight Leg">+</button>` : '';
+                  
                   card.innerHTML = `
                     <div class="leg-route" style="margin-bottom: 2px;">
                       <span class="airport-hoverable">${ev.from}</span>
@@ -5007,7 +5385,7 @@
                       <span>REPO</span>
                       <span>${formatDuration(ev.durationMins)}</span>
                     </div>
-                    <button class="add-leg-btn" style="width: 16px; height: 16px; border-radius: 50%; background: #10b981; color: white; border: none; font-size: 10px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3); transition: all 0.2s;" onclick="openLegCreator(${r}, ${c})" title="Add Flight Leg">+</button>
+                    ${addBtnMarkup}
                   `;
                 } else {
                   card.innerHTML = `
@@ -5612,7 +5990,10 @@
     });
 
     document.getElementById("rulesNameInput").addEventListener("input", updateRulesNameState);
-    document.getElementById("rulesNameInput").addEventListener("change", updateRulesNameState);
+    document.getElementById("rulesNameInput").addEventListener("change", (e) => {
+      e.target.value = formatNameCapitalization(e.target.value);
+      updateRulesNameState();
+    });
 
     document.getElementById("rulesBtn").addEventListener("click", () => {
       if (schedulerName) {
@@ -5848,7 +6229,8 @@
           repoTime: formatDuration(totalRepoDurationMins),
           timeLeft: formatTimeLeft(),
           date: dateStr,
-          puzzle: currentPuzzleName
+          puzzle: currentPuzzleName,
+          timestamp: new Date().toISOString()
         };
         scores.push(entry);
         scores.sort((a, b) => b.score - a.score);
@@ -5858,6 +6240,7 @@
 
       // Helper function to finish UI flow
       const finalizeSubmission = (entry) => {
+        lastSubmittedEntryName = entry.name;
         postMockSlackWebhook(entry);
         closeModal("submitModal");
         
@@ -5941,7 +6324,8 @@
             repoTime: formatDuration(totalRepoDurationMins),
             timeLeft: formatTimeLeft(),
             date: dateStr,
-            puzzle: currentPuzzleName
+            puzzle: currentPuzzleName,
+            timestamp: new Date().toISOString()
           };
           scores.push(entry);
           scores.sort((a, b) => b.score - a.score);
@@ -5983,21 +6367,48 @@
         return;
       }
       
+      let highlightedRow = null;
+      
       scores.forEach((entry, idx) => {
         const tr = document.createElement("tr");
         let rankDisplay = idx + 1;
         if (idx === 0) rankDisplay = `<i class="fa-solid fa-trophy"></i>`;
         else if (idx === 1 || idx === 2) rankDisplay = `<i class="fa-solid fa-medal"></i>`;
 
+        const isNewScore = (lastSubmittedEntryName && entry.name === lastSubmittedEntryName);
+        if (isNewScore) {
+          tr.className = "new-score-highlight";
+          highlightedRow = tr;
+        }
+
+        let tooltipText = "";
+        if (entry.timestamp) {
+          tooltipText = formatTimestampZ(entry.timestamp);
+        } else if (entry.date) {
+          tooltipText = `${entry.date} (Time not recorded)`;
+        } else {
+          tooltipText = "Unknown";
+        }
+
         tr.innerHTML = `
           <td class="rank-col">${rankDisplay}</td>
-          <td style="font-weight:600; color:#000000;">${entry.name}</td>
+          <td style="font-weight:600; color:#000000;" class="leaderboard-name-cell">
+            ${entry.name}
+            <span class="score-tooltip">${tooltipText}</span>
+          </td>
           <td style="text-align: right; font-family: var(--font-mono); color:#000000;">${entry.repoTime || formatDuration(Math.round((entry.distance || 0) / CRUISE_SPEED * 60))}</td>
           <td style="text-align: right; font-family: var(--font-mono); color:#000000;">${entry.timeLeft}</td>
           <td style="text-align: right;" class="score-col">${entry.score.toLocaleString()}</td>
         `;
         tbody.appendChild(tr);
       });
+
+      if (highlightedRow) {
+        setTimeout(() => {
+          highlightedRow.scrollIntoView({ behavior: "smooth", block: "center" });
+          lastSubmittedEntryName = null; // Clear to prevent re-triggering
+        }, 300);
+      }
     }
 
     function renderLocalLeaderboardTable() {
@@ -6177,8 +6588,7 @@
           let data = res.record || res;
           let scores = Array.isArray(data) ? data : (data.scores || []);
           const customPuzzles = data.customPuzzles || [];
-          puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...customPuzzles ];
-          updatePuzzleDropdownOptions();
+          populatePuzzlesDatabase(customPuzzles);
           populateAdminDropdowns(scores);
           
           // Sync puzzleToLoad dropdown
@@ -6265,8 +6675,8 @@
     });
 
     document.getElementById("adminRenameBtn").addEventListener("click", () => {
-      const oldName = document.getElementById("adminOldName").value;
-      const newName = document.getElementById("adminNewName").value.trim();
+      const oldName = formatNameCapitalization(document.getElementById("adminOldName").value);
+      const newName = formatNameCapitalization(document.getElementById("adminNewName").value);
       
       if (!oldName || !newName) {
         showToast("Please enter both Old Name and New Name.", "error");
@@ -6514,43 +6924,14 @@
             idleDaysLimit: idleDaysLimit
           };
           
-          closeModal("loadingOverlay");
-          showLoading("Saving Puzzle...", "Reading database configuration...", 20);
+          // Save to local storage instantly
+          let localCustomPuzzles = JSON.parse(localStorage.getItem("aero_local_custom_puzzles") || "[]");
+          localCustomPuzzles = localCustomPuzzles.filter(p => p.name !== name);
+          localCustomPuzzles.push(newPuzzle);
+          localStorage.setItem("aero_local_custom_puzzles", JSON.stringify(localCustomPuzzles));
           
-          const response = await fetchWithTimeout(GLOBAL_DB_READ_URL);
-          if (!response.ok) throw new Error("Failed to fetch database");
-          
-          showLoading("Saving Puzzle...", "Updating puzzle indexes...", 50);
-          const resObj = await response.json();
-          let record = resObj.record || resObj;
-          
-          if (!record.customPuzzles) record.customPuzzles = [];
-          record.customPuzzles = record.customPuzzles.filter(p => p.name !== name);
-          record.customPuzzles.push(newPuzzle);
-          
-          showLoading("Saving Puzzle...", "Uploading custom puzzle definition...", 80);
-          const writeResponse = await fetchWithTimeout(GLOBAL_DB_WRITE_URL, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Master-Key": GLOBAL_DB_MASTER_KEY
-            },
-            body: JSON.stringify({
-              scores: record.scores || [],
-              nameMappings: record.nameMappings || {},
-              deletedUsers: record.deletedUsers || [],
-              resetVersion: record.resetVersion || 0,
-              puzzleToLoad: record.puzzleToLoad || "Introduction Puzzle",
-              userIps: record.userIps || {},
-              customPuzzles: record.customPuzzles
-            })
-          });
-          
-          if (!writeResponse.ok) throw new Error("Failed to save to database");
-          showLoading("Saving Puzzle...", "Finalizing and loading puzzle...", 100);
-          
-          puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...record.customPuzzles ];
-          updatePuzzleDropdownOptions();
+          // Re-populate database local cache instantly
+          populatePuzzlesDatabase();
           
           nameInput.value = "";
           
@@ -6564,10 +6945,50 @@
           
           selectPuzzle(name);
           showToast(`Puzzle '${name}' created and loaded for editing!`);
+          
+          // Trigger asynchronous background cloud database sync
+          (async () => {
+            try {
+              console.log("[Auto-Sync] Syncing new puzzle to cloud database...");
+              const response = await fetchWithTimeout(GLOBAL_DB_READ_URL);
+              if (!response.ok) throw new Error("Failed to read database");
+              
+              const resObj = await response.json();
+              let record = resObj.record || resObj;
+              
+              if (!record.customPuzzles) record.customPuzzles = [];
+              record.customPuzzles = record.customPuzzles.filter(p => p.name !== name);
+              record.customPuzzles.push(newPuzzle);
+              
+              const writeResponse = await fetchWithTimeout(GLOBAL_DB_WRITE_URL, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Master-Key": GLOBAL_DB_MASTER_KEY
+                },
+                body: JSON.stringify({
+                  scores: record.scores || [],
+                  nameMappings: record.nameMappings || {},
+                  deletedUsers: record.deletedUsers || [],
+                  resetVersion: record.resetVersion || 0,
+                  puzzleToLoad: record.puzzleToLoad || "Introduction Puzzle",
+                  userIps: record.userIps || {},
+                  customPuzzles: record.customPuzzles
+                })
+              });
+              if (!writeResponse.ok) throw new Error("Failed to save to cloud database");
+              
+              // Sync local copy with database records
+              populatePuzzlesDatabase(record.customPuzzles);
+              console.log("[Auto-Sync] Cloud database successfully synced!");
+            } catch (err) {
+              console.error("[Auto-Sync] Cloud database sync failed:", err);
+            }
+          })();
         } catch (err) {
           closeModal("loadingOverlay");
           console.error(err);
-          showToast("Error saving puzzle: " + err.message, "error");
+          showToast("Error creating puzzle: " + err.message, "error");
         }
       }, 100);
     });
@@ -6584,43 +7005,14 @@
         "Delete Puzzle",
         `Are you sure you want to delete the puzzle '${name}'? This will also delete all submitted scores for this puzzle.`,
         async () => {
-          showLoading("Deleting Puzzle...", "Reading database configuration...", 20);
           try {
-            const response = await fetch(GLOBAL_DB_READ_URL);
-            if (!response.ok) throw new Error("Failed to fetch database");
+            // Remove from local storage immediately
+            let localCustomPuzzles = JSON.parse(localStorage.getItem("aero_local_custom_puzzles") || "[]");
+            localCustomPuzzles = localCustomPuzzles.filter(p => p.name !== name);
+            localStorage.setItem("aero_local_custom_puzzles", JSON.stringify(localCustomPuzzles));
             
-            showLoading("Deleting Puzzle...", "Wiping puzzle definitions...", 50);
-            const resObj = await response.json();
-            let record = resObj.record || resObj;
-            
-            if (record.customPuzzles) {
-              record.customPuzzles = record.customPuzzles.filter(p => p.name !== name);
-            }
-            if (record.scores) {
-              record.scores = record.scores.filter(s => s.puzzle !== name);
-            }
-            
-            showLoading("Deleting Puzzle...", "Uploading database updates...", 80);
-            const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Master-Key": GLOBAL_DB_MASTER_KEY
-              },
-              body: JSON.stringify({
-                scores: record.scores,
-                nameMappings: record.nameMappings || {},
-                deletedUsers: record.deletedUsers || [],
-                resetVersion: record.resetVersion || 0,
-                puzzleToLoad: record.puzzleToLoad === name ? "Introduction Puzzle" : record.puzzleToLoad,
-                userIps: record.userIps || {},
-                customPuzzles: record.customPuzzles || []
-              })
-            });
-            
-            if (!writeResponse.ok) throw new Error("Failed to update database");
-            
-            puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...(record.customPuzzles || []) ];
+            // Instantly remove from local puzzlesDatabase
+            puzzlesDatabase = puzzlesDatabase.filter(p => p.name !== name);
             
             if (currentPuzzleName === name) {
               selectPuzzle("Introduction Puzzle", false);
@@ -6629,18 +7021,59 @@
             }
             
             updatePuzzleDropdownOptions();
-            populateAdminDropdowns(record.scores);
-            renderAdminDeleteScoresList(record.scores);
             
             // Collapse all accordions
             document.querySelectorAll(".accordion-item").forEach(item => {
               item.classList.remove("active");
             });
             
-            closeModal("loadingOverlay");
             showToast(`Puzzle '${name}' deleted successfully.`);
+            
+            // Trigger background cloud database deletion sync
+            (async () => {
+              try {
+                console.log("[Auto-Sync] Syncing puzzle deletion to cloud database...");
+                const response = await fetchWithTimeout(GLOBAL_DB_READ_URL);
+                if (!response.ok) throw new Error("Failed to fetch database");
+                
+                const resObj = await response.json();
+                let record = resObj.record || resObj;
+                
+                if (record.customPuzzles) {
+                  record.customPuzzles = record.customPuzzles.filter(p => p.name !== name);
+                }
+                if (record.scores) {
+                  record.scores = record.scores.filter(s => s.puzzle !== name);
+                }
+                
+                const writeResponse = await fetchWithTimeout(GLOBAL_DB_WRITE_URL, {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-Master-Key": GLOBAL_DB_MASTER_KEY
+                  },
+                  body: JSON.stringify({
+                    scores: record.scores,
+                    nameMappings: record.nameMappings || {},
+                    deletedUsers: record.deletedUsers || [],
+                    resetVersion: record.resetVersion || 0,
+                    puzzleToLoad: record.puzzleToLoad === name ? "Introduction Puzzle" : record.puzzleToLoad,
+                    userIps: record.userIps || {},
+                    customPuzzles: record.customPuzzles || []
+                  })
+                });
+                
+                if (!writeResponse.ok) throw new Error("Failed to update cloud database");
+                
+                populatePuzzlesDatabase(record.customPuzzles || []);
+                populateAdminDropdowns(record.scores);
+                renderAdminDeleteScoresList(record.scores);
+                console.log("[Auto-Sync] Cloud database deletion successfully synced!");
+              } catch (err) {
+                console.error("[Auto-Sync] Cloud database deletion sync failed:", err);
+              }
+            })();
           } catch (err) {
-            closeModal("loadingOverlay");
             console.error(err);
             showToast("Error deleting puzzle: " + err.message, "error");
           }
@@ -7475,6 +7908,21 @@
       }, 150);
     });
 
+    document.body.addEventListener("click", (e) => {
+      if (currentPuzzleName === "Introduction Puzzle") return;
+      
+      const hoverable = e.target.closest(".airport-hoverable");
+      if (!hoverable) return;
+      
+      const code = hoverable.textContent.trim().toUpperCase();
+      const airport = AIRPORTS[code];
+      if (!airport) return;
+      
+      // Open Google Maps in a new tab centered with a pin, at z=5 (broader regional scale), forcing roadmap view
+      const url = `https://www.google.com/maps/place/${airport.lat},${airport.lon}/@${airport.lat},${airport.lon},5z/data=!3m1!1e0`;
+      window.open(url, "_blank");
+    });
+
     document.addEventListener("dragstart", () => {
       clearTimeout(hoverTimeout);
       tooltipEl.style.opacity = "0";
@@ -7501,9 +7949,25 @@
     function saveUpdatedPuzzleToDatabase() {
       if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
       
+      // Instantly save to local storage
+      let localCustomPuzzles = JSON.parse(localStorage.getItem("aero_local_custom_puzzles") || "[]");
+      let foundLocal = false;
+      localCustomPuzzles = localCustomPuzzles.map(p => {
+        if (p.name === currentPuzzle.name) {
+          foundLocal = true;
+          return currentPuzzle;
+        }
+        return p;
+      });
+      if (!foundLocal) {
+        localCustomPuzzles.push(currentPuzzle);
+      }
+      localStorage.setItem("aero_local_custom_puzzles", JSON.stringify(localCustomPuzzles));
+      populatePuzzlesDatabase();
+      
       autoSaveTimeout = setTimeout(async () => {
         try {
-          const response = await fetch(GLOBAL_DB_READ_URL);
+          const response = await fetchWithTimeout(GLOBAL_DB_READ_URL);
           if (!response.ok) throw new Error("Failed to read database for auto-save");
           const resObj = await response.json();
           let record = resObj.record || resObj;
@@ -7516,7 +7980,7 @@
             return p;
           });
           
-          const writeResponse = await fetch(GLOBAL_DB_WRITE_URL, {
+          const writeResponse = await fetchWithTimeout(GLOBAL_DB_WRITE_URL, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
@@ -7609,7 +8073,14 @@
           }
         } else if (target.classList.contains("dep-time-edit-input")) {
           const legId = target.getAttribute("data-leg-id");
-          const val = target.value.trim();
+          let val = target.value.trim().replace(/[^0-9:]/g, "");
+          if (/^\d{3}$/.test(val)) {
+            val = "0" + val[0] + ":" + val.slice(1);
+          } else if (/^\d{4}$/.test(val)) {
+            val = val.slice(0, 2) + ":" + val.slice(2);
+          } else if (/^\d:\d{2}$/.test(val)) {
+            val = "0" + val;
+          }
           const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
           const leg = currentPuzzle.legs.find(l => l.id === legId);
           if (leg) {
@@ -7619,7 +8090,46 @@
               return;
             }
             target.classList.remove("edit-input-error");
+            target.value = val;
             leg.depTimeStr = val;
+            onLegEdited();
+          }
+        } else if (target.classList.contains("arr-time-edit-input")) {
+          const legId = target.getAttribute("data-leg-id");
+          let val = target.value.trim().replace(/[^0-9:]/g, "");
+          if (/^\d{3}$/.test(val)) {
+            val = "0" + val[0] + ":" + val.slice(1);
+          } else if (/^\d{4}$/.test(val)) {
+            val = val.slice(0, 2) + ":" + val.slice(2);
+          } else if (/^\d:\d{2}$/.test(val)) {
+            val = "0" + val;
+          }
+          const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+          const leg = currentPuzzle.legs.find(l => l.id === legId);
+          if (leg) {
+            if (!timeRegex.test(val)) {
+              target.classList.add("edit-input-error");
+              showToast("Invalid arrival time! Use HH:MM format (00:00 - 23:59)", "error");
+              return;
+            }
+            target.classList.remove("edit-input-error");
+            target.value = val;
+            
+            const fromA = AIRPORTS[leg.from];
+            const toA = AIRPORTS[leg.to];
+            const tzDiff = toA.tz - fromA.tz;
+            
+            const [arrH, arrM] = val.split(":").map(Number);
+            const arrLocalMins = leg.day * 1440 + arrH * 60 + arrM;
+            const depLocalMins = arrLocalMins - leg.durationMins - tzDiff * 60;
+            
+            const localDepMins = depLocalMins - leg.day * 1440;
+            const totalMinsInDay = 1440;
+            let normalizedMins = (localDepMins % totalMinsInDay + totalMinsInDay) % totalMinsInDay;
+            const depH = Math.floor(normalizedMins / 60);
+            const depM = Math.floor(normalizedMins % 60);
+            
+            leg.depTimeStr = `${String(depH).padStart(2, '0')}:${String(depM).padStart(2, '0')}`;
             onLegEdited();
           }
         }
@@ -7627,7 +8137,7 @@
 
       boardGrid.addEventListener("keydown", (e) => {
         const target = e.target;
-        if (target.classList.contains("dep-time-edit-input")) {
+        if (target.classList.contains("dep-time-edit-input") || target.classList.contains("arr-time-edit-input")) {
           if (e.key === "Enter") {
             target.blur();
           }
@@ -7718,8 +8228,17 @@
           }
           schedulerAttemptCount = 0;
           
-          puzzlesDatabase = [ INTRODUCTION_PUZZLE, ...record.customPuzzles ];
-          updatePuzzleDropdownOptions();
+          // Update in local storage
+          let localCustomPuzzles = JSON.parse(localStorage.getItem("aero_local_custom_puzzles") || "[]");
+          localCustomPuzzles = localCustomPuzzles.map(p => {
+            if (p.name === currentPuzzle.name) {
+              return currentPuzzle;
+            }
+            return p;
+          });
+          localStorage.setItem("aero_local_custom_puzzles", JSON.stringify(localCustomPuzzles));
+          
+          populatePuzzlesDatabase(record.customPuzzles);
           
           // Select it again as published to load normal play mode
           selectPuzzle(currentPuzzle.name, false);
@@ -7750,7 +8269,8 @@
       const res = solvePuzzleMethodically(
         currentPuzzle.legs,
         currentPuzzle.rules || {},
-        currentPuzzle.startingLocations || Array(6).fill("LAX")
+        currentPuzzle.startingLocations || Array(6).fill("LAX"),
+        1000
       );
       if (res.minRepoTime === Infinity) {
         bestRepoValSpan.textContent = "Unsolvable";
@@ -7772,7 +8292,7 @@
             currentPuzzle.legs,
             currentPuzzle.rules || {},
             currentPuzzle.startingLocations || Array(6).fill("LAX"),
-            2000000 // 2 million states limit for full resolve precision
+            200000 // 200k states limit for full resolve precision
           );
           
           closeModal("loadingOverlay");
@@ -7885,7 +8405,7 @@
     window.saveCreatedLeg = function(r, c) {
       const fromVal = document.getElementById(`creator-from-${r}-${c}`).value;
       const toVal = document.getElementById(`creator-to-${r}-${c}`).value;
-      let timeVal = document.getElementById(`creator-time-${r}-${c}`).value.trim();
+      let timeVal = document.getElementById(`creator-dep-time-${r}-${c}`).value.trim();
 
       if (!fromVal) {
         showToast("Please select a departure airport!", "error");
@@ -7930,6 +8450,11 @@
         depTimeStr: timeVal
       };
 
+      // Clean up any overwritten flight at this grid position to avoid duplicates/orphans
+      if (grid[r][c]) {
+        currentPuzzle.legs = currentPuzzle.legs.filter(l => l.id !== grid[r][c].id);
+      }
+
       currentPuzzle.legs.push(newLeg);
       window.openLegCreators.delete(`${r},${c}`);
 
@@ -7939,6 +8464,115 @@
       onLegEdited();
       updateEditModeBestRepoVal();
       showToast("New flight successfully added!", "success");
+    };
+
+    window.formatCreatorTimeInput = function(input) {
+      let tVal = input.value.trim().replace(/[^0-9:]/g, "");
+      if (/^\d{3}$/.test(tVal)) {
+        tVal = "0" + tVal[0] + ":" + tVal.slice(1);
+      } else if (/^\d{4}$/.test(tVal)) {
+        tVal = tVal.slice(0, 2) + ":" + tVal.slice(2);
+      } else if (/^\d:\d{2}$/.test(tVal)) {
+        tVal = "0" + tVal;
+      }
+      const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+      if (timeRegex.test(tVal)) {
+        input.value = tVal;
+      }
+    };
+
+    window.syncCreatorTimes = function(r, c, changedInputType) {
+      const fromVal = document.getElementById(`creator-from-${r}-${c}`).value;
+      const toVal = document.getElementById(`creator-to-${r}-${c}`).value;
+      if (!fromVal || !toVal || fromVal === toVal) return;
+      
+      const fromAp = AIRPORTS[fromVal];
+      const toAp = AIRPORTS[toVal];
+      if (!fromAp || !toAp) return;
+      
+      const dist = Math.round(calculateDistance(fromAp.lat, fromAp.lon, toAp.lat, toAp.lon));
+      const durationMins = Math.round((dist / CRUISE_SPEED) * 60);
+      const tzDiff = toAp.tz - fromAp.tz;
+      
+      const depInput = document.getElementById(`creator-dep-time-${r}-${c}`);
+      const arrInput = document.getElementById(`creator-arr-time-${r}-${c}`);
+      if (!depInput || !arrInput) return;
+      
+      function parseEnteredTime(val) {
+        let tVal = val.trim().replace(/[^0-9:]/g, "");
+        if (/^\d{3}$/.test(tVal)) {
+          tVal = "0" + tVal[0] + ":" + tVal.slice(1);
+        } else if (/^\d{4}$/.test(tVal)) {
+          tVal = tVal.slice(0, 2) + ":" + tVal.slice(2);
+        } else if (/^\d:\d{2}$/.test(tVal)) {
+          tVal = "0" + tVal;
+        }
+        const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+        if (timeRegex.test(tVal)) {
+          return tVal;
+        }
+        return null;
+      }
+      
+      if (changedInputType === "dep") {
+        const parsed = parseEnteredTime(depInput.value);
+        if (!parsed) return;
+        
+        const [h, m] = parsed.split(":").map(Number);
+        const depLocalMins = c * 1440 + h * 60 + m;
+        const arrLocalMins = depLocalMins + durationMins + tzDiff * 60;
+        
+        const arrDayMins = arrLocalMins - c * 1440;
+        const totalMinsInDay = 1440;
+        let normalizedMins = (arrDayMins % totalMinsInDay + totalMinsInDay) % totalMinsInDay;
+        const arrH = Math.floor(normalizedMins / 60);
+        const arrM = Math.floor(normalizedMins % 60);
+        
+        arrInput.value = `${String(arrH).padStart(2, '0')}:${String(arrM).padStart(2, '0')}`;
+      } else if (changedInputType === "arr") {
+        const parsed = parseEnteredTime(arrInput.value);
+        if (!parsed) return;
+        
+        const [h, m] = parsed.split(":").map(Number);
+        const arrLocalMins = c * 1440 + h * 60 + m;
+        const depLocalMins = arrLocalMins - durationMins - tzDiff * 60;
+        
+        const depDayMins = depLocalMins - c * 1440;
+        const totalMinsInDay = 1440;
+        let normalizedMins = (depDayMins % totalMinsInDay + totalMinsInDay) % totalMinsInDay;
+        const depH = Math.floor(normalizedMins / 60);
+        const depM = Math.floor(normalizedMins % 60);
+        
+        depInput.value = `${String(depH).padStart(2, '0')}:${String(depM).padStart(2, '0')}`;
+      }
+    };
+
+    window.syncCreatorAirports = function(r, c) {
+      const depInput = document.getElementById(`creator-dep-time-${r}-${c}`);
+      const arrInput = document.getElementById(`creator-arr-time-${r}-${c}`);
+      if (!depInput || !arrInput) return;
+      
+      function parseEnteredTime(val) {
+        let tVal = val.trim().replace(/[^0-9:]/g, "");
+        if (/^\d{3}$/.test(tVal)) {
+          tVal = "0" + tVal[0] + ":" + tVal.slice(1);
+        } else if (/^\d{4}$/.test(tVal)) {
+          tVal = tVal.slice(0, 2) + ":" + tVal.slice(2);
+        } else if (/^\d:\d{2}$/.test(tVal)) {
+          tVal = "0" + tVal;
+        }
+        const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+        if (timeRegex.test(tVal)) {
+          return tVal;
+        }
+        return null;
+      }
+      
+      if (parseEnteredTime(depInput.value)) {
+        syncCreatorTimes(r, c, "dep");
+      } else if (parseEnteredTime(arrInput.value)) {
+        syncCreatorTimes(r, c, "arr");
+      }
     };
 
     function adjustGridRowHeights() {
